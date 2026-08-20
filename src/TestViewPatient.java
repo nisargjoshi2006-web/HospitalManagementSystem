@@ -1,12 +1,11 @@
 import dao.PatientDAO;
 
-}
-public class TestPatient {
+public class TestViewPatient {
 
     public static void main(String[] args) {
 
         PatientDAO dao = new PatientDAO();
 
-        dao.addPatient("TestUser", "Male", 20);
+        dao.viewPatients();
     }
 }
