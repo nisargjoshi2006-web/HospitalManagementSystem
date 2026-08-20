@@ -7,26 +7,33 @@ import java.sql.ResultSet;
 
 public class PatientDAO {
 
-    public void addPatient(String name, String gender, int age,String bloodGroup, String contact, String address, String registrationDate1) {
+    // INSERT PATIENT
+    public void addPatient(
+            String name,
+            String gender,
+            int age,
+            String bloodGroup,
+            String contact,
+            String address,
+            String registrationDate) {
 
         try {
 
             Connection con = DBConnection.getConnection();
 
             String query =
-            "INSERT INTO Patients(patient_name, gender, age, blood_group, contact, address, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    "INSERT INTO Patients(patient_name, gender, age, blood_group, contact, address, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             PreparedStatement pst = con.prepareStatement(query);
 
-            public void addPatient(
-                String name,
-                String gender,
-                int age,
-                String bloodGroup,
-                String contact,
-                String address,
-                String registrationDate)
-                            
+            pst.setString(1, name);
+            pst.setString(2, gender);
+            pst.setInt(3, age);
+            pst.setString(4, bloodGroup);
+            pst.setString(5, contact);
+            pst.setString(6, address);
+            pst.setDate(7, java.sql.Date.valueOf(registrationDate));
+
             int rows = pst.executeUpdate();
 
             System.out.println("Rows Inserted = " + rows);
@@ -42,7 +49,7 @@ public class PatientDAO {
         }
     }
 
-    // SELECT
+    // VIEW ALL PATIENTS
     public void viewPatients() {
 
         try {
@@ -58,14 +65,14 @@ public class PatientDAO {
             while (rs.next()) {
 
                 System.out.println(
-                    rs.getInt("patient_id") + " | " +
-                    rs.getString("patient_name") + " | " +
-                    rs.getString("gender") + " | " +
-                    rs.getInt("age") + " | " +
-                    rs.getString("blood_group") + " | " +
-                    rs.getString("contact") + " | " +
-                    rs.getString("address") + " | " +
-                    rs.getDate("registration_date")
+                        rs.getInt("patient_id") + " | " +
+                        rs.getString("patient_name") + " | " +
+                        rs.getString("gender") + " | " +
+                        rs.getInt("age") + " | " +
+                        rs.getString("blood_group") + " | " +
+                        rs.getString("contact") + " | " +
+                        rs.getString("address") + " | " +
+                        rs.getDate("registration_date")
                 );
             }
 
@@ -76,7 +83,7 @@ public class PatientDAO {
         }
     }
 
-    // UPDATE
+    // UPDATE PATIENT NAME
     public void updatePatient(int id, String newName) {
 
         try {
@@ -84,7 +91,7 @@ public class PatientDAO {
             Connection con = DBConnection.getConnection();
 
             String query =
-                "UPDATE Patients SET patient_name=? WHERE patient_id=?";
+                    "UPDATE Patients SET patient_name=? WHERE patient_id=?";
 
             PreparedStatement pst = con.prepareStatement(query);
 
@@ -94,11 +101,36 @@ public class PatientDAO {
             int rows = pst.executeUpdate();
 
             System.out.println("Rows Updated = " + rows);
-        
+
             con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    // DELETE PATIENT
+   public void deletePatient(int id) {
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+            "DELETE FROM Patients WHERE patient_id=?";
+
+        PreparedStatement pst = con.prepareStatement(query);
+
+        pst.setInt(1, id);
+
+        int rows = pst.executeUpdate();
+
+        System.out.println("Rows Deleted = " + rows);
+
+        con.close();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 }
