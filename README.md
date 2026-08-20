@@ -10,4 +10,4 @@ Technology Stack:
 
 Team Members:
 - Nisarg Joshi
-- Shilajit Banerjee
+- Shilajit Banerjees
