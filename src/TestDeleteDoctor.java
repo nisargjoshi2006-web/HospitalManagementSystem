@@ -1,10 +1,10 @@
 import dao.DoctorDAO;
 
-public class TestUpdateDoctor {
+public class TestDeleteDoctor {
     public static void main(String[] args) {
 
         DoctorDAO dao = new DoctorDAO();
 
-        dao.updateDoctor(5, "Dr. Updated");
+        dao.deleteDoctor(7);
     }
 }

@@ -1,10 +1,11 @@
 import dao.DoctorDAO;
 
-public class TestUpdateDoctor {
+public class TestViewDoctor {
+
     public static void main(String[] args) {
 
         DoctorDAO dao = new DoctorDAO();
 
-        dao.updateDoctor(5, "Dr. Updated");
+        dao.viewDoctors();
     }
 }
