@@ -25,41 +25,168 @@ public class FeedbackPanel extends JPanel {
 
     public FeedbackPanel() {
 
-        setLayout(new BorderLayout());
+        // ================= MAIN PANEL =================
 
-        JPanel form = new JPanel();
+        setLayout(new BorderLayout(10, 10));
 
-        form.setLayout(new GridLayout(5,2,10,10));
 
-        form.add(new JLabel("Patient ID"));
+        // ================= FONTS =================
 
-        txtPatientId = new JTextField();
-        form.add(txtPatientId);
+        Font labelFont =
+                new Font("Arial", Font.BOLD, 16);
 
-        form.add(new JLabel("Rating"));
+        Font fieldFont =
+                new Font("Arial", Font.PLAIN, 16);
 
-        txtRating = new JTextField();
-        form.add(txtRating);
+        Font buttonFont =
+                new Font("Arial", Font.BOLD, 16);
 
-        form.add(new JLabel("Feedback Date (YYYY-MM-DD)"));
+        Font tableFont =
+                new Font("Arial", Font.PLAIN, 15);
 
-        txtDate = new JTextField();
-        form.add(txtDate);
+        Font tableHeaderFont =
+                new Font("Arial", Font.BOLD, 15);
 
-        form.add(new JLabel("Comments"));
 
-        txtComments = new JTextField();
-        form.add(txtComments);
+        // ================= FORM PANEL =================
 
-        btnAdd = new JButton("Add Feedback");
-        form.add(btnAdd);
+        JPanel formPanel =
+                new JPanel(
+                        new GridLayout(4, 2, 10, 10)
+                );
 
-        btnView = new JButton("View Feedback");
-        form.add(btnView);
+        formPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        10, 10, 5, 10
+                )
+        );
 
-        add(form, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel();
+        // ================= PATIENT ID =================
+
+        JLabel lblPatient =
+                new JLabel("Patient ID");
+
+        lblPatient.setFont(labelFont);
+
+        formPanel.add(lblPatient);
+
+        txtPatientId =
+                new JTextField();
+
+        txtPatientId.setFont(fieldFont);
+
+        formPanel.add(txtPatientId);
+
+
+        // ================= RATING =================
+
+        JLabel lblRating =
+                new JLabel("Rating");
+
+        lblRating.setFont(labelFont);
+
+        formPanel.add(lblRating);
+
+        txtRating =
+                new JTextField();
+
+        txtRating.setFont(fieldFont);
+
+        formPanel.add(txtRating);
+
+
+        // ================= FEEDBACK DATE =================
+
+        JLabel lblDate =
+                new JLabel(
+                        "Feedback Date (YYYY-MM-DD)"
+                );
+
+        lblDate.setFont(labelFont);
+
+        formPanel.add(lblDate);
+
+        txtDate =
+                new JTextField();
+
+        txtDate.setFont(fieldFont);
+
+        formPanel.add(txtDate);
+
+
+        // ================= COMMENTS =================
+
+        JLabel lblComments =
+                new JLabel("Comments");
+
+        lblComments.setFont(labelFont);
+
+        formPanel.add(lblComments);
+
+        txtComments =
+                new JTextField();
+
+        txtComments.setFont(fieldFont);
+
+        formPanel.add(txtComments);
+
+
+        // ================= BUTTON PANEL =================
+
+        JPanel buttonPanel =
+                new JPanel(
+                        new GridLayout(1, 2, 10, 10)
+                );
+
+        buttonPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5, 10, 10, 10
+                )
+        );
+
+
+        btnAdd =
+                new JButton("Add Feedback");
+
+        btnAdd.setFont(buttonFont);
+
+
+        btnView =
+                new JButton("View Feedback");
+
+        btnView.setFont(buttonFont);
+
+
+        buttonPanel.add(btnAdd);
+        buttonPanel.add(btnView);
+
+
+        // ================= TOP PANEL =================
+
+        JPanel topPanel =
+                new JPanel(new BorderLayout());
+
+        topPanel.add(
+                formPanel,
+                BorderLayout.CENTER
+        );
+
+        topPanel.add(
+                buttonPanel,
+                BorderLayout.SOUTH
+        );
+
+        add(
+                topPanel,
+                BorderLayout.NORTH
+        );
+
+
+        // ================= TABLE =================
+
+        tableModel =
+                new DefaultTableModel();
 
         tableModel.setColumnIdentifiers(
                 new String[]{
@@ -68,48 +195,101 @@ public class FeedbackPanel extends JPanel {
                         "Rating",
                         "Date",
                         "Comments"
-                });
+                }
+        );
 
-        table = new JTable(tableModel);
 
-        JScrollPane scroll =
+        table =
+                new JTable(tableModel);
+
+        table.setFont(tableFont);
+
+        table.setRowHeight(25);
+
+        table.getTableHeader()
+                .setFont(tableHeaderFont);
+
+
+        JScrollPane scrollPane =
                 new JScrollPane(table);
 
-        add(scroll, BorderLayout.CENTER);
+        add(
+                scrollPane,
+                BorderLayout.CENTER
+        );
+
+
+        // ================= ADD FEEDBACK =================
 
         btnAdd.addActionListener(e -> {
 
             try {
 
+                int patientId =
+                        Integer.parseInt(
+                                txtPatientId
+                                        .getText()
+                                        .trim()
+                        );
+
+                int rating =
+                        Integer.parseInt(
+                                txtRating
+                                        .getText()
+                                        .trim()
+                        );
+
+                String date =
+                        txtDate
+                                .getText()
+                                .trim();
+
+                String comments =
+                        txtComments
+                                .getText()
+                                .trim();
+
+
                 dao.addFeedback(
-                        Integer.parseInt(
-                                txtPatientId.getText()),
-                        Integer.parseInt(
-                                txtRating.getText()),
-                        txtDate.getText(),
-                        txtComments.getText()
+                        patientId,
+                        rating,
+                        date,
+                        comments
                 );
 
+
                 JOptionPane.showMessageDialog(
-                        null,
-                        "Feedback Added Successfully"
+                        this,
+                        "Feedback Added Successfully",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
                 );
+
 
                 txtPatientId.setText("");
+
                 txtRating.setText("");
+
                 txtDate.setText("");
+
                 txtComments.setText("");
 
-            } catch(Exception ex) {
+
+            } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
-                        null,
-                        "Invalid Input"
+                        this,
+                        "Invalid Input",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
 
                 ex.printStackTrace();
             }
         });
+
+
+        // ================= VIEW FEEDBACK =================
 
         btnView.addActionListener(e -> {
 
@@ -117,27 +297,48 @@ public class FeedbackPanel extends JPanel {
 
                 tableModel.setRowCount(0);
 
+
                 ResultSet rs =
                         dao.getAllFeedback();
 
-                while(rs.next()) {
+
+                while (rs.next()) {
 
                     tableModel.addRow(
                             new Object[]{
 
-                                    rs.getInt("feedback_id"),
+                                    rs.getInt(
+                                            "feedback_id"
+                                    ),
 
-                                    rs.getInt("patient_id"),
+                                    rs.getInt(
+                                            "patient_id"
+                                    ),
 
-                                    rs.getInt("rating"),
+                                    rs.getInt(
+                                            "rating"
+                                    ),
 
-                                    rs.getDate("feedback_date"),
+                                    rs.getDate(
+                                            "feedback_date"
+                                    ),
 
-                                    rs.getString("comments")
-                            });
+                                    rs.getString(
+                                            "comments"
+                                    )
+                            }
+                    );
                 }
 
-            } catch(Exception ex) {
+
+            } catch (Exception ex) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to load feedback",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
 
                 ex.printStackTrace();
             }

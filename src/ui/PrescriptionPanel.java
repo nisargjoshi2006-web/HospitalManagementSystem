@@ -25,41 +25,184 @@ public class PrescriptionPanel extends JPanel {
 
     public PrescriptionPanel() {
 
-        setLayout(new BorderLayout());
+        // ================= MAIN PANEL =================
 
-        // FORM PANEL
-        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        setLayout(new BorderLayout(10, 10));
 
-        formPanel.add(new JLabel("Appointment ID"));
-        txtAppointmentId = new JTextField();
+        // ================= FONTS =================
+
+        Font labelFont =
+                new Font("Arial", Font.BOLD, 16);
+
+        Font fieldFont =
+                new Font("Arial", Font.PLAIN, 16);
+
+        Font buttonFont =
+                new Font("Arial", Font.BOLD, 16);
+
+        Font tableFont =
+                new Font("Arial", Font.PLAIN, 15);
+
+        Font tableHeaderFont =
+                new Font("Arial", Font.BOLD, 15);
+
+
+        // ================= FORM PANEL =================
+
+        JPanel formPanel =
+                new JPanel(new GridLayout(5, 2, 10, 10));
+
+        formPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        10, 10, 5, 10
+                )
+        );
+
+
+        // ================= APPOINTMENT ID =================
+
+        JLabel lblAppointment =
+                new JLabel("Appointment ID");
+
+        lblAppointment.setFont(labelFont);
+
+        formPanel.add(lblAppointment);
+
+        txtAppointmentId =
+                new JTextField();
+
+        txtAppointmentId.setFont(fieldFont);
+
         formPanel.add(txtAppointmentId);
 
-        formPanel.add(new JLabel("Diagnosis"));
-        txtDiagnosis = new JTextField();
+
+        // ================= DIAGNOSIS =================
+
+        JLabel lblDiagnosis =
+                new JLabel("Diagnosis");
+
+        lblDiagnosis.setFont(labelFont);
+
+        formPanel.add(lblDiagnosis);
+
+        txtDiagnosis =
+                new JTextField();
+
+        txtDiagnosis.setFont(fieldFont);
+
         formPanel.add(txtDiagnosis);
 
-        formPanel.add(new JLabel("Medicine"));
-        txtMedicine = new JTextField();
+
+        // ================= MEDICINE =================
+
+        JLabel lblMedicine =
+                new JLabel("Medicine");
+
+        lblMedicine.setFont(labelFont);
+
+        formPanel.add(lblMedicine);
+
+        txtMedicine =
+                new JTextField();
+
+        txtMedicine.setFont(fieldFont);
+
         formPanel.add(txtMedicine);
 
-        formPanel.add(new JLabel("Next Visit Date (YYYY-MM-DD)"));
-        txtNextVisit = new JTextField();
+
+        // ================= NEXT VISIT =================
+
+        JLabel lblNextVisit =
+                new JLabel(
+                        "Next Visit Date (YYYY-MM-DD)"
+                );
+
+        lblNextVisit.setFont(labelFont);
+
+        formPanel.add(lblNextVisit);
+
+        txtNextVisit =
+                new JTextField();
+
+        txtNextVisit.setFont(fieldFont);
+
         formPanel.add(txtNextVisit);
 
-        formPanel.add(new JLabel("Remarks"));
-        txtRemarks = new JTextField();
+
+        // ================= REMARKS =================
+
+        JLabel lblRemarks =
+                new JLabel("Remarks");
+
+        lblRemarks.setFont(labelFont);
+
+        formPanel.add(lblRemarks);
+
+        txtRemarks =
+                new JTextField();
+
+        txtRemarks.setFont(fieldFont);
+
         formPanel.add(txtRemarks);
 
-        btnAdd = new JButton("Add Prescription");
-        formPanel.add(btnAdd);
 
-        btnView = new JButton("View Prescriptions");
-        formPanel.add(btnView);
+        // ================= BUTTON PANEL =================
 
-        add(formPanel, BorderLayout.NORTH);
+        JPanel buttonPanel =
+                new JPanel(new GridLayout(1, 2, 10, 10));
 
-        // TABLE
-        model = new DefaultTableModel();
+        buttonPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5, 10, 10, 10
+                )
+        );
+
+
+        // ADD BUTTON
+
+        btnAdd =
+                new JButton("Add Prescription");
+
+        btnAdd.setFont(buttonFont);
+
+
+        // VIEW BUTTON
+
+        btnView =
+                new JButton("View Prescriptions");
+
+        btnView.setFont(buttonFont);
+
+
+        buttonPanel.add(btnAdd);
+        buttonPanel.add(btnView);
+
+
+        // ================= TOP PANEL =================
+
+        JPanel topPanel =
+                new JPanel(new BorderLayout());
+
+        topPanel.add(
+                formPanel,
+                BorderLayout.CENTER
+        );
+
+        topPanel.add(
+                buttonPanel,
+                BorderLayout.SOUTH
+        );
+
+        add(
+                topPanel,
+                BorderLayout.NORTH
+        );
+
+
+        // ================= TABLE =================
+
+        model =
+                new DefaultTableModel();
 
         model.setColumnIdentifiers(
                 new String[]{
@@ -72,72 +215,167 @@ public class PrescriptionPanel extends JPanel {
                 }
         );
 
-        table = new JTable(model);
+
+        table =
+                new JTable(model);
+
+        // Table font
+
+        table.setFont(tableFont);
+
+        // Table row height
+
         table.setRowHeight(25);
 
-        JScrollPane scrollPane = new JScrollPane(table);
+        // Table header font
 
-        add(scrollPane, BorderLayout.CENTER);
+        table.getTableHeader()
+                .setFont(tableHeaderFont);
 
-        // ADD BUTTON
+
+        JScrollPane scrollPane =
+                new JScrollPane(table);
+
+        add(
+                scrollPane,
+                BorderLayout.CENTER
+        );
+
+
+        // ================= ADD PRESCRIPTION =================
+
         btnAdd.addActionListener(e -> {
 
             try {
 
+                int appointmentId =
+                        Integer.parseInt(
+                                txtAppointmentId
+                                        .getText()
+                                        .trim()
+                        );
+
+                String diagnosis =
+                        txtDiagnosis
+                                .getText()
+                                .trim();
+
+                String medicine =
+                        txtMedicine
+                                .getText()
+                                .trim();
+
+                String nextVisit =
+                        txtNextVisit
+                                .getText()
+                                .trim();
+
+                String remarks =
+                        txtRemarks
+                                .getText()
+                                .trim();
+
+
                 dao.addPrescription(
-                        Integer.parseInt(txtAppointmentId.getText()),
-                        txtDiagnosis.getText(),
-                        txtMedicine.getText(),
-                        txtNextVisit.getText(),
-                        txtRemarks.getText()
+                        appointmentId,
+                        diagnosis,
+                        medicine,
+                        nextVisit,
+                        remarks
                 );
+
 
                 JOptionPane.showMessageDialog(
-                        null,
-                        "Prescription Added Successfully"
+                        this,
+                        "Prescription Added Successfully",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
                 );
 
+
+                // Clear fields
+
                 txtAppointmentId.setText("");
+
                 txtDiagnosis.setText("");
+
                 txtMedicine.setText("");
+
                 txtNextVisit.setText("");
+
                 txtRemarks.setText("");
+
 
             } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
-                        null,
-                        "Invalid Input"
+                        this,
+                        "Invalid Input",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
 
                 ex.printStackTrace();
             }
         });
 
-        // VIEW BUTTON
+
+        // ================= VIEW PRESCRIPTIONS =================
+
         btnView.addActionListener(e -> {
 
             try {
 
+                // Clear old rows
+
                 model.setRowCount(0);
 
-                ResultSet rs = dao.getAllPrescriptions();
+
+                ResultSet rs =
+                        dao.getAllPrescriptions();
+
 
                 while (rs.next()) {
 
                     model.addRow(
                             new Object[]{
-                                    rs.getInt("prescription_id"),
-                                    rs.getInt("appointment_id"),
-                                    rs.getString("diagnosis"),
-                                    rs.getString("medicine"),
-                                    rs.getDate("next_visit_date"),
-                                    rs.getString("remarks")
+
+                                    rs.getInt(
+                                            "prescription_id"
+                                    ),
+
+                                    rs.getInt(
+                                            "appointment_id"
+                                    ),
+
+                                    rs.getString(
+                                            "diagnosis"
+                                    ),
+
+                                    rs.getString(
+                                            "medicine"
+                                    ),
+
+                                    rs.getDate(
+                                            "next_visit_date"
+                                    ),
+
+                                    rs.getString(
+                                            "remarks"
+                                    )
                             }
                     );
                 }
 
+
             } catch (Exception ex) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to load prescriptions",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
 
                 ex.printStackTrace();
             }

@@ -4,6 +4,7 @@ import dao.BillingDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.sql.ResultSet;
 
@@ -24,45 +25,172 @@ public class BillingPanel extends JPanel {
 
     public BillingPanel() {
 
-        setLayout(new BorderLayout());
+        // ================= MAIN PANEL =================
 
-        // FORM PANEL
-        JPanel form = new JPanel(new GridLayout(4, 2, 10, 10));
+        setLayout(new BorderLayout(10, 10));
 
-        form.add(new JLabel("Appointment ID"));
-        txtAppointmentId = new JTextField();
-        form.add(txtAppointmentId);
 
-        form.add(new JLabel("Bill Date (YYYY-MM-DD)"));
-        txtBillDate = new JTextField();
-        form.add(txtBillDate);
+        // ================= FONTS =================
 
-        form.add(new JLabel("Payment Method"));
-        txtPaymentMethod = new JTextField();
-        form.add(txtPaymentMethod);
+        Font labelFont =
+                new Font("Arial", Font.BOLD, 16);
 
-        form.add(new JLabel("Payment Status"));
-        txtPaymentStatus = new JTextField();
-        form.add(txtPaymentStatus);
+        Font fieldFont =
+                new Font("Arial", Font.PLAIN, 16);
 
-        // BUTTON PANEL
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        Font buttonFont =
+                new Font("Arial", Font.BOLD, 16);
 
-        btnAdd = new JButton("Add Bill");
-        btnView = new JButton("View Bills");
+        Font tableFont =
+                new Font("Arial", Font.PLAIN, 15);
+
+        Font tableHeaderFont =
+                new Font("Arial", Font.BOLD, 15);
+
+
+        // ================= FORM PANEL =================
+
+        JPanel formPanel =
+                new JPanel(
+                        new GridLayout(4, 2, 10, 10)
+                );
+
+        formPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        10, 10, 5, 10
+                )
+        );
+
+
+        // ================= APPOINTMENT ID =================
+
+        JLabel lblAppointment =
+                new JLabel("Appointment ID");
+
+        lblAppointment.setFont(labelFont);
+
+        formPanel.add(lblAppointment);
+
+        txtAppointmentId =
+                new JTextField();
+
+        txtAppointmentId.setFont(fieldFont);
+
+        formPanel.add(txtAppointmentId);
+
+
+        // ================= BILL DATE =================
+
+        JLabel lblBillDate =
+                new JLabel(
+                        "Bill Date (YYYY-MM-DD)"
+                );
+
+        lblBillDate.setFont(labelFont);
+
+        formPanel.add(lblBillDate);
+
+        txtBillDate =
+                new JTextField();
+
+        txtBillDate.setFont(fieldFont);
+
+        formPanel.add(txtBillDate);
+
+
+        // ================= PAYMENT METHOD =================
+
+        JLabel lblPaymentMethod =
+                new JLabel("Payment Method");
+
+        lblPaymentMethod.setFont(labelFont);
+
+        formPanel.add(lblPaymentMethod);
+
+        txtPaymentMethod =
+                new JTextField();
+
+        txtPaymentMethod.setFont(fieldFont);
+
+        formPanel.add(txtPaymentMethod);
+
+
+        // ================= PAYMENT STATUS =================
+
+        JLabel lblPaymentStatus =
+                new JLabel("Payment Status");
+
+        lblPaymentStatus.setFont(labelFont);
+
+        formPanel.add(lblPaymentStatus);
+
+        txtPaymentStatus =
+                new JTextField();
+
+        txtPaymentStatus.setFont(fieldFont);
+
+        formPanel.add(txtPaymentStatus);
+
+
+        // ================= BUTTON PANEL =================
+
+        JPanel buttonPanel =
+                new JPanel(
+                        new GridLayout(1, 2, 10, 10)
+                );
+
+        buttonPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5, 10, 10, 10
+                )
+        );
+
+
+        // ADD BILL
+
+        btnAdd =
+                new JButton("Add Bill");
+
+        btnAdd.setFont(buttonFont);
+
+
+        // VIEW BILLS
+
+        btnView =
+                new JButton("View Bills");
+
+        btnView.setFont(buttonFont);
+
 
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnView);
 
-        // TOP PANEL
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(form, BorderLayout.CENTER);
-        topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        add(topPanel, BorderLayout.NORTH);
+        // ================= TOP PANEL =================
 
-        // TABLE
-        tableModel = new DefaultTableModel();
+        JPanel topPanel =
+                new JPanel(new BorderLayout());
+
+        topPanel.add(
+                formPanel,
+                BorderLayout.CENTER
+        );
+
+        topPanel.add(
+                buttonPanel,
+                BorderLayout.SOUTH
+        );
+
+        add(
+                topPanel,
+                BorderLayout.NORTH
+        );
+
+
+        // ================= TABLE =================
+
+        tableModel =
+                new DefaultTableModel();
 
         tableModel.setColumnIdentifiers(
                 new String[]{
@@ -72,72 +200,157 @@ public class BillingPanel extends JPanel {
                         "Bill Date",
                         "Payment Method",
                         "Payment Status"
-                });
+                }
+        );
 
-        table = new JTable(tableModel);
 
-        JScrollPane scrollPane = new JScrollPane(table);
+        table =
+                new JTable(tableModel);
 
-        add(scrollPane, BorderLayout.CENTER);
+        table.setFont(tableFont);
 
-        // ADD BILL
+        table.setRowHeight(25);
+
+        table.getTableHeader()
+                .setFont(tableHeaderFont);
+
+
+        JScrollPane scrollPane =
+                new JScrollPane(table);
+
+        add(
+                scrollPane,
+                BorderLayout.CENTER
+        );
+
+
+        // ================= ADD BILL =================
+
         btnAdd.addActionListener(e -> {
 
             try {
 
+                int appointmentId =
+                        Integer.parseInt(
+                                txtAppointmentId
+                                        .getText()
+                                        .trim()
+                        );
+
+                String billDate =
+                        txtBillDate
+                                .getText()
+                                .trim();
+
+                String paymentMethod =
+                        txtPaymentMethod
+                                .getText()
+                                .trim();
+
+                String paymentStatus =
+                        txtPaymentStatus
+                                .getText()
+                                .trim();
+
+
                 dao.addBill(
-                        Integer.parseInt(txtAppointmentId.getText()),
-                        txtBillDate.getText(),
-                        txtPaymentMethod.getText(),
-                        txtPaymentStatus.getText()
+                        appointmentId,
+                        billDate,
+                        paymentMethod,
+                        paymentStatus
                 );
+
 
                 JOptionPane.showMessageDialog(
-                        null,
-                        "Bill Added Successfully"
+                        this,
+                        "Bill Added Successfully",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
                 );
 
+
+                // Clear fields
+
                 txtAppointmentId.setText("");
+
                 txtBillDate.setText("");
+
                 txtPaymentMethod.setText("");
+
                 txtPaymentStatus.setText("");
+
 
             } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
-                        null,
-                        "Invalid Input"
+                        this,
+                        "Invalid Input",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
 
                 ex.printStackTrace();
             }
         });
 
-        // VIEW BILLS
+
+        // ================= VIEW BILLS =================
+
         btnView.addActionListener(e -> {
 
             try {
 
+                // Clear previous rows
+
                 tableModel.setRowCount(0);
 
-                ResultSet rs = dao.getAllBills();
+
+                ResultSet rs =
+                        dao.getAllBills();
+
 
                 while (rs.next()) {
 
                     tableModel.addRow(
                             new Object[]{
-                                    rs.getInt("bill_id"),
-                                    rs.getInt("appointment_id"),
-                                    rs.getDouble("amount"),
-                                    rs.getDate("bill_date"),
-                                    rs.getString("payment_method"),
-                                    rs.getString("payment_status")
+
+                                    rs.getInt(
+                                            "bill_id"
+                                    ),
+
+                                    rs.getInt(
+                                            "appointment_id"
+                                    ),
+
+                                    rs.getDouble(
+                                            "amount"
+                                    ),
+
+                                    rs.getDate(
+                                            "bill_date"
+                                    ),
+
+                                    rs.getString(
+                                            "payment_method"
+                                    ),
+
+                                    rs.getString(
+                                            "payment_status"
+                                    )
                             }
                     );
                 }
 
+
             } catch (Exception ex) {
-     
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to load bills",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+
                 ex.printStackTrace();
             }
         });
