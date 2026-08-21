@@ -10,7 +10,7 @@ public class TestConnection {
         try {
 
             Connection con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/hospital_db",
+                    "jdbc:mysql://localhost:3306/hospital",
                     "root",
                     "Kalpana1979*"
             );

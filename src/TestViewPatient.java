@@ -6,6 +6,6 @@ public class TestViewPatient {
 
         PatientDAO dao = new PatientDAO();
 
-        dao.viewPatients();
+        dao.viewPatients(13);
     }
 }

@@ -6,7 +6,7 @@ public class TestDeletePatient {
 
         PatientDAO dao = new PatientDAO();
 
-        dao.deletePatient(14);
+        dao.deletePatient(13);
 
     }
 }

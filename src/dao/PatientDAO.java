@@ -112,6 +112,8 @@ public class PatientDAO {
     // DELETE PATIENT
    public void deletePatient(int id) {
 
+    System.out.println("Deleting ID = " + id);
+
     try {
 
         Connection con = DBConnection.getConnection();
