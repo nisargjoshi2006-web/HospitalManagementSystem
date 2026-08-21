@@ -4,10 +4,7 @@ import dao.PrescriptionDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-
 import java.awt.*;
-import java.awt.event.*;
-
 import java.sql.ResultSet;
 
 public class PrescriptionPanel extends JPanel {
@@ -28,115 +25,121 @@ public class PrescriptionPanel extends JPanel {
 
     public PrescriptionPanel() {
 
-        setLayout(new GridLayout(7,2,10,10));
+        setLayout(new BorderLayout());
 
-        add(new JLabel("Appointment ID"));
+        // FORM PANEL
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+
+        formPanel.add(new JLabel("Appointment ID"));
         txtAppointmentId = new JTextField();
-        add(txtAppointmentId);
+        formPanel.add(txtAppointmentId);
 
-        add(new JLabel("Diagnosis"));
+        formPanel.add(new JLabel("Diagnosis"));
         txtDiagnosis = new JTextField();
-        add(txtDiagnosis);
+        formPanel.add(txtDiagnosis);
 
-        add(new JLabel("Medicine"));
+        formPanel.add(new JLabel("Medicine"));
         txtMedicine = new JTextField();
-        add(txtMedicine);
+        formPanel.add(txtMedicine);
 
-        add(new JLabel("Next Visit Date (YYYY-MM-DD)"));
+        formPanel.add(new JLabel("Next Visit Date (YYYY-MM-DD)"));
         txtNextVisit = new JTextField();
-        add(txtNextVisit);
+        formPanel.add(txtNextVisit);
 
-        add(new JLabel("Remarks"));
+        formPanel.add(new JLabel("Remarks"));
         txtRemarks = new JTextField();
-        add(txtRemarks);
+        formPanel.add(txtRemarks);
 
         btnAdd = new JButton("Add Prescription");
-        add(btnAdd);
+        formPanel.add(btnAdd);
 
         btnView = new JButton("View Prescriptions");
-        add(btnView);
+        formPanel.add(btnView);
 
+        add(formPanel, BorderLayout.NORTH);
+
+        // TABLE
         model = new DefaultTableModel();
 
-        model.addColumn("ID");
-        model.addColumn("Appointment ID");
-        model.addColumn("Diagnosis");
-        model.addColumn("Medicine");
-        model.addColumn("Next Visit");
-        model.addColumn("Remarks");
+        model.setColumnIdentifiers(
+                new String[]{
+                        "ID",
+                        "Appointment ID",
+                        "Diagnosis",
+                        "Medicine",
+                        "Next Visit",
+                        "Remarks"
+                }
+        );
 
         table = new JTable(model);
+        table.setRowHeight(25);
 
-        JScrollPane scroll =
-                new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table);
 
-        add(scroll);
+        add(scrollPane, BorderLayout.CENTER);
 
-        btnAdd.addActionListener(new ActionListener() {
+        // ADD BUTTON
+        btnAdd.addActionListener(e -> {
 
-            public void actionPerformed(ActionEvent e) {
+            try {
 
-                try {
+                dao.addPrescription(
+                        Integer.parseInt(txtAppointmentId.getText()),
+                        txtDiagnosis.getText(),
+                        txtMedicine.getText(),
+                        txtNextVisit.getText(),
+                        txtRemarks.getText()
+                );
 
-                    dao.addPrescription(
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Prescription Added Successfully"
+                );
 
-                            Integer.parseInt(
-                                    txtAppointmentId.getText()),
+                txtAppointmentId.setText("");
+                txtDiagnosis.setText("");
+                txtMedicine.setText("");
+                txtNextVisit.setText("");
+                txtRemarks.setText("");
 
-                            txtDiagnosis.getText(),
+            } catch (Exception ex) {
 
-                            txtMedicine.getText(),
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Invalid Input"
+                );
 
-                            txtNextVisit.getText(),
-
-                            txtRemarks.getText()
-                    );
-
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Prescription Added Successfully"
-                    );
-
-                } catch (Exception ex) {
-
-                    ex.printStackTrace();
-                }
+                ex.printStackTrace();
             }
         });
 
-        btnView.addActionListener(new ActionListener() {
+        // VIEW BUTTON
+        btnView.addActionListener(e -> {
 
-            public void actionPerformed(ActionEvent e) {
+            try {
 
-                try {
+                model.setRowCount(0);
 
-                    model.setRowCount(0);
+                ResultSet rs = dao.getAllPrescriptions();
 
-                    ResultSet rs =
-                            dao.getAllPrescriptions();
+                while (rs.next()) {
 
-                    while(rs.next()) {
-
-                        model.addRow(new Object[]{
-
-                                rs.getInt("prescription_id"),
-
-                                rs.getInt("appointment_id"),
-
-                                rs.getString("diagnosis"),
-
-                                rs.getString("medicine"),
-
-                                rs.getDate("next_visit_date"),
-
-                                rs.getString("remarks")
-                        });
-                    }
-
-                } catch(Exception ex) {
-
-                    ex.printStackTrace();
+                    model.addRow(
+                            new Object[]{
+                                    rs.getInt("prescription_id"),
+                                    rs.getInt("appointment_id"),
+                                    rs.getString("diagnosis"),
+                                    rs.getString("medicine"),
+                                    rs.getDate("next_visit_date"),
+                                    rs.getString("remarks")
+                            }
+                    );
                 }
+
+            } catch (Exception ex) {
+
+                ex.printStackTrace();
             }
         });
     }

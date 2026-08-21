@@ -4,7 +4,6 @@ import dao.BillingDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-
 import java.awt.*;
 import java.sql.ResultSet;
 
@@ -27,38 +26,42 @@ public class BillingPanel extends JPanel {
 
         setLayout(new BorderLayout());
 
-        JPanel form = new JPanel();
-
-        form.setLayout(new GridLayout(4,2,10,10));
+        // FORM PANEL
+        JPanel form = new JPanel(new GridLayout(4, 2, 10, 10));
 
         form.add(new JLabel("Appointment ID"));
-
         txtAppointmentId = new JTextField();
         form.add(txtAppointmentId);
 
         form.add(new JLabel("Bill Date (YYYY-MM-DD)"));
-
         txtBillDate = new JTextField();
         form.add(txtBillDate);
 
         form.add(new JLabel("Payment Method"));
-
         txtPaymentMethod = new JTextField();
         form.add(txtPaymentMethod);
 
         form.add(new JLabel("Payment Status"));
-
         txtPaymentStatus = new JTextField();
         form.add(txtPaymentStatus);
 
+        // BUTTON PANEL
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+
         btnAdd = new JButton("Add Bill");
-        form.add(btnAdd);
-
         btnView = new JButton("View Bills");
-        form.add(btnView);
 
-        add(form, BorderLayout.NORTH);
+        buttonPanel.add(btnAdd);
+        buttonPanel.add(btnView);
 
+        // TOP PANEL
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(form, BorderLayout.CENTER);
+        topPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(topPanel, BorderLayout.NORTH);
+
+        // TABLE
         tableModel = new DefaultTableModel();
 
         tableModel.setColumnIdentifiers(
@@ -73,18 +76,17 @@ public class BillingPanel extends JPanel {
 
         table = new JTable(tableModel);
 
-        JScrollPane scroll =
-                new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table);
 
-        add(scroll, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
 
+        // ADD BILL
         btnAdd.addActionListener(e -> {
 
             try {
 
                 dao.addBill(
-                        Integer.parseInt(
-                                txtAppointmentId.getText()),
+                        Integer.parseInt(txtAppointmentId.getText()),
                         txtBillDate.getText(),
                         txtPaymentMethod.getText(),
                         txtPaymentStatus.getText()
@@ -100,7 +102,7 @@ public class BillingPanel extends JPanel {
                 txtPaymentMethod.setText("");
                 txtPaymentStatus.setText("");
 
-            } catch(Exception ex) {
+            } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
                         null,
@@ -111,36 +113,31 @@ public class BillingPanel extends JPanel {
             }
         });
 
+        // VIEW BILLS
         btnView.addActionListener(e -> {
 
             try {
 
                 tableModel.setRowCount(0);
 
-                ResultSet rs =
-                        dao.getAllBills();
+                ResultSet rs = dao.getAllBills();
 
-                while(rs.next()) {
+                while (rs.next()) {
 
                     tableModel.addRow(
                             new Object[]{
-
                                     rs.getInt("bill_id"),
-
                                     rs.getInt("appointment_id"),
-
                                     rs.getDouble("amount"),
-
                                     rs.getDate("bill_date"),
-
                                     rs.getString("payment_method"),
-
                                     rs.getString("payment_status")
-                            });
+                            }
+                    );
                 }
 
-            } catch(Exception ex) {
-
+            } catch (Exception ex) {
+     
                 ex.printStackTrace();
             }
         });
