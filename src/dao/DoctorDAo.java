@@ -1,5 +1,6 @@
 package dao;
-
+import java.util.ArrayList;
+import model.Doctor;
 import db.DBConnection;
 
 import java.sql.Connection;
@@ -131,4 +132,53 @@ public class DoctorDAO {
             e.printStackTrace();
         }
     }
+    public ArrayList<Doctor> getAllDoctors() {
+
+    ArrayList<Doctor> doctorList = new ArrayList<>();
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT * FROM Doctor";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+
+            Doctor d = new Doctor();
+
+            d.setDoctorId(
+                    rs.getInt("doctor_id"));
+
+            d.setDoctorName(
+                    rs.getString("doctor_name"));
+
+            d.setSpecializationId(
+                    rs.getInt("specialization_id"));
+
+            d.setQualification(
+                    rs.getString("qualification"));
+
+            d.setConsultationFee(
+                    rs.getDouble("consultation_fee"));
+
+            d.setContact(
+                    rs.getString("contact"));
+
+            doctorList.add(d);
+        }
+
+        con.close();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return doctorList;
+}
 }

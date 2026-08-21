@@ -124,4 +124,24 @@ public class PrescriptionDAO {
             e.printStackTrace();
         }
     }
+    public ResultSet getAllPrescriptions() {
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT * FROM Prescriptions";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        return pst.executeQuery();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return null;
+}
 }

@@ -1,5 +1,6 @@
 package dao;
-
+import java.util.ArrayList;
+import model.Appointment;
 import db.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -127,4 +128,58 @@ public class AppointmentDAO {
             e.printStackTrace();
         }
     }
+    public ArrayList<Appointment> getAllAppointments() {
+
+    ArrayList<Appointment> appointmentList =
+            new ArrayList<>();
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT * FROM Appointments";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+
+            Appointment a = new Appointment();
+
+            a.setAppointmentId(
+                    rs.getInt("appointment_id"));
+
+            a.setPatientId(
+                    rs.getInt("patient_id"));
+
+            a.setDoctorId(
+                    rs.getInt("doctor_id"));
+
+            a.setAppointmentDate(
+                    rs.getDate("appointment_date").toString());
+
+            a.setAppointmentTime(
+                    rs.getTime("appointment_time").toString());
+
+            a.setRoomNumber(
+                    rs.getString("room_number"));
+
+            a.setStatus(
+                    rs.getString("status"));
+
+            appointmentList.add(a);
+        }
+
+        con.close();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return appointmentList;
+}
 }

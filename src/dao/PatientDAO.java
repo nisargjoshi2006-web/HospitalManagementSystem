@@ -1,5 +1,6 @@
 package dao;
-
+import java.util.ArrayList;
+import model.Patient;
 import db.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -135,4 +136,41 @@ public class PatientDAO {
         e.printStackTrace();
     }
 }
+    public ArrayList<Patient> getAllPatients() {
+
+    ArrayList<Patient> patients = new ArrayList<>();
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT * FROM Patients";
+
+        PreparedStatement pst = con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+
+            Patient p = new Patient();
+
+            p.setPatientId(rs.getInt("patient_id"));
+            p.setPatientName(rs.getString("patient_name"));
+            p.setGender(rs.getString("gender"));
+            p.setAge(rs.getInt("age"));
+            p.setBloodGroup(rs.getString("blood_group"));
+            p.setContact(rs.getString("contact"));
+            p.setAddress(rs.getString("address"));
+
+            patients.add(p);
+        }
+
+        con.close();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return patients;
+}    
 }

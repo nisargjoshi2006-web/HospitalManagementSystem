@@ -151,4 +151,26 @@ public class BillingDAO {
             e.printStackTrace();
         }
     }
+    public ResultSet getAllBills() {
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT * FROM Billing";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        return pst.executeQuery();
+
+    }
+
+    catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return null;
+}
 }

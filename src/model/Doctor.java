@@ -5,20 +5,25 @@ public class Doctor {
     private int doctorId;
     private String doctorName;
     private int specializationId;
-    private int experience;
+    private String qualification;
+    private double consultationFee;
     private String contact;
 
-    public Doctor() {}
+    public Doctor() {
+
+    }
 
     public Doctor(
             String doctorName,
             int specializationId,
-            int experience,
+            String qualification,
+            double consultationFee,
             String contact) {
 
         this.doctorName = doctorName;
         this.specializationId = specializationId;
-        this.experience = experience;
+        this.qualification = qualification;
+        this.consultationFee = consultationFee;
         this.contact = contact;
     }
 
@@ -46,12 +51,20 @@ public class Doctor {
         this.specializationId = specializationId;
     }
 
-    public int getExperience() {
-        return experience;
+    public String getQualification() {
+        return qualification;
     }
 
-    public void setExperience(int experience) {
-        this.experience = experience;
+    public void setQualification(String qualification) {
+        this.qualification = qualification;
+    }
+
+    public double getConsultationFee() {
+        return consultationFee;
+    }
+
+    public void setConsultationFee(double consultationFee) {
+        this.consultationFee = consultationFee;
     }
 
     public String getContact() {

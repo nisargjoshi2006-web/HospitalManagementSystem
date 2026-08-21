@@ -122,4 +122,25 @@ public class FeedbackDAO {
             e.printStackTrace();
         }
     }
+    public ResultSet getAllFeedback() {
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT * FROM Feedback";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        return pst.executeQuery();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+
+    }
+
+    return null;
+}
 }
