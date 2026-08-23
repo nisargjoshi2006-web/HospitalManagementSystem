@@ -1,8 +1,6 @@
 package ui;
-import ui.PrescriptionPanel;
-import ui.BillingPanel;
-import javax.swing.*;
 
+import javax.swing.*;
 
 public class HospitalManagementUI extends JFrame {
 
@@ -16,16 +14,12 @@ public class HospitalManagementUI extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
 
         tabs.add("Patients", new PatientPanel());
-
-tabs.add("Doctors", new DoctorPanel());
-
-tabs.add("Appointments", new AppointmentPanel());
-
-tabs.add("Prescriptions", new PrescriptionPanel());
-
-tabs.add("Feedback", new FeedbackPanel());
-
-tabs.add("Billing", new BillingPanel());
+        tabs.add("Doctors", new DoctorPanel());
+        tabs.add("Doctor Schedule", new DoctorSchedulePanel());
+        tabs.add("Appointments", new AppointmentPanel());
+        tabs.add("Prescriptions", new PrescriptionPanel());
+        tabs.add("Feedback", new FeedbackPanel());
+        tabs.add("Billing", new BillingPanel());
 
         add(tabs);
 
