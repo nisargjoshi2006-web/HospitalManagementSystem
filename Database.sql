@@ -186,3 +186,5 @@ INSERT INTO Billing
 VALUES
 (11,900.00,'2026-09-01','Cash','Pending'),
 (12,1000.00,'2026-09-02','UPI','Pending');
+
+//MAIN CODE FOR THE DATABASE//
