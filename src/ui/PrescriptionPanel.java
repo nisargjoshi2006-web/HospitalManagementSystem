@@ -16,7 +16,9 @@ public class PrescriptionPanel extends JPanel {
     JTextField txtRemarks;
 
     JButton btnAdd;
-    JButton btnView;
+JButton btnView;
+JButton btnUpdate;
+JButton btnDelete;
 
     JTable table;
     DefaultTableModel model;
@@ -114,7 +116,7 @@ public class PrescriptionPanel extends JPanel {
 
         JLabel lblNextVisit =
                 new JLabel(
-                        "Next Visit Date (YYYY-MM-DD)"
+                        "Next Visit Date (DD-MM-YYYY)"
                 );
 
         lblNextVisit.setFont(labelFont);
@@ -149,7 +151,7 @@ public class PrescriptionPanel extends JPanel {
         // ================= BUTTON PANEL =================
 
         JPanel buttonPanel =
-                new JPanel(new GridLayout(1, 2, 10, 10));
+                new JPanel(new GridLayout(1, 5, 10, 10));
 
         buttonPanel.setBorder(
                 BorderFactory.createEmptyBorder(
@@ -172,11 +174,17 @@ public class PrescriptionPanel extends JPanel {
                 new JButton("View Prescriptions");
 
         btnView.setFont(buttonFont);
+        btnUpdate = new JButton("Update Prescription");
+btnUpdate.setFont(buttonFont);
+
+btnDelete = new JButton("Delete Prescription");
+btnDelete.setFont(buttonFont);
 
 
         buttonPanel.add(btnAdd);
-        buttonPanel.add(btnView);
-
+buttonPanel.add(btnView);
+buttonPanel.add(btnUpdate);
+buttonPanel.add(btnDelete);
 
         // ================= TOP PANEL =================
 
@@ -206,13 +214,13 @@ public class PrescriptionPanel extends JPanel {
 
         model.setColumnIdentifiers(
                 new String[]{
-                        "ID",
-                        "Appointment ID",
-                        "Diagnosis",
-                        "Medicine",
-                        "Next Visit",
-                        "Remarks"
-                }
+    "Prescription ID",
+    "Appointment ID",
+    "Diagnosis",
+    "Medicine",
+    "Next Visit",
+    "Remarks"
+}
         );
 
 
@@ -240,6 +248,35 @@ public class PrescriptionPanel extends JPanel {
                 scrollPane,
                 BorderLayout.CENTER
         );
+        table.getSelectionModel()
+        .addListSelectionListener(e -> {
+
+    int row = table.getSelectedRow();
+
+    if(row >= 0) {
+
+        txtAppointmentId.setText(
+                model.getValueAt(row,1).toString()
+        );
+
+        txtDiagnosis.setText(
+                model.getValueAt(row,2).toString()
+        );
+
+        txtMedicine.setText(
+                model.getValueAt(row,3).toString()
+        );
+
+        txtNextVisit.setText(
+                model.getValueAt(row,4).toString()
+        );
+
+        txtRemarks.setText(
+                model.getValueAt(row,5).toString()
+        );
+    }
+
+});
 
 
         // ================= ADD PRESCRIPTION =================
@@ -275,7 +312,20 @@ public class PrescriptionPanel extends JPanel {
                                 .getText()
                                 .trim();
 
+                java.time.LocalDate today =
+        java.time.LocalDate.now();
 
+java.time.LocalDate nextDate =
+        java.time.LocalDate.parse(nextVisit);
+
+if(nextDate.isBefore(today))
+{
+    JOptionPane.showMessageDialog(
+            this,
+            "Next Visit Date cannot be before today!"
+    );
+    return;
+}        
                 dao.addPrescription(
                         appointmentId,
                         diagnosis,
@@ -380,5 +430,89 @@ public class PrescriptionPanel extends JPanel {
                 ex.printStackTrace();
             }
         });
+        btnUpdate.addActionListener(e -> {
+
+    int row = table.getSelectedRow();
+
+    if(row == -1) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Select a row first"
+        );
+
+        return;
+    }
+
+    try {
+
+        int prescriptionId =
+                Integer.parseInt(
+                        model.getValueAt(row,0).toString()
+                );
+
+        int appointmentId =
+                Integer.parseInt(
+                        txtAppointmentId.getText().trim()
+                );
+
+        dao.updatePrescription(
+                prescriptionId,
+                appointmentId,
+                txtDiagnosis.getText().trim(),
+                txtMedicine.getText().trim(),
+                txtNextVisit.getText().trim(),
+                txtRemarks.getText().trim()
+        );
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Prescription Updated"
+        );
+
+    } catch(Exception ex) {
+
+        ex.printStackTrace();
+
+    }
+
+});
+btnDelete.addActionListener(e -> {
+
+    int row = table.getSelectedRow();
+
+    if(row == -1) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Select a row first"
+        );
+
+        return;
+    }
+
+    try {
+
+        int prescriptionId =
+                Integer.parseInt(
+                        model.getValueAt(row,0).toString()
+                );
+
+        dao.deletePrescription(
+                prescriptionId
+        );
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Prescription Deleted"
+        );
+
+    } catch(Exception ex) {
+
+        ex.printStackTrace();
+
+    }
+
+});
     }
 }

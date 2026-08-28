@@ -16,7 +16,8 @@ public class BillingPanel extends JPanel {
     JTextField txtPaymentStatus;
 
     JButton btnAdd;
-    JButton btnView;
+JButton btnView;
+JButton btnReceipt;
 
     JTable table;
     DefaultTableModel tableModel;
@@ -83,7 +84,7 @@ public class BillingPanel extends JPanel {
 
         JLabel lblBillDate =
                 new JLabel(
-                        "Bill Date (YYYY-MM-DD)"
+                        "Bill Date (DD-MM-YYYY)"
                 );
 
         lblBillDate.setFont(labelFont);
@@ -136,7 +137,7 @@ public class BillingPanel extends JPanel {
 
         JPanel buttonPanel =
                 new JPanel(
-                        new GridLayout(1, 2, 10, 10)
+                        new GridLayout(1, 3, 10, 10)
                 );
 
         buttonPanel.setBorder(
@@ -160,10 +161,12 @@ public class BillingPanel extends JPanel {
                 new JButton("View Bills");
 
         btnView.setFont(buttonFont);
-
+        btnReceipt = new JButton("Generate Receipt");
+btnReceipt.setFont(buttonFont);
 
         buttonPanel.add(btnAdd);
-        buttonPanel.add(btnView);
+buttonPanel.add(btnView);
+buttonPanel.add(btnReceipt);
 
 
         // ================= TOP PANEL =================
@@ -251,6 +254,15 @@ public class BillingPanel extends JPanel {
                         txtPaymentStatus
                                 .getText()
                                 .trim();
+                                if (!paymentStatus.equalsIgnoreCase("Paid")
+        && !paymentStatus.equalsIgnoreCase("Pending")) {
+
+    JOptionPane.showMessageDialog(
+            this,
+            "Payment Status must be Paid or Pending"
+    );
+    return;
+}
 
 
                 dao.addBill(
@@ -354,5 +366,70 @@ public class BillingPanel extends JPanel {
                 ex.printStackTrace();
             }
         });
+        table.getSelectionModel()
+     .addListSelectionListener(e -> {
+
+    int row = table.getSelectedRow();
+
+    if(row >= 0) {
+
+        txtAppointmentId.setText(
+                tableModel.getValueAt(row,1).toString()
+        );
+
+        
+
+        txtBillDate.setText(
+                tableModel.getValueAt(row,3).toString()
+        );
+
+        txtPaymentMethod.setText(
+                tableModel.getValueAt(row,4).toString()
+        );
+
+        txtPaymentStatus.setText(
+                tableModel.getValueAt(row,5).toString()
+        );
+    }
+});
+btnReceipt.addActionListener(e -> {
+
+    int row = table.getSelectedRow();
+
+    if(row < 0) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Select a bill first"
+        );
+        return;
+    }
+
+    String receipt =
+            "=========================\n" +
+            "      HOSPITAL RECEIPT\n" +
+            "=========================\n\n" +
+            "Bill ID: " +
+            tableModel.getValueAt(row,0) + "\n" +
+            "Appointment ID: " +
+            tableModel.getValueAt(row,1) + "\n" +
+            "Amount: " +
+            tableModel.getValueAt(row,2) + "\n" +
+            "Bill Date: " +
+            tableModel.getValueAt(row,3) + "\n" +
+            "Payment Method: " +
+            tableModel.getValueAt(row,4) + "\n" +
+            "Payment Status: " +
+            tableModel.getValueAt(row,5) + "\n\n" +
+            "Thank You!\n" +
+            "=========================";
+
+    JOptionPane.showMessageDialog(
+            this,
+            receipt,
+            "Receipt",
+            JOptionPane.INFORMATION_MESSAGE
+    );
+});
     }
 }

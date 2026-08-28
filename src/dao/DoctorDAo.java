@@ -1,17 +1,16 @@
 package dao;
-import java.util.ArrayList;
-import model.Doctor;
-import src.model.Patient;
-import db.DBConnection;
 
+import java.util.ArrayList;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import db.DBConnection;
+import model.Doctor;
+
 public class DoctorDAO {
 
-    // INSERT
-
+    // ADD DOCTOR
     public void addDoctor(String name,
                           int specializationId,
                           String qualification,
@@ -19,22 +18,20 @@ public class DoctorDAO {
                           String contact) {
 
         try {
-
             Connection con = DBConnection.getConnection();
 
-            String query =
+            String sql =
                 "INSERT INTO Doctor(doctor_name,specialization_id,qualification,consultation_fee,contact) VALUES(?,?,?,?,?)";
 
-            PreparedStatement pst =
-                con.prepareStatement(query);
+            PreparedStatement ps = con.prepareStatement(sql);
 
-            pst.setString(1, name);
-            pst.setInt(2, specializationId);
-            pst.setString(3, qualification);
-            pst.setDouble(4, fee);
-            pst.setString(5, contact);
+            ps.setString(1, name);
+            ps.setInt(2, specializationId);
+            ps.setString(3, qualification);
+            ps.setDouble(4, fee);
+            ps.setString(5, contact);
 
-            int rows = pst.executeUpdate();
+            int rows = ps.executeUpdate();
 
             System.out.println("Rows Inserted = " + rows);
 
@@ -45,32 +42,85 @@ public class DoctorDAO {
         }
     }
 
-    // VIEW
+    // VIEW ALL DOCTORS
+    public ArrayList<Doctor> getAllDoctors() {
 
-    public void viewDoctors() {
+        ArrayList<Doctor> doctorList = new ArrayList<>();
 
         try {
 
             Connection con = DBConnection.getConnection();
 
-            String query = "SELECT * FROM Doctor";
+            String sql = "SELECT * FROM Doctor";
 
-            PreparedStatement pst =
-                con.prepareStatement(query);
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
 
-            ResultSet rs = pst.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             while(rs.next()) {
 
-                System.out.println(
-                    rs.getInt("doctor_id") + " | " +
-                    rs.getString("doctor_name") + " | " +
-                    rs.getInt("specialization_id") + " | " +
-                    rs.getString("qualification") + " | " +
-                    rs.getDouble("consultation_fee") + " | " +
-                    rs.getString("contact")
-                );
+                Doctor d = new Doctor();
+
+                d.setDoctorId(
+                        rs.getInt("doctor_id"));
+
+                d.setDoctorName(
+                        rs.getString("doctor_name"));
+
+                d.setSpecializationId(
+                        rs.getInt("specialization_id"));
+
+                d.setQualification(
+                        rs.getString("qualification"));
+
+                d.setConsultationFee(
+                        rs.getDouble("consultation_fee"));
+
+                d.setContact(
+                        rs.getString("contact"));
+
+                doctorList.add(d);
             }
+
+            con.close();
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return doctorList;
+    }
+
+    // UPDATE DOCTOR
+    public void updateDoctor(int id,
+                             String name,
+                             int specializationId,
+                             String qualification,
+                             double fee,
+                             String contact) {
+
+        try {
+
+            Connection con =
+                    DBConnection.getConnection();
+
+            String sql =
+                    "UPDATE Doctor SET doctor_name=?, specialization_id=?, qualification=?, consultation_fee=?, contact=? WHERE doctor_id=?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
+
+            ps.setString(1, name);
+            ps.setInt(2, specializationId);
+            ps.setString(3, qualification);
+            ps.setDouble(4, fee);
+            ps.setString(5, contact);
+            ps.setInt(6, id);
+
+            int rows = ps.executeUpdate();
+
+            System.out.println("Rows Updated = " + rows);
 
             con.close();
 
@@ -79,117 +129,129 @@ public class DoctorDAO {
         }
     }
 
-    // UPDATE
-
-   public void updateDoctor(
-    int id,
-    String name,
-    int specializationId,
-    String qualification,
-    double fee,
-    String contact)
-{
-    try{
-
-        Connection con =
-            DBConnection.getConnection();
-
-        String sql =
-        "UPDATE doctor SET doctor_name=?, specialization_id=?, qualification=?, consultation_fee=?, contact=? WHERE doctor_id=?";
-
-        PreparedStatement ps =
-            con.prepareStatement(sql);
-
-        ps.setString(1,name);
-        ps.setInt(2,specializationId);
-        ps.setString(3,qualification);
-        ps.setDouble(4,fee);
-        ps.setString(5,contact);
-        ps.setInt(6,id);
-
-        ps.executeUpdate();
-
-        con.close();
-
-    }catch(Exception e){
-        e.printStackTrace();
-    }
-}
-
-    // DELETE
-
-    public void deleteDoctor(int id)
-{
-    try{
-
-        Connection con =
-            DBConnection.getConnection();
-
-        String sql =
-            "DELETE FROM doctor WHERE doctor_id=?";
-
-        PreparedStatement ps =
-            con.prepareStatement(sql);
-
-        ps.setInt(1,id);
-
-        ps.executeUpdate();
-
-        con.close();
-
-    }catch(Exception e){
-        e.printStackTrace();
-    }
-}
-public Patient searchPatient(int id) {
-
-    Patient p = null;
+    // DELETE DOCTOR
+    public void deleteDoctor(int id) {
 
     try {
 
         Connection con = DBConnection.getConnection();
 
-        String query =
-                "SELECT * FROM Patients WHERE patient_id=?";
+        // Delete prescriptions first
+        String sql0 =
+            "DELETE FROM prescriptions WHERE appointment_id IN " +
+            "(SELECT appointment_id FROM appointments WHERE doctor_id=?)";
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+        PreparedStatement ps0 =
+            con.prepareStatement(sql0);
 
-        pst.setInt(1, id);
+        ps0.setInt(1, id);
 
-        ResultSet rs = pst.executeQuery();
+        ps0.executeUpdate();
 
-        if(rs.next()) {
+        // Delete billing records
+        String sql1 =
+            "DELETE FROM billing WHERE appointment_id IN " +
+            "(SELECT appointment_id FROM appointments WHERE doctor_id=?)";
 
-            p = new Patient();
+        PreparedStatement ps1 =
+            con.prepareStatement(sql1);
 
-            p.setPatientId(
-                    rs.getInt("patient_id"));
+        ps1.setInt(1, id);
 
-            p.setPatientName(
-                    rs.getString("patient_name"));
+        ps1.executeUpdate();
 
-            p.setGender(
-                    rs.getString("gender"));
+        // Delete appointments
+        String sql2 =
+            "DELETE FROM appointments WHERE doctor_id=?";
 
-            p.setAge(
-                    rs.getInt("age"));
+        PreparedStatement ps2 =
+            con.prepareStatement(sql2);
 
-            p.setBloodGroup(
-                    rs.getString("blood_group"));
+        ps2.setInt(1, id);
 
-            p.setContact(
-                    rs.getString("contact"));
+        ps2.executeUpdate();
 
-            p.setAddress(
-                    rs.getString("address"));
-        }
+        // Delete doctor schedule
+        String sql3 =
+            "DELETE FROM doctor_schedule WHERE doctor_id=?";
+
+        PreparedStatement ps3 =
+            con.prepareStatement(sql3);
+
+        ps3.setInt(1, id);
+
+        ps3.executeUpdate();
+
+        // Delete doctor
+        String sql4 =
+            "DELETE FROM Doctor WHERE doctor_id=?";
+
+        PreparedStatement ps4 =
+            con.prepareStatement(sql4);
+
+        ps4.setInt(1, id);
+
+        int rows = ps4.executeUpdate();
+
+        System.out.println("Rows Deleted = " + rows);
 
         con.close();
 
     } catch(Exception e) {
         e.printStackTrace();
     }
-    return doctorList;
 }
+
+    // SEARCH DOCTOR
+    public Doctor searchDoctor(int id) {
+
+        Doctor d = null;
+
+        try {
+
+            Connection con =
+                    DBConnection.getConnection();
+
+            String sql =
+                    "SELECT * FROM Doctor WHERE doctor_id=?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
+
+            ps.setInt(1, id);
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            if(rs.next()) {
+
+                d = new Doctor();
+
+                d.setDoctorId(
+                        rs.getInt("doctor_id"));
+
+                d.setDoctorName(
+                        rs.getString("doctor_name"));
+
+                d.setSpecializationId(
+                        rs.getInt("specialization_id"));
+
+                d.setQualification(
+                        rs.getString("qualification"));
+
+                d.setConsultationFee(
+                        rs.getDouble("consultation_fee"));
+
+                d.setContact(
+                        rs.getString("contact"));
+            }
+
+            con.close();
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return d;
+    }
 }

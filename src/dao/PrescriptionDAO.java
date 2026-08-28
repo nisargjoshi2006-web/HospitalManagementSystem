@@ -155,4 +155,25 @@ public class PrescriptionDAO {
 
         return null;
     }
+    // SEARCH
+public ResultSet searchPrescription(int prescriptionId) {
+    try {
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT * FROM Prescriptions WHERE prescription_id=?";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        pst.setInt(1, prescriptionId);
+
+        return pst.executeQuery();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return null;
+}
 }

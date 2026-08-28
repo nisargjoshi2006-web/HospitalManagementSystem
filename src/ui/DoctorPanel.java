@@ -8,9 +8,10 @@ import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
 import java.util.ArrayList;
-int selectedDoctorId = -1;
 
 public class DoctorPanel extends JPanel {
+
+    int selectedDoctorId = -1;
 
     JTextField txtName;
     JTextField txtSpecializationId;
@@ -167,26 +168,24 @@ public class DoctorPanel extends JPanel {
         );
 
 
-        // ================= ADD BUTTON =================
+        // ================= BUTTONS =================
 
         btnAdd =
                 new JButton("Add Doctor");
 
         btnAdd.setFont(buttonFont);
 
-
-        // ================= VIEW BUTTON =================
-
         btnView =
                 new JButton("View Doctors");
-                btnUpdate = new JButton("Update Doctor");
-btnDelete = new JButton("Delete Doctor");
-btnSearch = new JButton("Search Doctor");
+
+        btnUpdate = new JButton("Update Doctor");
+        btnDelete = new JButton("Delete Doctor");
+        btnSearch = new JButton("Search Doctor");
 
         btnView.setFont(buttonFont);
         btnUpdate.setFont(buttonFont);
-btnDelete.setFont(buttonFont);
-btnSearch.setFont(buttonFont);
+        btnDelete.setFont(buttonFont);
+        btnSearch.setFont(buttonFont);
 
 
         buttonPanel.add(btnAdd);
@@ -194,9 +193,6 @@ btnSearch.setFont(buttonFont);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
         buttonPanel.add(btnSearch);
-        
-        
-        
 
 
         // ================= TOP PANEL =================
@@ -253,40 +249,41 @@ btnSearch.setFont(buttonFont);
                 scrollPane,
                 BorderLayout.CENTER
         );
+
         table.getSelectionModel()
-.addListSelectionListener(e -> {
+                .addListSelectionListener(e -> {
 
-    if(!e.getValueIsAdjusting()
-       && table.getSelectedRow() != -1){
+                    if (!e.getValueIsAdjusting()
+                            && table.getSelectedRow() != -1) {
 
-        int row = table.getSelectedRow();
+                        int row = table.getSelectedRow();
 
-        selectedDoctorId =
-            Integer.parseInt(
-                tableModel.getValueAt(row,0)
-                .toString());
+                        selectedDoctorId =
+                                Integer.parseInt(
+                                        tableModel.getValueAt(row, 0)
+                                                .toString());
 
-        txtName.setText(
-            tableModel.getValueAt(row,1)
-            .toString());
+                        txtName.setText(
+                                tableModel.getValueAt(row, 1)
+                                        .toString());
 
-        txtSpecialization.setText(
-            tableModel.getValueAt(row,2)
-            .toString());
+                        txtSpecializationId.setText(
+                                tableModel.getValueAt(row, 2)
+                                        .toString());
 
-        txtQualification.setText(
-            tableModel.getValueAt(row,3)
-            .toString());
+                        txtQualification.setText(
+                                tableModel.getValueAt(row, 3)
+                                        .toString());
 
-        txtFee.setText(
-            tableModel.getValueAt(row,4)
-            .toString());
+                        txtFee.setText(
+                                tableModel.getValueAt(row, 4)
+                                        .toString());
 
-        txtContact.setText(
-            tableModel.getValueAt(row,5)
-            .toString());
-    }
-});
+                        txtContact.setText(
+                                tableModel.getValueAt(row, 5)
+                                        .toString());
+                    }
+                });
 
 
         // =====================================================
@@ -566,68 +563,132 @@ btnSearch.setFont(buttonFont);
                 ex.printStackTrace();
             }
         });
+
+
+        // =====================================================
+        // ================= UPDATE DOCTOR =====================
+        // =====================================================
+
+        btnUpdate.addActionListener(e -> {
+
+            if (selectedDoctorId == -1) {
+
+                showValidationError(
+                        "Please select a doctor from the table first."
+                );
+
+                return;
+            }
+
+            try {
+
+                dao.updateDoctor(
+                        selectedDoctorId,
+                        txtName.getText().trim(),
+                        Integer.parseInt(txtSpecializationId.getText().trim()),
+                        txtQualification.getText().trim(),
+                        Double.parseDouble(txtFee.getText().trim()),
+                        txtContact.getText().trim());
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Doctor Updated Successfully");
+
+                btnView.doClick();
+
+            } catch (NumberFormatException ex) {
+
+                showValidationError(
+                        "Specialization ID and Fee must be valid numbers."
+                );
+            }
+        });
+
+
+        // =====================================================
+        // ================= DELETE DOCTOR =====================
+        // =====================================================
+
+        btnDelete.addActionListener(e -> {
+
+            if (selectedDoctorId == -1) {
+
+                showValidationError(
+                        "Please select a doctor from the table first."
+                );
+
+                return;
+            }
+
+            dao.deleteDoctor(selectedDoctorId);
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Doctor Deleted Successfully");
+
+            selectedDoctorId = -1;
+
+            btnView.doClick();
+        });
+
+
+        // =====================================================
+        // ================= SEARCH DOCTOR =====================
+        // =====================================================
+
+        btnSearch.addActionListener(e -> {
+
+            String idStr =
+                    JOptionPane.showInputDialog(
+                            this,
+                            "Enter Doctor ID");
+
+            if (idStr == null || idStr.trim().isEmpty())
+                return;
+
+            try {
+
+                int id = Integer.parseInt(idStr.trim());
+
+                Doctor d = dao.searchDoctor(id);
+
+                if (d != null) {
+
+                    selectedDoctorId = d.getDoctorId();
+
+                    txtName.setText(
+                            d.getDoctorName());
+
+                    txtSpecializationId.setText(
+                            String.valueOf(
+                                    d.getSpecializationId()));
+
+                    txtQualification.setText(
+                            d.getQualification());
+
+                    txtFee.setText(
+                            String.valueOf(
+                                    d.getConsultationFee()));
+
+                    txtContact.setText(
+                            d.getContact());
+
+                } else {
+
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "No doctor found with that ID.",
+                            "Not Found",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+
+            } catch (NumberFormatException ex) {
+
+                showValidationError("Doctor ID must be a valid number.");
+            }
+        });
     }
-btnUpdate.addActionListener(e -> {
 
-    dao.updateDoctor(
-        selectedDoctorId,
-        txtName.getText(),
-        Integer.parseInt(txtSpecialization.getText()),
-        txtQualification.getText(),
-        Double.parseDouble(txtFee.getText()),
-        txtContact.getText());
-
-    JOptionPane.showMessageDialog(
-        this,
-        "Doctor Updated Successfully");
-
-    btnView.doClick();
-});
-btnDelete.addActionListener(e -> {
-
-    dao.deleteDoctor(
-        selectedDoctorId);
-
-    JOptionPane.showMessageDialog(
-        this,
-        "Doctor Deleted Successfully");
-
-    btnView.doClick();
-});
-btnSearch.addActionListener(e -> {
-
-    String idStr =
-        JOptionPane.showInputDialog(
-            this,
-            "Enter Doctor ID");
-
-    if(idStr == null)
-        return;
-
-    Doctor d =
-        dao.searchDoctor(
-            Integer.parseInt(idStr));
-
-    if(d != null){
-
-        txtName.setText(
-            d.getDoctorName());
-
-        txtSpecialization.setText(
-            String.valueOf(
-                d.getSpecializationId()));
-
-        txtQualification.setText(
-            d.getQualification());
-
-        txtFee.setText(
-            String.valueOf(
-                d.getConsultationFee()));
-
-        txtContact.setText(
-            d.getContact());
-    }
-});
 
     // =========================================================
     // ================= VALIDATION MESSAGE ===================

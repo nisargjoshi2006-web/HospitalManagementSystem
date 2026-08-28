@@ -10,303 +10,292 @@ import java.util.ArrayList;
 
 public class DoctorSchedulePanel extends JPanel {
 
-    JTextField txtDoctorId;
+    private JTextField txtScheduleId;
+    private JTextField txtDoctorId;
+    private JComboBox<String> dayBox;
+    private JTextField txtStartTime;
+    private JTextField txtEndTime;
 
-    JComboBox<String> dayBox;
+    private JButton btnAdd;
+    private JButton btnView;
+    private JButton btnSearch;
+    private JButton btnUpdate;
+    private JButton btnDelete;
 
-    JTextField txtStartTime;
-    JTextField txtEndTime;
+    private JTable table;
+    private DefaultTableModel tableModel;
 
-    JButton btnAdd;
-    JButton btnView;
-
-    JTable table;
-    DefaultTableModel tableModel;
-
-    DoctorScheduleDAO dao =
-            new DoctorScheduleDAO();
+    private DoctorScheduleDAO dao = new DoctorScheduleDAO();
 
     public DoctorSchedulePanel() {
 
-        // ================= MAIN PANEL =================
-
         setLayout(new BorderLayout(10,10));
 
-        // ================= FONTS =================
+        JPanel formPanel = new JPanel(new GridLayout(5,2,10,10));
 
-        Font labelFont =
-                new Font("Arial", Font.BOLD, 16);
+        formPanel.add(new JLabel("Schedule ID"));
+        txtScheduleId = new JTextField();
+        formPanel.add(txtScheduleId);
 
-        Font fieldFont =
-                new Font("Arial", Font.PLAIN, 16);
-
-        Font buttonFont =
-                new Font("Arial", Font.BOLD, 16);
-
-        Font tableFont =
-                new Font("Arial", Font.PLAIN, 15);
-
-        Font tableHeaderFont =
-                new Font("Arial", Font.BOLD, 15);
-
-        // ================= FORM PANEL =================
-
-        JPanel formPanel =
-                new JPanel(
-                        new GridLayout(4,2,10,10)
-                );
-
-        formPanel.setBorder(
-                BorderFactory.createEmptyBorder(
-                        10,10,5,10
-                )
-        );
-
-        // ================= DOCTOR ID =================
-
-        JLabel lblDoctor =
-                new JLabel("Doctor ID");
-
-        lblDoctor.setFont(labelFont);
-
-        formPanel.add(lblDoctor);
-
-        txtDoctorId =
-                new JTextField();
-
-        txtDoctorId.setFont(fieldFont);
-
+        formPanel.add(new JLabel("Doctor ID"));
+        txtDoctorId = new JTextField();
         formPanel.add(txtDoctorId);
 
-        // ================= DAY =================
+        formPanel.add(new JLabel("Day Of Week"));
 
-        JLabel lblDay =
-                new JLabel("Day Of Week");
-
-        lblDay.setFont(labelFont);
-
-        formPanel.add(lblDay);
-
-        dayBox =
-                new JComboBox<>(
-                        new String[]{
-                                "Monday",
-                                "Tuesday",
-                                "Wednesday",
-                                "Thursday",
-                                "Friday",
-                                "Saturday",
-                                "Sunday"
-                        }
-                );
-
-        dayBox.setFont(fieldFont);
+        dayBox = new JComboBox<>(new String[]{
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+        });
 
         formPanel.add(dayBox);
 
-        // ================= START TIME =================
-
-        JLabel lblStart =
-                new JLabel("Start Time");
-
-        lblStart.setFont(labelFont);
-
-        formPanel.add(lblStart);
-
-        txtStartTime =
-                new JTextField();
-
-        txtStartTime.setFont(fieldFont);
-
+        formPanel.add(new JLabel("Start Time"));
+        txtStartTime = new JTextField();
         formPanel.add(txtStartTime);
 
-        // ================= END TIME =================
-
-        JLabel lblEnd =
-                new JLabel("End Time");
-
-        lblEnd.setFont(labelFont);
-
-        formPanel.add(lblEnd);
-
-        txtEndTime =
-                new JTextField();
-
-        txtEndTime.setFont(fieldFont);
-
+        formPanel.add(new JLabel("End Time"));
+        txtEndTime = new JTextField();
         formPanel.add(txtEndTime);
 
-        // ================= BUTTON PANEL =================
+        JPanel buttonPanel = new JPanel(new GridLayout(1,5,10,10));
 
-        JPanel buttonPanel =
-                new JPanel(
-                        new GridLayout(1,2,10,10)
-                );
-
-        buttonPanel.setBorder(
-                BorderFactory.createEmptyBorder(
-                        5,10,10,10
-                )
-        );
-
-        btnAdd =
-                new JButton("Add Schedule");
-
-        btnAdd.setFont(buttonFont);
-
-        btnView =
-                new JButton("View Schedules");
-
-        btnView.setFont(buttonFont);
+        btnAdd = new JButton("Add");
+        btnView = new JButton("View");
+        btnSearch = new JButton("Search");
+        btnUpdate = new JButton("Update");
+        btnDelete = new JButton("Delete");
 
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnView);
+        buttonPanel.add(btnSearch);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
 
-        // ================= TOP PANEL =================
+        JPanel topPanel = new JPanel(new BorderLayout());
 
-        JPanel topPanel =
-                new JPanel(
-                        new BorderLayout()
-                );
+        topPanel.add(formPanel, BorderLayout.CENTER);
+        topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        topPanel.add(
-                formPanel,
-                BorderLayout.CENTER
-        );
+        add(topPanel, BorderLayout.NORTH);
 
-        topPanel.add(
-                buttonPanel,
-                BorderLayout.SOUTH
-        );
+        tableModel = new DefaultTableModel();
 
-        add(
-                topPanel,
-                BorderLayout.NORTH
-        );
+        tableModel.setColumnIdentifiers(new String[]{
+                "Schedule ID",
+                "Doctor ID",
+                "Day",
+                "Start Time",
+                "End Time"
+        });
 
-        // ================= TABLE =================
+        table = new JTable(tableModel);
 
-        tableModel =
-                new DefaultTableModel();
+        JScrollPane sp = new JScrollPane(table);
 
-        tableModel.setColumnIdentifiers(
-                new String[]{
-                        "Schedule ID",
-                        "Doctor ID",
-                        "Day",
-                        "Start Time",
-                        "End Time"
-                }
-        );
+        add(sp, BorderLayout.CENTER);
 
-        table =
-                new JTable(tableModel);
-
-        table.setFont(tableFont);
-
-        table.setRowHeight(25);
-
-        table.getTableHeader()
-                .setFont(tableHeaderFont);
-
-        JScrollPane scrollPane =
-                new JScrollPane(table);
-
-        add(
-                scrollPane,
-                BorderLayout.CENTER
-        );
-
-        // ================= ADD SCHEDULE =================
+        // ADD
 
         btnAdd.addActionListener(e -> {
 
             try {
 
                 int doctorId =
-                        Integer.parseInt(
-                                txtDoctorId.getText().trim()
-                        );
-
-                String day =
-                        dayBox.getSelectedItem().toString();
-
-                String startTime =
-                        txtStartTime.getText().trim();
-
-                String endTime =
-                        txtEndTime.getText().trim();
+                        Integer.parseInt(txtDoctorId.getText());
 
                 dao.addSchedule(
                         doctorId,
-                        day,
-                        startTime,
-                        endTime
+                        dayBox.getSelectedItem().toString(),
+                        txtStartTime.getText(),
+                        txtEndTime.getText()
                 );
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Schedule Added Successfully",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
+                        "Schedule Added Successfully"
                 );
 
+                loadTable();
+
+            } catch(Exception ex) {
+
+                ex.printStackTrace();
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error Adding Schedule"
+                );
+            }
+        });
+
+        // VIEW
+
+        btnView.addActionListener(e -> loadTable());
+
+        // SEARCH
+
+        btnSearch.addActionListener(e -> {
+
+            try {
+
+                int id =
+                        Integer.parseInt(
+                                txtScheduleId.getText()
+                        );
+
+                DoctorSchedule ds =
+                        dao.searchSchedule(id);
+
+                if(ds != null) {
+
+                    txtDoctorId.setText(
+                            String.valueOf(
+                                    ds.getDoctorId()
+                            ));
+
+                    dayBox.setSelectedItem(
+                            ds.getDayOfWeek()
+                    );
+
+                    txtStartTime.setText(
+                            ds.getStartTime()
+                    );
+
+                    txtEndTime.setText(
+                            ds.getEndTime()
+                    );
+
+                } else {
+
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Schedule Not Found"
+                    );
+                }
+
+            } catch(Exception ex) {
+
+                ex.printStackTrace();
+            }
+        });
+
+        // UPDATE
+
+        btnUpdate.addActionListener(e -> {
+
+            try {
+
+                int scheduleId =
+                        Integer.parseInt(
+                                txtScheduleId.getText()
+                        );
+
+                int doctorId =
+                        Integer.parseInt(
+                                txtDoctorId.getText()
+                        );
+
+                dao.updateSchedule(
+                        scheduleId,
+                        doctorId,
+                        dayBox.getSelectedItem().toString(),
+                        txtStartTime.getText(),
+                        txtEndTime.getText()
+                );
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Schedule Updated Successfully"
+                );
+
+                loadTable();
+
+            } catch(Exception ex) {
+
+                ex.printStackTrace();
+            }
+        });
+
+        // DELETE
+
+        btnDelete.addActionListener(e -> {
+
+            try {
+
+                int scheduleId =
+                        Integer.parseInt(
+                                txtScheduleId.getText()
+                        );
+
+                dao.deleteSchedule(scheduleId);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Schedule Deleted Successfully"
+                );
+
+                txtScheduleId.setText("");
                 txtDoctorId.setText("");
                 txtStartTime.setText("");
                 txtEndTime.setText("");
 
-            }
-            catch(Exception ex) {
+                loadTable();
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Invalid Input",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+            } catch(Exception ex) {
 
                 ex.printStackTrace();
             }
-
         });
 
-        // ================= VIEW SCHEDULES =================
+        // TABLE CLICK
 
-        btnView.addActionListener(e -> {
+        table.getSelectionModel().addListSelectionListener(e -> {
 
-            try {
+            if(!e.getValueIsAdjusting()
+                    && table.getSelectedRow() != -1) {
 
-                tableModel.setRowCount(0);
+                int row = table.getSelectedRow();
 
-                ArrayList<DoctorSchedule> list =
-                        dao.getAllSchedules();
+                txtScheduleId.setText(
+                        tableModel.getValueAt(row,0).toString());
 
-                for(DoctorSchedule ds : list) {
+                txtDoctorId.setText(
+                        tableModel.getValueAt(row,1).toString());
 
-                    tableModel.addRow(
-                            new Object[]{
-                                    ds.getScheduleId(),
-                                    ds.getDoctorId(),
-                                    ds.getDayOfWeek(),
-                                    ds.getStartTime(),
-                                    ds.getEndTime()
-                            }
-                    );
-                }
+                dayBox.setSelectedItem(
+                        tableModel.getValueAt(row,2).toString());
 
+                txtStartTime.setText(
+                        tableModel.getValueAt(row,3).toString());
+
+                txtEndTime.setText(
+                        tableModel.getValueAt(row,4).toString());
             }
-            catch(Exception ex) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Unable to Load Schedules",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
-
-                ex.printStackTrace();
-            }
-
         });
+    }
+
+    private void loadTable() {
+
+        tableModel.setRowCount(0);
+
+        ArrayList<DoctorSchedule> list =
+                dao.getAllSchedules();
+
+        for(DoctorSchedule ds : list) {
+
+            tableModel.addRow(new Object[]{
+                    ds.getScheduleId(),
+                    ds.getDoctorId(),
+                    ds.getDayOfWeek(),
+                    ds.getStartTime(),
+                    ds.getEndTime()
+            });
+        }
     }
 }

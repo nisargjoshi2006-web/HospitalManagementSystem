@@ -11,7 +11,8 @@ import java.util.ArrayList;
 
 public class AppointmentPanel extends JPanel {
 
-    JTextField txtPatientId;
+    JTextField txtAppointmentId;
+JTextField txtPatientId;
     JTextField txtDoctorId;
     JTextField txtDate;
     JTextField txtTime;
@@ -19,7 +20,10 @@ public class AppointmentPanel extends JPanel {
     JTextField txtStatus;
 
     JButton btnAdd;
-    JButton btnView;
+JButton btnView;
+JButton btnSearch;
+JButton btnUpdate;
+JButton btnDelete;
 
     JTable table;
     DefaultTableModel tableModel;
@@ -55,7 +59,7 @@ public class AppointmentPanel extends JPanel {
 
         JPanel formPanel =
                 new JPanel(
-                        new GridLayout(6, 2, 10, 10)
+                        new GridLayout(7, 2, 10, 10)
                 );
 
         formPanel.setBorder(
@@ -63,6 +67,19 @@ public class AppointmentPanel extends JPanel {
                         10, 10, 5, 10
                 )
         );
+        JLabel lblAppointmentId =
+        new JLabel("Appointment ID");
+
+lblAppointmentId.setFont(labelFont);
+
+formPanel.add(lblAppointmentId);
+
+txtAppointmentId =
+        new JTextField();
+
+txtAppointmentId.setFont(fieldFont);
+
+formPanel.add(txtAppointmentId);
 
 
         // ================= PATIENT ID =================
@@ -175,7 +192,7 @@ public class AppointmentPanel extends JPanel {
 
         JPanel buttonPanel =
                 new JPanel(
-                        new GridLayout(1, 2, 10, 10)
+                        new GridLayout(1, 5, 10, 10)
                 );
 
         buttonPanel.setBorder(
@@ -184,21 +201,25 @@ public class AppointmentPanel extends JPanel {
                 )
         );
 
+        btnAdd = new JButton("Add");
+btnView = new JButton("View");
+btnSearch = new JButton("Search");
+btnUpdate = new JButton("Update");
+btnDelete = new JButton("Delete");
 
-        btnAdd =
-                new JButton("Add Appointment");
-
-        btnAdd.setFont(buttonFont);
-
-
-        btnView =
-                new JButton("View Appointments");
-
+btnAdd.setFont(buttonFont);
+btnView.setFont(buttonFont);
+btnSearch.setFont(buttonFont);
+btnUpdate.setFont(buttonFont);
+btnDelete.setFont(buttonFont);
         btnView.setFont(buttonFont);
 
 
         buttonPanel.add(btnAdd);
-        buttonPanel.add(btnView);
+buttonPanel.add(btnView);
+buttonPanel.add(btnSearch);
+buttonPanel.add(btnUpdate);
+buttonPanel.add(btnDelete);
 
 
         // ================= TOP PANEL =================
@@ -394,5 +415,138 @@ public class AppointmentPanel extends JPanel {
                 ex.printStackTrace();
             }
         });
+        btnSearch.addActionListener(e -> {
+
+    try {
+
+        int id =
+                Integer.parseInt(
+                        txtAppointmentId.getText().trim());
+
+        Appointment a =
+                dao.searchAppointment(id);
+
+        if(a != null){
+
+            txtPatientId.setText(
+                    String.valueOf(a.getPatientId()));
+
+            txtDoctorId.setText(
+                    String.valueOf(a.getDoctorId()));
+
+            txtDate.setText(
+                    a.getAppointmentDate());
+
+            txtTime.setText(
+                    a.getAppointmentTime());
+
+            txtRoom.setText(
+                    a.getRoomNumber());
+
+            txtStatus.setText(
+                    a.getStatus());
+
+        } else {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Appointment Not Found");
+        }
+
+    } catch(Exception ex){
+
+        ex.printStackTrace();
+    }
+});
+
+btnUpdate.addActionListener(e -> {
+
+    try {
+
+        dao.updateAppointment(
+
+                Integer.parseInt(
+                        txtAppointmentId.getText().trim()),
+
+                Integer.parseInt(
+                        txtPatientId.getText().trim()),
+
+                Integer.parseInt(
+                        txtDoctorId.getText().trim()),
+
+                txtDate.getText().trim(),
+
+                txtTime.getText().trim(),
+
+                txtRoom.getText().trim(),
+
+                txtStatus.getText().trim()
+        );
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Appointment Updated Successfully");
+
+        btnView.doClick();
+
+    } catch(Exception ex){
+
+        ex.printStackTrace();
+    }
+});
+
+btnDelete.addActionListener(e -> {
+
+    try {
+
+        int id =
+                Integer.parseInt(
+                        txtAppointmentId.getText().trim());
+
+        dao.deleteAppointment(id);
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Appointment Deleted Successfully");
+
+        btnView.doClick();
+
+    } catch(Exception ex){
+
+        ex.printStackTrace();
+    }
+});
+
+table.getSelectionModel()
+        .addListSelectionListener(e -> {
+
+    if(!e.getValueIsAdjusting()
+            && table.getSelectedRow() != -1){
+
+        int row =
+                table.getSelectedRow();
+
+        txtAppointmentId.setText(
+                tableModel.getValueAt(row,0).toString());
+
+        txtPatientId.setText(
+                tableModel.getValueAt(row,1).toString());
+
+        txtDoctorId.setText(
+                tableModel.getValueAt(row,2).toString());
+
+        txtDate.setText(
+                tableModel.getValueAt(row,3).toString());
+
+        txtTime.setText(
+                tableModel.getValueAt(row,4).toString());
+
+        txtRoom.setText(
+                tableModel.getValueAt(row,5).toString());
+
+        txtStatus.setText(
+                tableModel.getValueAt(row,6).toString());
+    }
+});
     }
 }
