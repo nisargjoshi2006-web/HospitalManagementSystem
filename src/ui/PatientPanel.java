@@ -22,7 +22,7 @@ public class PatientPanel extends JPanel {
     JButton btnView;
     JButton btnUpdate;
     JButton btnDelete;
-    JButton btnClear;
+    JButton btnSearch;
 
     JTable table;
     DefaultTableModel tableModel;
@@ -164,21 +164,19 @@ public class PatientPanel extends JPanel {
         btnDelete =
                 new JButton("Delete Patient");
 
-        btnClear =
-                new JButton("Clear Form");
+        btnSearch = new JButton("Search Patient");
 
         btnAdd.setFont(buttonFont);
         btnView.setFont(buttonFont);
         btnUpdate.setFont(buttonFont);
         btnDelete.setFont(buttonFont);
-        btnClear.setFont(buttonFont);
+        
 
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnView);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
-        buttonPanel.add(btnClear);
-
+        buttonPanel.add(btnSearch);
         JPanel topPanel =
                 new JPanel(new BorderLayout());
 
@@ -303,7 +301,7 @@ public class PatientPanel extends JPanel {
                 );
 
                 btnView.doClick();
-                btnClear.doClick();
+                
 
             } catch (Exception ex) {
 
@@ -417,26 +415,64 @@ public class PatientPanel extends JPanel {
                 );
 
                 btnView.doClick();
-                btnClear.doClick();
+                
             }
         });
+        btnSearch.addActionListener(e -> {
 
-        // ================= CLEAR =================
+    String idStr =
+            JOptionPane.showInputDialog(
+                    this,
+                    "Enter Patient ID");
 
-        btnClear.addActionListener(e -> {
+    if(idStr == null)
+        return;
 
-            txtName.setText("");
-            genderBox.setSelectedIndex(0);
-            txtAge.setText("");
-            txtBlood.setText("");
-            txtContact.setText("");
-            txtAddress.setText("");
-            txtDate.setText("");
+    try {
 
-            selectedPatientId = -1;
+        int id =
+                Integer.parseInt(idStr);
 
-            table.clearSelection();
-        });
+        Patient p =
+                dao.searchPatient(id);
+
+        if(p != null) {
+
+            txtName.setText(
+                    p.getPatientName());
+
+            genderBox.setSelectedItem(
+                    p.getGender());
+
+            txtAge.setText(
+                    String.valueOf(
+                            p.getAge()));
+
+            txtBlood.setText(
+                    p.getBloodGroup());
+
+            txtContact.setText(
+                    p.getContact());
+
+            txtAddress.setText(
+                    p.getAddress());
+
+        } else {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Patient Not Found");
+        }
+
+    } catch(Exception ex) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Invalid ID");
+    }
+});
+
+        
 
         // ================= AUTO LOAD =================
 

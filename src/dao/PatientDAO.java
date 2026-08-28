@@ -194,5 +194,57 @@ public void updatePatient(
     }
 
     return patients;
-}    
+} 
+public Patient searchPatient(int id) {
+
+    Patient p = null;
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT * FROM Patients WHERE patient_id=?";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        pst.setInt(1, id);
+
+        ResultSet rs = pst.executeQuery();
+
+        if(rs.next()) {
+
+            p = new Patient();
+
+            p.setPatientId(
+                    rs.getInt("patient_id"));
+
+            p.setPatientName(
+                    rs.getString("patient_name"));
+
+            p.setGender(
+                    rs.getString("gender"));
+
+            p.setAge(
+                    rs.getInt("age"));
+
+            p.setBloodGroup(
+                    rs.getString("blood_group"));
+
+            p.setContact(
+                    rs.getString("contact"));
+
+            p.setAddress(
+                    rs.getString("address"));
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+        e.printStackTrace();
+    }
+
+    return p;
+}   
 }
