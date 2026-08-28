@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
 import java.util.ArrayList;
+int selectedDoctorId = -1;
 
 public class DoctorPanel extends JPanel {
 
@@ -19,6 +20,9 @@ public class DoctorPanel extends JPanel {
 
     JButton btnAdd;
     JButton btnView;
+    JButton btnUpdate;
+    JButton btnDelete;
+    JButton btnSearch;
 
     JTable table;
     DefaultTableModel tableModel;
@@ -153,7 +157,7 @@ public class DoctorPanel extends JPanel {
 
         JPanel buttonPanel =
                 new JPanel(
-                        new GridLayout(1, 2, 10, 10)
+                        new GridLayout(1, 5, 10, 10)
                 );
 
         buttonPanel.setBorder(
@@ -175,12 +179,24 @@ public class DoctorPanel extends JPanel {
 
         btnView =
                 new JButton("View Doctors");
+                btnUpdate = new JButton("Update Doctor");
+btnDelete = new JButton("Delete Doctor");
+btnSearch = new JButton("Search Doctor");
 
         btnView.setFont(buttonFont);
+        btnUpdate.setFont(buttonFont);
+btnDelete.setFont(buttonFont);
+btnSearch.setFont(buttonFont);
 
 
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnView);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnSearch);
+        
+        
+        
 
 
         // ================= TOP PANEL =================
@@ -237,6 +253,40 @@ public class DoctorPanel extends JPanel {
                 scrollPane,
                 BorderLayout.CENTER
         );
+        table.getSelectionModel()
+.addListSelectionListener(e -> {
+
+    if(!e.getValueIsAdjusting()
+       && table.getSelectedRow() != -1){
+
+        int row = table.getSelectedRow();
+
+        selectedDoctorId =
+            Integer.parseInt(
+                tableModel.getValueAt(row,0)
+                .toString());
+
+        txtName.setText(
+            tableModel.getValueAt(row,1)
+            .toString());
+
+        txtSpecialization.setText(
+            tableModel.getValueAt(row,2)
+            .toString());
+
+        txtQualification.setText(
+            tableModel.getValueAt(row,3)
+            .toString());
+
+        txtFee.setText(
+            tableModel.getValueAt(row,4)
+            .toString());
+
+        txtContact.setText(
+            tableModel.getValueAt(row,5)
+            .toString());
+    }
+});
 
 
         // =====================================================
@@ -517,7 +567,67 @@ public class DoctorPanel extends JPanel {
             }
         });
     }
+btnUpdate.addActionListener(e -> {
 
+    dao.updateDoctor(
+        selectedDoctorId,
+        txtName.getText(),
+        Integer.parseInt(txtSpecialization.getText()),
+        txtQualification.getText(),
+        Double.parseDouble(txtFee.getText()),
+        txtContact.getText());
+
+    JOptionPane.showMessageDialog(
+        this,
+        "Doctor Updated Successfully");
+
+    btnView.doClick();
+});
+btnDelete.addActionListener(e -> {
+
+    dao.deleteDoctor(
+        selectedDoctorId);
+
+    JOptionPane.showMessageDialog(
+        this,
+        "Doctor Deleted Successfully");
+
+    btnView.doClick();
+});
+btnSearch.addActionListener(e -> {
+
+    String idStr =
+        JOptionPane.showInputDialog(
+            this,
+            "Enter Doctor ID");
+
+    if(idStr == null)
+        return;
+
+    Doctor d =
+        dao.searchDoctor(
+            Integer.parseInt(idStr));
+
+    if(d != null){
+
+        txtName.setText(
+            d.getDoctorName());
+
+        txtSpecialization.setText(
+            String.valueOf(
+                d.getSpecializationId()));
+
+        txtQualification.setText(
+            d.getQualification());
+
+        txtFee.setText(
+            String.valueOf(
+                d.getConsultationFee()));
+
+        txtContact.setText(
+            d.getContact());
+    }
+});
 
     // =========================================================
     // ================= VALIDATION MESSAGE ===================

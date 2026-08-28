@@ -1,6 +1,7 @@
 package dao;
 import java.util.ArrayList;
 import model.Doctor;
+import src.model.Patient;
 import db.DBConnection;
 
 import java.sql.Connection;
@@ -80,105 +81,115 @@ public class DoctorDAO {
 
     // UPDATE
 
-    public void updateDoctor(int id, String newName) {
+   public void updateDoctor(
+    int id,
+    String name,
+    int specializationId,
+    String qualification,
+    double fee,
+    String contact)
+{
+    try{
 
-        try {
+        Connection con =
+            DBConnection.getConnection();
 
-            Connection con = DBConnection.getConnection();
+        String sql =
+        "UPDATE doctor SET doctor_name=?, specialization_id=?, qualification=?, consultation_fee=?, contact=? WHERE doctor_id=?";
 
-            String query =
-                "UPDATE Doctor SET doctor_name=? WHERE doctor_id=?";
+        PreparedStatement ps =
+            con.prepareStatement(sql);
 
-            PreparedStatement pst =
-                con.prepareStatement(query);
+        ps.setString(1,name);
+        ps.setInt(2,specializationId);
+        ps.setString(3,qualification);
+        ps.setDouble(4,fee);
+        ps.setString(5,contact);
+        ps.setInt(6,id);
 
-            pst.setString(1, newName);
-            pst.setInt(2, id);
+        ps.executeUpdate();
 
-            int rows = pst.executeUpdate();
+        con.close();
 
-            System.out.println("Rows Updated = " + rows);
-
-            con.close();
-
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+    }catch(Exception e){
+        e.printStackTrace();
     }
+}
 
     // DELETE
 
-    public void deleteDoctor(int id) {
+    public void deleteDoctor(int id)
+{
+    try{
 
-        try {
+        Connection con =
+            DBConnection.getConnection();
 
-            Connection con = DBConnection.getConnection();
+        String sql =
+            "DELETE FROM doctor WHERE doctor_id=?";
 
-            String query =
-                "DELETE FROM Doctor WHERE doctor_id=?";
+        PreparedStatement ps =
+            con.prepareStatement(sql);
 
-            PreparedStatement pst =
-                con.prepareStatement(query);
+        ps.setInt(1,id);
 
-            pst.setInt(1, id);
+        ps.executeUpdate();
 
-            int rows = pst.executeUpdate();
+        con.close();
 
-            System.out.println("Rows Deleted = " + rows);
-
-            con.close();
-
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+    }catch(Exception e){
+        e.printStackTrace();
     }
-    public ArrayList<Doctor> getAllDoctors() {
+}
+public Patient searchPatient(int id) {
 
-    ArrayList<Doctor> doctorList = new ArrayList<>();
+    Patient p = null;
 
     try {
 
         Connection con = DBConnection.getConnection();
 
-        String query = "SELECT * FROM Doctor";
+        String query =
+                "SELECT * FROM Patients WHERE patient_id=?";
 
         PreparedStatement pst =
                 con.prepareStatement(query);
 
+        pst.setInt(1, id);
+
         ResultSet rs = pst.executeQuery();
 
-        while (rs.next()) {
+        if(rs.next()) {
 
-            Doctor d = new Doctor();
+            p = new Patient();
 
-            d.setDoctorId(
-                    rs.getInt("doctor_id"));
+            p.setPatientId(
+                    rs.getInt("patient_id"));
 
-            d.setDoctorName(
-                    rs.getString("doctor_name"));
+            p.setPatientName(
+                    rs.getString("patient_name"));
 
-            d.setSpecializationId(
-                    rs.getInt("specialization_id"));
+            p.setGender(
+                    rs.getString("gender"));
 
-            d.setQualification(
-                    rs.getString("qualification"));
+            p.setAge(
+                    rs.getInt("age"));
 
-            d.setConsultationFee(
-                    rs.getDouble("consultation_fee"));
+            p.setBloodGroup(
+                    rs.getString("blood_group"));
 
-            d.setContact(
+            p.setContact(
                     rs.getString("contact"));
 
-            doctorList.add(d);
+            p.setAddress(
+                    rs.getString("address"));
         }
 
         con.close();
 
-    } catch (Exception e) {
-
+    } catch(Exception e) {
         e.printStackTrace();
     }
-
     return doctorList;
 }
 }

@@ -130,7 +130,7 @@ public class PatientPanel extends JPanel {
 
         JLabel lblDate =
                 new JLabel(
-                        "Registration Date (YYYY-MM-DD)"
+                        "Registration Date (DD-MM-YYYY)"
                 );
         lblDate.setFont(labelFont);
         formPanel.add(lblDate);
@@ -170,6 +170,7 @@ public class PatientPanel extends JPanel {
         btnView.setFont(buttonFont);
         btnUpdate.setFont(buttonFont);
         btnDelete.setFont(buttonFont);
+        btnSearch.setFont(buttonFont);
         
 
         buttonPanel.add(btnAdd);
