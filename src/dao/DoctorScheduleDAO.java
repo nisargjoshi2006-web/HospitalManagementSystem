@@ -52,11 +52,12 @@ public class DoctorScheduleDAO {
             String sql =
                     "SELECT * FROM doctor_schedule";
 
-            Statement st =
-                    con.createStatement();
+            PreparedStatement ps =
+        con.prepareStatement(
+                "SELECT * FROM doctor_schedule"
+        );
 
-            ResultSet rs =
-                    st.executeQuery(sql);
+ResultSet rs = ps.executeQuery();
 
             while(rs.next()) {
 
