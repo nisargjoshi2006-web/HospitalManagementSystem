@@ -1,0 +1,3 @@
+*.class
+config.properties
+hs_err_pid*.log
