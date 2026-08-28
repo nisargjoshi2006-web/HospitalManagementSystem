@@ -85,30 +85,52 @@ public class PatientDAO {
     }
 
     // UPDATE PATIENT NAME
-    public void updatePatient(int id, String newName) {
+   // UPDATE PATIENT
+public void updatePatient(
+        int id,
+        String name,
+        String gender,
+        int age,
+        String bloodGroup,
+        String contact,
+        String address) {
 
-        try {
+    try {
 
-            Connection con = DBConnection.getConnection();
+        Connection con = DBConnection.getConnection();
 
-            String query =
-                    "UPDATE Patients SET patient_name=? WHERE patient_id=?";
+        String query =
+                "UPDATE Patients SET " +
+                "patient_name=?, " +
+                "gender=?, " +
+                "age=?, " +
+                "blood_group=?, " +
+                "contact=?, " +
+                "address=? " +
+                "WHERE patient_id=?";
 
-            PreparedStatement pst = con.prepareStatement(query);
+        PreparedStatement pst =
+                con.prepareStatement(query);
 
-            pst.setString(1, newName);
-            pst.setInt(2, id);
+        pst.setString(1, name);
+        pst.setString(2, gender);
+        pst.setInt(3, age);
+        pst.setString(4, bloodGroup);
+        pst.setString(5, contact);
+        pst.setString(6, address);
+        pst.setInt(7, id);
 
-            int rows = pst.executeUpdate();
+        int rows = pst.executeUpdate();
 
-            System.out.println("Rows Updated = " + rows);
+        System.out.println(
+                "Rows Updated = " + rows);
 
-            con.close();
+        con.close();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
 
     // DELETE PATIENT
    public void deletePatient(int id) {

@@ -5,10 +5,7 @@ import model.Patient;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-
 import java.awt.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class PatientPanel extends JPanel {
@@ -23,9 +20,14 @@ public class PatientPanel extends JPanel {
 
     JButton btnAdd;
     JButton btnView;
+    JButton btnUpdate;
+    JButton btnDelete;
+    JButton btnClear;
 
     JTable table;
     DefaultTableModel tableModel;
+
+    int selectedPatientId = -1;
 
     PatientDAO dao = new PatientDAO();
 
@@ -34,7 +36,6 @@ public class PatientPanel extends JPanel {
         // ================= MAIN PANEL =================
 
         setLayout(new BorderLayout(10, 10));
-
 
         // ================= FONTS =================
 
@@ -53,7 +54,6 @@ public class PatientPanel extends JPanel {
         Font tableHeaderFont =
                 new Font("Arial", Font.BOLD, 15);
 
-
         // ================= FORM PANEL =================
 
         JPanel formPanel =
@@ -67,31 +67,18 @@ public class PatientPanel extends JPanel {
                 )
         );
 
-
-        // ================= PATIENT NAME =================
-
         JLabel lblName =
                 new JLabel("Patient Name");
-
         lblName.setFont(labelFont);
-
         formPanel.add(lblName);
 
-        txtName =
-                new JTextField();
-
+        txtName = new JTextField();
         txtName.setFont(fieldFont);
-
         formPanel.add(txtName);
-
-
-        // ================= GENDER =================
 
         JLabel lblGender =
                 new JLabel("Gender");
-
         lblGender.setFont(labelFont);
-
         formPanel.add(lblGender);
 
         genderBox =
@@ -102,104 +89,61 @@ public class PatientPanel extends JPanel {
                                 "Other"
                         }
                 );
-
         genderBox.setFont(fieldFont);
-
         formPanel.add(genderBox);
-
-
-        // ================= AGE =================
 
         JLabel lblAge =
                 new JLabel("Age");
-
         lblAge.setFont(labelFont);
-
         formPanel.add(lblAge);
 
-        txtAge =
-                new JTextField();
-
+        txtAge = new JTextField();
         txtAge.setFont(fieldFont);
-
         formPanel.add(txtAge);
-
-
-        // ================= BLOOD GROUP =================
 
         JLabel lblBlood =
                 new JLabel("Blood Group");
-
         lblBlood.setFont(labelFont);
-
         formPanel.add(lblBlood);
 
-        txtBlood =
-                new JTextField();
-
+        txtBlood = new JTextField();
         txtBlood.setFont(fieldFont);
-
         formPanel.add(txtBlood);
-
-
-        // ================= CONTACT =================
 
         JLabel lblContact =
                 new JLabel("Contact");
-
         lblContact.setFont(labelFont);
-
         formPanel.add(lblContact);
 
-        txtContact =
-                new JTextField();
-
+        txtContact = new JTextField();
         txtContact.setFont(fieldFont);
-
         formPanel.add(txtContact);
-
-
-        // ================= ADDRESS =================
 
         JLabel lblAddress =
                 new JLabel("Address");
-
         lblAddress.setFont(labelFont);
-
         formPanel.add(lblAddress);
 
-        txtAddress =
-                new JTextField();
-
+        txtAddress = new JTextField();
         txtAddress.setFont(fieldFont);
-
         formPanel.add(txtAddress);
-
-
-        // ================= REGISTRATION DATE =================
 
         JLabel lblDate =
                 new JLabel(
                         "Registration Date (YYYY-MM-DD)"
                 );
-
         lblDate.setFont(labelFont);
-
         formPanel.add(lblDate);
 
-        txtDate =
-                new JTextField();
-
+        txtDate = new JTextField();
         txtDate.setFont(fieldFont);
-
         formPanel.add(txtDate);
-
 
         // ================= BUTTON PANEL =================
 
         JPanel buttonPanel =
                 new JPanel(
-                        new GridLayout(1, 2, 10, 10)
+                        new GridLayout(1, 5, 10, 10)
                 );
 
         buttonPanel.setBorder(
@@ -208,24 +152,32 @@ public class PatientPanel extends JPanel {
                 )
         );
 
-
         btnAdd =
                 new JButton("Add Patient");
-
-        btnAdd.setFont(buttonFont);
-
 
         btnView =
                 new JButton("View Patients");
 
-        btnView.setFont(buttonFont);
+        btnUpdate =
+                new JButton("Update Patient");
 
+        btnDelete =
+                new JButton("Delete Patient");
+
+        btnClear =
+                new JButton("Clear Form");
+
+        btnAdd.setFont(buttonFont);
+        btnView.setFont(buttonFont);
+        btnUpdate.setFont(buttonFont);
+        btnDelete.setFont(buttonFont);
+        btnClear.setFont(buttonFont);
 
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnView);
-
-
-        // ================= TOP PANEL =================
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnClear);
 
         JPanel topPanel =
                 new JPanel(new BorderLayout());
@@ -245,7 +197,6 @@ public class PatientPanel extends JPanel {
                 BorderLayout.NORTH
         );
 
-
         // ================= TABLE =================
 
         tableModel =
@@ -263,17 +214,14 @@ public class PatientPanel extends JPanel {
                 }
         );
 
-
         table =
                 new JTable(tableModel);
 
         table.setFont(tableFont);
-
         table.setRowHeight(25);
 
         table.getTableHeader()
                 .setFont(tableHeaderFont);
-
 
         JScrollPane scrollPane =
                 new JScrollPane(table);
@@ -283,376 +231,215 @@ public class PatientPanel extends JPanel {
                 BorderLayout.CENTER
         );
 
+        // ================= TABLE SELECTION =================
 
-        // ================= ADD PATIENT =================
+        table.getSelectionModel()
+                .addListSelectionListener(e -> {
+
+                    if (!e.getValueIsAdjusting()
+                            && table.getSelectedRow() != -1) {
+
+                        int row =
+                                table.getSelectedRow();
+
+                        selectedPatientId =
+                                Integer.parseInt(
+                                        tableModel
+                                                .getValueAt(row, 0)
+                                                .toString()
+                                );
+
+                        txtName.setText(
+                                tableModel.getValueAt(row, 1)
+                                        .toString()
+                        );
+
+                        genderBox.setSelectedItem(
+                                tableModel.getValueAt(row, 2)
+                                        .toString()
+                        );
+
+                        txtAge.setText(
+                                tableModel.getValueAt(row, 3)
+                                        .toString()
+                        );
+
+                        txtBlood.setText(
+                                tableModel.getValueAt(row, 4)
+                                        .toString()
+                        );
+
+                        txtContact.setText(
+                                tableModel.getValueAt(row, 5)
+                                        .toString()
+                        );
+
+                        txtAddress.setText(
+                                tableModel.getValueAt(row, 6)
+                                        .toString()
+                        );
+                    }
+                });
+
+        // ================= ADD =================
 
         btnAdd.addActionListener(e -> {
 
             try {
 
-                // ================= GET INPUT =================
-
-                String name =
-                        txtName
-                                .getText()
-                                .trim();
-
-                String gender =
-                        genderBox
-                                .getSelectedItem()
-                                .toString();
-
-                String ageText =
-                        txtAge
-                                .getText()
-                                .trim();
-
-                String blood =
-                        txtBlood
-                                .getText()
-                                .trim()
-                                .toUpperCase();
-
-                String contact =
-                        txtContact
-                                .getText()
-                                .trim();
-
-                String address =
-                        txtAddress
-                                .getText()
-                                .trim();
-
-                String date =
-                        txtDate
-                                .getText()
-                                .trim();
-
-
-                // ================= NAME VALIDATION =================
-
-                if (name.isEmpty()) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Please enter patient name.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtName.requestFocus();
-                    return;
-                }
-
-
-                if (!name.matches("[a-zA-Z ]+")) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Patient name should contain only letters.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtName.requestFocus();
-                    return;
-                }
-
-
-                // ================= AGE VALIDATION =================
-
-                if (ageText.isEmpty()) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Please enter patient age.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtAge.requestFocus();
-                    return;
-                }
-
-
-                int age;
-
-                try {
-
-                    age = Integer.parseInt(ageText);
-
-                } catch (NumberFormatException ex) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Age must be a valid number.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtAge.requestFocus();
-                    return;
-                }
-
-
-                if (age < 1 || age > 120) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Age must be between 1 and 120.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtAge.requestFocus();
-                    return;
-                }
-
-
-                // ================= BLOOD GROUP VALIDATION =================
-
-                String[] validBloodGroups = {
-                        "A+",
-                        "A-",
-                        "B+",
-                        "B-",
-                        "AB+",
-                        "AB-",
-                        "O+",
-                        "O-"
-                };
-
-                boolean validBlood = false;
-
-                for (String group : validBloodGroups) {
-
-                    if (blood.equals(group)) {
-
-                        validBlood = true;
-                        break;
-                    }
-                }
-
-
-                if (!validBlood) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Enter a valid blood group:\n"
-                                    + "A+, A-, B+, B-, AB+, AB-, O+, O-",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtBlood.requestFocus();
-                    return;
-                }
-
-
-                // ================= CONTACT VALIDATION =================
-
-                if (contact.isEmpty()) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Please enter contact number.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtContact.requestFocus();
-                    return;
-                }
-
-
-                if (!contact.matches("\\d{10}")) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Contact number must contain exactly 10 digits.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtContact.requestFocus();
-                    return;
-                }
-
-
-                // ================= ADDRESS VALIDATION =================
-
-                if (address.isEmpty()) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Please enter patient address.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtAddress.requestFocus();
-                    return;
-                }
-
-
-                // ================= DATE VALIDATION =================
-
-                if (date.isEmpty()) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Please enter registration date.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtDate.requestFocus();
-                    return;
-                }
-
-
-                if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Date must be in YYYY-MM-DD format.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtDate.requestFocus();
-                    return;
-                }
-
-
-                // Check whether date is actually valid
-
-                SimpleDateFormat dateFormat =
-                        new SimpleDateFormat("yyyy-MM-dd");
-
-                dateFormat.setLenient(false);
-
-                try {
-
-                    dateFormat.parse(date);
-
-                } catch (ParseException ex) {
-
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Please enter a valid calendar date.",
-                            "Validation Error",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-
-                    txtDate.requestFocus();
-                    return;
-                }
-
-
-                // ================= ADD TO DATABASE =================
-
                 dao.addPatient(
-                        name,
-                        gender,
-                        age,
-                        blood,
-                        contact,
-                        address,
-                        date
+                        txtName.getText(),
+                        genderBox.getSelectedItem().toString(),
+                        Integer.parseInt(txtAge.getText()),
+                        txtBlood.getText(),
+                        txtContact.getText(),
+                        txtAddress.getText(),
+                        txtDate.getText()
                 );
-
-
-                // ================= SUCCESS MESSAGE =================
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Patient Added Successfully",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
+                        "Patient Added Successfully"
                 );
 
-
-                // ================= CLEAR FIELDS =================
-
-                txtName.setText("");
-
-                genderBox.setSelectedIndex(0);
-
-                txtAge.setText("");
-
-                txtBlood.setText("");
-
-                txtContact.setText("");
-
-                txtAddress.setText("");
-
-                txtDate.setText("");
-
-
-                txtName.requestFocus();
-
+                btnView.doClick();
+                btnClear.doClick();
 
             } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Unable to add patient.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
+                        "Invalid Input"
                 );
 
                 ex.printStackTrace();
             }
         });
 
-
-        // ================= VIEW PATIENTS =================
+        // ================= VIEW =================
 
         btnView.addActionListener(e -> {
 
+            tableModel.setRowCount(0);
+
+            ArrayList<Patient> patients =
+                    dao.getAllPatients();
+
+            for (Patient p : patients) {
+
+                tableModel.addRow(
+                        new Object[]{
+                                p.getPatientId(),
+                                p.getPatientName(),
+                                p.getGender(),
+                                p.getAge(),
+                                p.getBloodGroup(),
+                                p.getContact(),
+                                p.getAddress()
+                        }
+                );
+            }
+        });
+
+        // ================= UPDATE =================
+
+        btnUpdate.addActionListener(e -> {
+
+            if (selectedPatientId == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a patient first"
+                );
+
+                return;
+            }
+
             try {
 
-                tableModel.setRowCount(0);
+                dao.updatePatient(
+                        selectedPatientId,
+                        txtName.getText(),
+                        genderBox.getSelectedItem().toString(),
+                        Integer.parseInt(txtAge.getText()),
+                        txtBlood.getText(),
+                        txtContact.getText(),
+                        txtAddress.getText()
+                );
 
-                ArrayList<Patient> patients =
-                        dao.getAllPatients();
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Patient Updated Successfully"
+                );
 
-
-                for (Patient p : patients) {
-
-                    tableModel.addRow(
-                            new Object[]{
-
-                                    p.getPatientId(),
-
-                                    p.getPatientName(),
-
-                                    p.getGender(),
-
-                                    p.getAge(),
-
-                                    p.getBloodGroup(),
-
-                                    p.getContact(),
-
-                                    p.getAddress()
-                            }
-                    );
-                }
-
+                btnView.doClick();
 
             } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Unable to load patients",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
+                        "Invalid Input"
                 );
 
                 ex.printStackTrace();
             }
         });
+
+        // ================= DELETE =================
+
+        btnDelete.addActionListener(e -> {
+
+            if (selectedPatientId == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a patient first"
+                );
+
+                return;
+            }
+
+            int confirm =
+                    JOptionPane.showConfirmDialog(
+                            this,
+                            "Are you sure you want to delete this patient?",
+                            "Confirm Delete",
+                            JOptionPane.YES_NO_OPTION
+                    );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+
+                dao.deletePatient(selectedPatientId);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Patient Deleted Successfully"
+                );
+
+                btnView.doClick();
+                btnClear.doClick();
+            }
+        });
+
+        // ================= CLEAR =================
+
+        btnClear.addActionListener(e -> {
+
+            txtName.setText("");
+            genderBox.setSelectedIndex(0);
+            txtAge.setText("");
+            txtBlood.setText("");
+            txtContact.setText("");
+            txtAddress.setText("");
+            txtDate.setText("");
+
+            selectedPatientId = -1;
+
+            table.clearSelection();
+        });
+
+        // ================= AUTO LOAD =================
+
+        btnView.doClick();
     }
 }

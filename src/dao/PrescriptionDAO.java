@@ -74,20 +74,30 @@ public class PrescriptionDAO {
         }
     }
 
-    // UPDATE
-    public void updatePrescription(int id, String newMedicine) {
+    // UPDATE (now updates all fields, not just medicine)
+    public void updatePrescription(
+            int id,
+            int appointmentId,
+            String diagnosis,
+            String medicine,
+            String nextVisitDate,
+            String remarks) {
 
         try {
 
             Connection con = DBConnection.getConnection();
 
             String query =
-                "UPDATE Prescriptions SET medicine=? WHERE prescription_id=?";
+                "UPDATE Prescriptions SET appointment_id=?, diagnosis=?, medicine=?, next_visit_date=?, remarks=? WHERE prescription_id=?";
 
             PreparedStatement pst = con.prepareStatement(query);
 
-            pst.setString(1, newMedicine);
-            pst.setInt(2, id);
+            pst.setInt(1, appointmentId);
+            pst.setString(2, diagnosis);
+            pst.setString(3, medicine);
+            pst.setDate(4, java.sql.Date.valueOf(nextVisitDate));
+            pst.setString(5, remarks);
+            pst.setInt(6, id);
 
             int rows = pst.executeUpdate();
 
@@ -124,24 +134,25 @@ public class PrescriptionDAO {
             e.printStackTrace();
         }
     }
+
     public ResultSet getAllPrescriptions() {
 
-    try {
+        try {
 
-        Connection con = DBConnection.getConnection();
+            Connection con = DBConnection.getConnection();
 
-        String query = "SELECT * FROM Prescriptions";
+            String query = "SELECT * FROM Prescriptions";
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+            PreparedStatement pst =
+                    con.prepareStatement(query);
 
-        return pst.executeQuery();
+            return pst.executeQuery();
 
-    } catch (Exception e) {
+        } catch (Exception e) {
 
-        e.printStackTrace();
+            e.printStackTrace();
+        }
+
+        return null;
     }
-
-    return null;
-}
 }
