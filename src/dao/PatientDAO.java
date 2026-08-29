@@ -246,5 +246,37 @@ public Patient searchPatient(int id) {
     }
 
     return p;
-}   
+}
+public int getPatientCount() {
+
+    int count = 0;
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT COUNT(*) FROM Patients";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        if(rs.next()) {
+
+            count = rs.getInt(1);
+
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+
+    }
+
+    return count;
+}
+
 }

@@ -12,6 +12,7 @@ public class HospitalManagementUI extends JFrame {
         setLocationRelativeTo(null);
 
         JTabbedPane tabs = new JTabbedPane();
+        tabs.add("Dashboard", new DashboardPanel());
 
         tabs.add("Patients", new PatientPanel());
         tabs.add("Doctors", new DoctorPanel());
@@ -20,6 +21,7 @@ public class HospitalManagementUI extends JFrame {
         tabs.add("Prescriptions", new PrescriptionPanel());
         tabs.add("Feedback", new FeedbackPanel());
         tabs.add("Billing", new BillingPanel());
+        tabs.add("Emergency", new EmergencyPanel());
 
         add(tabs);
 

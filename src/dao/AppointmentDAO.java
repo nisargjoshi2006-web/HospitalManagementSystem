@@ -161,6 +161,7 @@ public class AppointmentDAO {
 
         return a;
     }
+    
 
     // UPDATE COMPLETE RECORD
     public void updateAppointment(
@@ -235,4 +236,36 @@ public class AppointmentDAO {
             e.printStackTrace();
         }
     }
+    public int getAppointmentCount() {
+
+    int count = 0;
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query = "SELECT COUNT(*) FROM Appointments";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        if(rs.next()) {
+
+            count = rs.getInt(1);
+
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+
+    }
+
+    return count;
+}
+
 }
