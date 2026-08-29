@@ -2,53 +2,42 @@ package db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.Properties;
-import java.io.FileInputStream;
 
 public class DBConnection {
 
+    private static final String URL =
+            "jdbc:mysql://localhost:3306/hospital";
+
+    private static final String USER = "root";
+
+    private static final String PASSWORD = "Kalpana1979*";
+    
+
     public static Connection getConnection() {
 
-        try {
+    System.out.println("DBConnection class loaded");
 
-            Properties props = new Properties();
+    try {
 
-            props.load(
-                new FileInputStream("config.properties")
-            );
+        Class.forName("com.mysql.cj.jdbc.Driver");
 
-            String url =
-                    props.getProperty("db.url");
+        Connection con =
+                DriverManager.getConnection(
+                        URL,
+                        USER,
+                        PASSWORD
+                );
 
-            String user =
-                    props.getProperty("db.user");
+        System.out.println("Database Connected Successfully");
 
-            String password =
-                    props.getProperty("db.password");
+        return con;
 
-            Class.forName(
-                    "com.mysql.cj.jdbc.Driver"
-            );
+    } catch (Exception e) {
 
-            Connection con =
-                    DriverManager.getConnection(
-                            url,
-                            user,
-                            password
-                    );
+        e.printStackTrace();
 
-            System.out.println(
-                    "Database Connected Successfully"
-            );
-
-            return con;
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-        }
-
-        return null;
     }
+
+    return null;
+}
 }
