@@ -84,7 +84,7 @@ JButton btnReceipt;
 
         JLabel lblBillDate =
                 new JLabel(
-                        "Bill Date (DD-MM-YYYY)"
+                        "Bill Date (YYYY-MM-DD)"
                 );
 
         lblBillDate.setFont(labelFont);

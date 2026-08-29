@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 
 public class FeedbackDAO {
 
-    // INSERT
+    // INSERT FEEDBACK
     public void addFeedback(
             int patientId,
             int rating,
@@ -19,8 +19,7 @@ public class FeedbackDAO {
             Connection con = DBConnection.getConnection();
 
             String query =
-                "INSERT INTO Feedback(patient_id, rating, feedback_date, comments) " +
-                "VALUES (?, ?, ?, ?)";
+                    "INSERT INTO Feedback(patient_id, rating, feedback_date, comments) VALUES (?, ?, ?, ?)";
 
             PreparedStatement pst = con.prepareStatement(query);
 
@@ -40,7 +39,7 @@ public class FeedbackDAO {
         }
     }
 
-    // VIEW
+    // VIEW ALL FEEDBACK
     public void viewFeedback() {
 
         try {
@@ -56,11 +55,11 @@ public class FeedbackDAO {
             while (rs.next()) {
 
                 System.out.println(
-                    rs.getInt("feedback_id") + " | " +
-                    rs.getInt("patient_id") + " | " +
-                    rs.getInt("rating") + " | " +
-                    rs.getDate("feedback_date") + " | " +
-                    rs.getString("comments")
+                        rs.getInt("feedback_id") + " | " +
+                        rs.getInt("patient_id") + " | " +
+                        rs.getInt("rating") + " | " +
+                        rs.getDate("feedback_date") + " | " +
+                        rs.getString("comments")
                 );
             }
 
@@ -71,21 +70,24 @@ public class FeedbackDAO {
         }
     }
 
-    // UPDATE
-    public void updateFeedback(int id, int newRating, String newComments) {
+    // UPDATE FEEDBACK (updates rating and comments only)
+    public void updateFeedback(
+            int feedbackId,
+            int rating,
+            String comments) {
 
         try {
 
             Connection con = DBConnection.getConnection();
 
             String query =
-                "UPDATE Feedback SET rating=?, comments=? WHERE feedback_id=?";
+                    "UPDATE Feedback SET rating=?, comments=? WHERE feedback_id=?";
 
             PreparedStatement pst = con.prepareStatement(query);
 
-            pst.setInt(1, newRating);
-            pst.setString(2, newComments);
-            pst.setInt(3, id);
+            pst.setInt(1, rating);
+            pst.setString(2, comments);
+            pst.setInt(3, feedbackId);
 
             int rows = pst.executeUpdate();
 
@@ -98,19 +100,19 @@ public class FeedbackDAO {
         }
     }
 
-    // DELETE
-    public void deleteFeedback(int id) {
+    // DELETE FEEDBACK
+    public void deleteFeedback(int feedbackId) {
 
         try {
 
             Connection con = DBConnection.getConnection();
 
             String query =
-                "DELETE FROM Feedback WHERE feedback_id=?";
+                    "DELETE FROM Feedback WHERE feedback_id=?";
 
             PreparedStatement pst = con.prepareStatement(query);
 
-            pst.setInt(1, id);
+            pst.setInt(1, feedbackId);
 
             int rows = pst.executeUpdate();
 
@@ -122,25 +124,25 @@ public class FeedbackDAO {
             e.printStackTrace();
         }
     }
+
+    // GET ALL FEEDBACK
     public ResultSet getAllFeedback() {
 
-    try {
+        try {
 
-        Connection con = DBConnection.getConnection();
+            Connection con = DBConnection.getConnection();
 
-        String query = "SELECT * FROM Feedback";
+            String query = "SELECT * FROM Feedback";
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+            PreparedStatement pst = con.prepareStatement(query);
 
-        return pst.executeQuery();
+            return pst.executeQuery();
 
-    } catch(Exception e) {
+        } catch (Exception e) {
 
-        e.printStackTrace();
+            e.printStackTrace();
+        }
 
+        return null;
     }
-
-    return null;
-}
 }

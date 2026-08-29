@@ -116,7 +116,7 @@ JButton btnDelete;
 
         JLabel lblNextVisit =
                 new JLabel(
-                        "Next Visit Date (DD-MM-YYYY)"
+                        "Next Visit Date (YYYY-MM-DD)"
                 );
 
         lblNextVisit.setFont(labelFont);
