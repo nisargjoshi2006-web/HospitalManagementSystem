@@ -200,4 +200,36 @@ ResultSet rs = ps.executeQuery();
             e.printStackTrace();
         }
     }
+    public int getScheduleCount() {
+
+    int count = 0;
+
+    try {
+
+        Connection con =
+                DBConnection.getConnection();
+
+        String sql =
+                "SELECT COUNT(*) FROM doctor_schedule";
+
+        PreparedStatement ps =
+                con.prepareStatement(sql);
+
+        ResultSet rs =
+                ps.executeQuery();
+
+        if(rs.next()) {
+
+            count = rs.getInt(1);
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return count;
+}
 }

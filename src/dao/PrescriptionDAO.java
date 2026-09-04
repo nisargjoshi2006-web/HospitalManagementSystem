@@ -176,4 +176,67 @@ public ResultSet searchPrescription(int prescriptionId) {
 
     return null;
 }
+// CHECK PRESCRIPTION EXISTS
+
+public boolean prescriptionExists(int prescriptionId) {
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT * FROM Prescriptions WHERE prescription_id=?";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        pst.setInt(1, prescriptionId);
+
+        ResultSet rs = pst.executeQuery();
+
+        boolean exists = rs.next();
+
+        con.close();
+
+        return exists;
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return false;
+}
+// COUNT PRESCRIPTIONS
+
+public int getPrescriptionCount() {
+
+    int count = 0;
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT COUNT(*) FROM Prescriptions";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        if(rs.next()) {
+
+            count = rs.getInt(1);
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return count;
+}
 }

@@ -173,4 +173,67 @@ public class BillingDAO {
 
     return null;
 }
+// SEARCH BILL
+
+public boolean billExists(int billId) {
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT * FROM Billing WHERE bill_id=?";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        pst.setInt(1, billId);
+
+        ResultSet rs = pst.executeQuery();
+
+        boolean exists = rs.next();
+
+        con.close();
+
+        return exists;
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return false;
+}
+// COUNT BILLS
+
+public int getBillCount() {
+
+    int count = 0;
+
+    try {
+
+        Connection con = DBConnection.getConnection();
+
+        String query =
+                "SELECT COUNT(*) FROM Billing";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        ResultSet rs = pst.executeQuery();
+
+        if(rs.next()) {
+
+            count = rs.getInt(1);
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return count;
+}
 }

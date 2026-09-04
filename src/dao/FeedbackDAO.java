@@ -176,4 +176,28 @@ public class FeedbackDAO {
 
     return count;
 }
+public ResultSet searchFeedback(int feedbackId) {
+
+    try {
+
+        Connection con =
+                DBConnection.getConnection();
+
+        String query =
+                "SELECT * FROM Feedback WHERE feedback_id=?";
+
+        PreparedStatement pst =
+                con.prepareStatement(query);
+
+        pst.setInt(1, feedbackId);
+
+        return pst.executeQuery();
+
+    } catch(Exception e) {
+
+        e.printStackTrace();
+    }
+
+    return null;
+}
 }
