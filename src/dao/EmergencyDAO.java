@@ -241,4 +241,32 @@ public class EmergencyDAO {
             e.printStackTrace();
         }
     }
+    public int getEmergencyCount() {
+
+    int count = 0;
+
+    try {
+        Connection con =
+                DBConnection.getConnection();
+
+        PreparedStatement ps =
+                con.prepareStatement(
+                        "SELECT COUNT(*) FROM emergency"
+                );
+
+        ResultSet rs =
+                ps.executeQuery();
+
+        if(rs.next()) {
+            count = rs.getInt(1);
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+        e.printStackTrace();
+    }
+
+    return count;
+}
 }

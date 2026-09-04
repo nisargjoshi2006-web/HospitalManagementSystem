@@ -278,5 +278,36 @@ public int getPatientCount() {
 
     return count;
 }
+public boolean patientExists(int patientId) {
+
+    boolean exists = false;
+
+    try {
+
+        Connection con =
+                DBConnection.getConnection();
+
+        String sql =
+                "SELECT * FROM patients WHERE patient_id=?";
+
+        PreparedStatement ps =
+                con.prepareStatement(sql);
+
+        ps.setInt(1, patientId);
+
+        ResultSet rs = ps.executeQuery();
+
+        if(rs.next()) {
+            exists = true;
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+        e.printStackTrace();
+    }
+
+    return exists;
+}
 
 }

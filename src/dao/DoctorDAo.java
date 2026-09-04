@@ -285,4 +285,36 @@ public class DoctorDAO {
 
     return count;
 }
+public boolean doctorExists(int doctorId) {
+
+    boolean exists = false;
+
+    try {
+
+        Connection con =
+                DBConnection.getConnection();
+
+        String sql =
+                "SELECT * FROM doctor WHERE doctor_id=?";
+
+        PreparedStatement ps =
+                con.prepareStatement(sql);
+
+        ps.setInt(1, doctorId);
+
+        ResultSet rs =
+                ps.executeQuery();
+
+        if(rs.next()) {
+            exists = true;
+        }
+
+        con.close();
+
+    } catch(Exception e) {
+        e.printStackTrace();
+    }
+
+    return exists;
+}
 }

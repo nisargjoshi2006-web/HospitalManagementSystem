@@ -1,6 +1,8 @@
 package ui;
 
 import dao.EmergencyDAO;
+import dao.DoctorDAO;
+import dao.PatientDAO;
 import model.Emergency;
 
 import javax.swing.*;
@@ -29,6 +31,8 @@ public class EmergencyPanel extends JPanel {
     private DefaultTableModel tableModel;
 
     private EmergencyDAO dao = new EmergencyDAO();
+    private DoctorDAO doctorDAO = new DoctorDAO();
+    private PatientDAO patientDAO = new PatientDAO();
 
     public EmergencyPanel() {
 
@@ -223,18 +227,8 @@ public class EmergencyPanel extends JPanel {
 
             String patientIdText = txtPatientId.getText().trim();
             String assignedDoctorText = txtAssignedDoctor.getText().trim();
-            String arrivalDate = txtArrivalDate.getText().trim();
-            String arrivalTime = txtArrivalTime.getText().trim();
-
-            if (!isValidDate(arrivalDate)) {
-                showValidationError("Arrival Date must be a valid date in YYYY-MM-DD format.");
-                return;
-            }
-
-            if (!isValidTime(arrivalTime)) {
-                showValidationError("Arrival Time must be in HH:MM:SS format (00-23 : 00-59 : 00-59).");
-                return;
-            }
+            
+           
 
             int patientId;
             int assignedDoctor;
@@ -244,6 +238,38 @@ public class EmergencyPanel extends JPanel {
                 assignedDoctor = Integer.parseInt(assignedDoctorText);
             } catch (NumberFormatException ex) {
                 showValidationError("Patient ID and Assigned Doctor must be valid numbers.");
+                return;
+            }
+            if (!patientDAO.patientExists(patientId)) {
+
+    JOptionPane.showMessageDialog(
+            this,
+            "Patient ID does not exist!"
+    );
+
+    return;
+}
+
+
+if (!doctorDAO.doctorExists(assignedDoctor)) {
+
+    JOptionPane.showMessageDialog(
+            this,
+            "Doctor ID does not exist!"
+    );
+
+    return;
+}
+ String arrivalDate = txtArrivalDate.getText().trim();
+            String arrivalTime = txtArrivalTime.getText().trim();
+
+            if (!isValidDate(arrivalDate)) {
+                showValidationError("Arrival Date must be a valid date in YYYY-MM-DD format.");
+                return;
+            }
+
+            if (!isValidTime(arrivalTime)) {
+                showValidationError("Arrival Time must be in HH:MM:SS format (00-23 : 00-59 : 00-59).");
                 return;
             }
 
@@ -349,6 +375,15 @@ public class EmergencyPanel extends JPanel {
                 showValidationError("Emergency ID, Patient ID, and Assigned Doctor must be valid numbers.");
                 return;
             }
+            if (!doctorDAO.doctorExists(assignedDoctor)) {
+
+    JOptionPane.showMessageDialog(
+            this,
+            "Doctor ID does not exist!"
+    );
+
+    return;
+}
 
             dao.updateEmergency(
                     emergencyId,
