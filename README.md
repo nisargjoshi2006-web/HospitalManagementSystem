@@ -135,7 +135,14 @@ java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDashboard
 ### Default Credentials
 | Username | Password | Role | Permissions |
 |----------|----------|------|-------------|
-| `admin` | `admin123` | Admin | Full access to all 9 modules |
+| `admin` | `admin123` | Admin | Full access to all modules |
+| `receptionist` | `recep123` | Receptionist | Access to Dashboard, Patients, Appointments, Billing |
+
+### 📊 Review & Viva Demonstration Queries
+The `Database.sql` script includes dedicated review demonstration queries for:
+- **4-Table Joins** (Appointments + Patients + Doctor + Specializations)
+- **Aggregates with `GROUP BY` & `HAVING`** (Revenue by payment method, doctor popularity)
+- **Nested Subqueries** (Scalar, `IN`, and `EXISTS` subqueries)
 
 ## 🗄️ Database Schema
 

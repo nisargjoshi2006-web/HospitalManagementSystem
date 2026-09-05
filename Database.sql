@@ -214,6 +214,115 @@ CREATE TABLE IF NOT EXISTS Users (
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Default admin account (password: admin123)
+-- Default users (admin & receptionist)
 INSERT INTO Users (username, password, full_name, role)
-VALUES ('admin', SHA2('admin123', 256), 'Administrator', 'Admin');
+VALUES 
+('admin', SHA2('admin123', 256), 'Administrator', 'Admin'),
+('receptionist', SHA2('recep123', 256), 'Ananya Verma', 'Receptionist');
+
+-- Sample Data for Emergency Table
+INSERT INTO Emergency 
+(patient_id, emergency_type, priority_level, status, assigned_doctor, arrival_date, arrival_time)
+VALUES
+(1, 'Accident', 'Critical', 'Under Treatment', 3, '2026-09-01', '08:45:00'),
+(2, 'Heart Attack', 'Critical', 'Admitted', 1, '2026-09-02', '10:15:00'),
+(3, 'Stroke', 'High', 'Under Treatment', 2, '2026-09-03', '14:30:00'),
+(4, 'Burn Injury', 'Medium', 'Waiting', 5, '2026-09-04', '16:00:00'),
+(5, 'Poisoning', 'Critical', 'Admitted', 5, '2026-09-05', '11:20:00');
+
+-- ==================================================================================
+-- REVIEW-2 DEMONSTRATION QUERIES (CRUD, JOINS, AGGREGATES, NESTED SUBQUERIES)
+-- ==================================================================================
+
+-- 1. MULTI-TABLE JOINS (4-Table Inner Join)
+-- Retrieve full appointment details with patient info, doctor name, and specialization
+SELECT 
+    a.appointment_id,
+    p.patient_name,
+    p.contact AS patient_contact,
+    d.doctor_name,
+    s.specialization_name,
+    a.appointment_date,
+    a.appointment_time,
+    a.status
+FROM Appointments a
+JOIN Patients p ON a.patient_id = p.patient_id
+JOIN Doctor d ON a.doctor_id = d.doctor_id
+JOIN Specializations s ON d.specialization_id = s.specialization_id
+ORDER BY a.appointment_date DESC;
+
+-- 2. BILLING DETAILS WITH LEFT JOIN
+-- Retrieve all appointments and their corresponding billing amounts (even if unbilled)
+SELECT 
+    a.appointment_id,
+    p.patient_name,
+    d.doctor_name,
+    b.amount,
+    b.payment_method,
+    b.payment_status
+FROM Appointments a
+JOIN Patients p ON a.patient_id = p.patient_id
+JOIN Doctor d ON a.doctor_id = d.doctor_id
+LEFT JOIN Billing b ON a.appointment_id = b.appointment_id;
+
+-- 3. AGGREGATES & GROUP BY WITH HAVING
+-- Total billing revenue and count of transactions grouped by payment method, having total > 1000
+SELECT 
+    payment_method,
+    COUNT(*) AS total_transactions,
+    SUM(amount) AS total_revenue,
+    AVG(amount) AS average_bill
+FROM Billing
+WHERE payment_status = 'Paid'
+GROUP BY payment_method
+HAVING SUM(amount) > 1000;
+
+-- 4. AGGREGATE QUERY: DOCTOR POPULARITY & APPOINTMENT COUNT
+-- Count number of appointments per doctor
+SELECT 
+    d.doctor_id,
+    d.doctor_name,
+    s.specialization_name,
+    COUNT(a.appointment_id) AS total_appointments
+FROM Doctor d
+JOIN Specializations s ON d.specialization_id = s.specialization_id
+LEFT JOIN Appointments a ON d.doctor_id = a.doctor_id
+GROUP BY d.doctor_id, d.doctor_name, s.specialization_name
+ORDER BY total_appointments DESC;
+
+-- 5. NESTED SUBQUERY (Scalar Subquery)
+-- Find all doctors whose consultation fee is higher than the average consultation fee
+SELECT 
+    doctor_name, 
+    consultation_fee 
+FROM Doctor
+WHERE consultation_fee > (
+    SELECT AVG(consultation_fee) FROM Doctor
+);
+
+-- 6. NESTED SUBQUERY WITH 'IN'
+-- Find all patients who currently have a 'Pending' bill
+SELECT 
+    patient_id, 
+    patient_name, 
+    contact 
+FROM Patients
+WHERE patient_id IN (
+    SELECT a.patient_id 
+    FROM Appointments a
+    JOIN Billing b ON a.appointment_id = b.appointment_id
+    WHERE b.payment_status = 'Pending'
+);
+
+-- 7. NESTED SUBQUERY WITH 'EXISTS'
+-- Find doctors who have attended at least one critical emergency case
+SELECT 
+    d.doctor_name, 
+    d.contact 
+FROM Doctor d
+WHERE EXISTS (
+    SELECT 1 
+    FROM Emergency e 
+    WHERE e.assigned_doctor = d.doctor_id 
+      AND e.priority_level = 'Critical'
+);
