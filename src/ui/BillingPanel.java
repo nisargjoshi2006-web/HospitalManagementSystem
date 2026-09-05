@@ -1,14 +1,17 @@
 package ui;
 
 import dao.BillingDAO;
+import model.Billing;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
-import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class BillingPanel extends JPanel {
+
+    private static final long serialVersionUID = 1L;
 
     JTextField txtAppointmentId;
     JTextField txtBillDate;
@@ -16,8 +19,10 @@ public class BillingPanel extends JPanel {
     JTextField txtPaymentStatus;
 
     JButton btnAdd;
-JButton btnView;
-JButton btnReceipt;
+    JButton btnView;
+    JButton btnUpdate;
+    JButton btnDelete;
+    JButton btnReceipt;
 
     JTable table;
     DefaultTableModel tableModel;
@@ -137,7 +142,7 @@ JButton btnReceipt;
 
         JPanel buttonPanel =
                 new JPanel(
-                        new GridLayout(1, 3, 10, 10)
+                        new GridLayout(1, 5, 10, 10)
                 );
 
         buttonPanel.setBorder(
@@ -146,27 +151,31 @@ JButton btnReceipt;
                 )
         );
 
-
         // ADD BILL
-
-        btnAdd =
-                new JButton("Add Bill");
-
+        btnAdd = new JButton("Add Bill");
         btnAdd.setFont(buttonFont);
 
-
         // VIEW BILLS
-
-        btnView =
-                new JButton("View Bills");
-
+        btnView = new JButton("View Bills");
         btnView.setFont(buttonFont);
+
+        // UPDATE BILL
+        btnUpdate = new JButton("Update Bill");
+        btnUpdate.setFont(buttonFont);
+
+        // DELETE BILL
+        btnDelete = new JButton("Delete Bill");
+        btnDelete.setFont(buttonFont);
+
+        // RECEIPT
         btnReceipt = new JButton("Generate Receipt");
-btnReceipt.setFont(buttonFont);
+        btnReceipt.setFont(buttonFont);
 
         buttonPanel.add(btnAdd);
-buttonPanel.add(btnView);
-buttonPanel.add(btnReceipt);
+        buttonPanel.add(btnView);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnReceipt);
 
 
         // ================= TOP PANEL =================
@@ -206,7 +215,6 @@ buttonPanel.add(btnReceipt);
                 }
         );
 
-
         table =
                 new JTable(tableModel);
 
@@ -216,7 +224,6 @@ buttonPanel.add(btnReceipt);
 
         table.getTableHeader()
                 .setFont(tableHeaderFont);
-
 
         JScrollPane scrollPane =
                 new JScrollPane(table);
@@ -254,16 +261,16 @@ buttonPanel.add(btnReceipt);
                         txtPaymentStatus
                                 .getText()
                                 .trim();
-                                if (!paymentStatus.equalsIgnoreCase("Paid")
-        && !paymentStatus.equalsIgnoreCase("Pending")) {
 
-    JOptionPane.showMessageDialog(
-            this,
-            "Payment Status must be Paid or Pending"
-    );
-    return;
-}
+                if (!paymentStatus.equalsIgnoreCase("Paid")
+                        && !paymentStatus.equalsIgnoreCase("Pending")) {
 
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Payment Status must be Paid or Pending"
+                    );
+                    return;
+                }
 
                 dao.addBill(
                         appointmentId,
@@ -272,7 +279,6 @@ buttonPanel.add(btnReceipt);
                         paymentStatus
                 );
 
-
                 JOptionPane.showMessageDialog(
                         this,
                         "Bill Added Successfully",
@@ -280,17 +286,13 @@ buttonPanel.add(btnReceipt);
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-
                 // Clear fields
-
                 txtAppointmentId.setText("");
-
                 txtBillDate.setText("");
-
                 txtPaymentMethod.setText("");
-
                 txtPaymentStatus.setText("");
 
+                btnView.doClick();
 
             } catch (Exception ex) {
 
@@ -310,126 +312,192 @@ buttonPanel.add(btnReceipt);
 
         btnView.addActionListener(e -> {
 
+            tableModel.setRowCount(0);
+
+            ArrayList<Billing> bills = dao.getAllBills();
+
+            for (Billing b : bills) {
+
+                tableModel.addRow(
+                        new Object[]{
+                                b.getBillId(),
+                                b.getAppointmentId(),
+                                b.getAmount(),
+                                b.getBillDate(),
+                                b.getPaymentMethod(),
+                                b.getPaymentStatus()
+                        }
+                );
+            }
+        });
+
+
+        // ================= UPDATE BILL =================
+
+        btnUpdate.addActionListener(e -> {
+
+            int row = table.getSelectedRow();
+
+            if (row < 0) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a bill from the table first",
+                        "No Selection",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
             try {
 
-                // Clear previous rows
+                int billId = Integer.parseInt(
+                        tableModel.getValueAt(row, 0).toString()
+                );
 
-                tableModel.setRowCount(0);
+                String newMethod = txtPaymentMethod.getText().trim();
+                String newStatus = txtPaymentStatus.getText().trim();
 
-
-                ResultSet rs =
-                        dao.getAllBills();
-
-
-                while (rs.next()) {
-
-                    tableModel.addRow(
-                            new Object[]{
-
-                                    rs.getInt(
-                                            "bill_id"
-                                    ),
-
-                                    rs.getInt(
-                                            "appointment_id"
-                                    ),
-
-                                    rs.getDouble(
-                                            "amount"
-                                    ),
-
-                                    rs.getDate(
-                                            "bill_date"
-                                    ),
-
-                                    rs.getString(
-                                            "payment_method"
-                                    ),
-
-                                    rs.getString(
-                                            "payment_status"
-                                    )
-                            }
+                if (!newStatus.equalsIgnoreCase("Paid")
+                        && !newStatus.equalsIgnoreCase("Pending")) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Payment Status must be Paid or Pending"
                     );
+                    return;
                 }
 
-
-            } catch (Exception ex) {
+                dao.updateBill(billId, newMethod, newStatus);
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Unable to load bills",
+                        "Bill Updated Successfully"
+                );
+
+                btnView.doClick();
+
+            } catch (Exception ex) {
+
+                ex.printStackTrace();
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error updating bill",
                         "Error",
                         JOptionPane.ERROR_MESSAGE
                 );
-
-                ex.printStackTrace();
             }
         });
+
+
+        // ================= DELETE BILL =================
+
+        btnDelete.addActionListener(e -> {
+
+            int row = table.getSelectedRow();
+
+            if (row < 0) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a bill from the table first",
+                        "No Selection",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to delete this bill?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+
+                int billId = Integer.parseInt(
+                        tableModel.getValueAt(row, 0).toString()
+                );
+
+                dao.deleteBill(billId);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Bill Deleted Successfully"
+                );
+
+                btnView.doClick();
+            }
+        });
+
+
+        // ================= TABLE SELECTION =================
+
         table.getSelectionModel()
-     .addListSelectionListener(e -> {
+                .addListSelectionListener(e -> {
 
-    int row = table.getSelectedRow();
+            int row = table.getSelectedRow();
 
-    if(row >= 0) {
+            if (row >= 0) {
 
-        txtAppointmentId.setText(
-                tableModel.getValueAt(row,1).toString()
-        );
+                txtAppointmentId.setText(
+                        tableModel.getValueAt(row, 1).toString()
+                );
 
-        
+                txtBillDate.setText(
+                        tableModel.getValueAt(row, 3).toString()
+                );
 
-        txtBillDate.setText(
-                tableModel.getValueAt(row,3).toString()
-        );
+                txtPaymentMethod.setText(
+                        tableModel.getValueAt(row, 4).toString()
+                );
 
-        txtPaymentMethod.setText(
-                tableModel.getValueAt(row,4).toString()
-        );
+                txtPaymentStatus.setText(
+                        tableModel.getValueAt(row, 5).toString()
+                );
+            }
+        });
 
-        txtPaymentStatus.setText(
-                tableModel.getValueAt(row,5).toString()
-        );
+
+        // ================= GENERATE RECEIPT =================
+
+        btnReceipt.addActionListener(e -> {
+
+            int row = table.getSelectedRow();
+
+            if (row < 0) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a bill first"
+                );
+                return;
+            }
+
+            String receipt =
+                    "=========================\n" +
+                    "      HOSPITAL RECEIPT\n" +
+                    "=========================\n\n" +
+                    "Bill ID: " +
+                    tableModel.getValueAt(row, 0) + "\n" +
+                    "Appointment ID: " +
+                    tableModel.getValueAt(row, 1) + "\n" +
+                    "Amount: " +
+                    tableModel.getValueAt(row, 2) + "\n" +
+                    "Bill Date: " +
+                    tableModel.getValueAt(row, 3) + "\n" +
+                    "Payment Method: " +
+                    tableModel.getValueAt(row, 4) + "\n" +
+                    "Payment Status: " +
+                    tableModel.getValueAt(row, 5) + "\n\n" +
+                    "Thank You!\n" +
+                    "=========================";
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    receipt,
+                    "Receipt",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        });
     }
-});
-btnReceipt.addActionListener(e -> {
-
-    int row = table.getSelectedRow();
-
-    if(row < 0) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Select a bill first"
-        );
-        return;
-    }
-
-    String receipt =
-            "=========================\n" +
-            "      HOSPITAL RECEIPT\n" +
-            "=========================\n\n" +
-            "Bill ID: " +
-            tableModel.getValueAt(row,0) + "\n" +
-            "Appointment ID: " +
-            tableModel.getValueAt(row,1) + "\n" +
-            "Amount: " +
-            tableModel.getValueAt(row,2) + "\n" +
-            "Bill Date: " +
-            tableModel.getValueAt(row,3) + "\n" +
-            "Payment Method: " +
-            tableModel.getValueAt(row,4) + "\n" +
-            "Payment Status: " +
-            tableModel.getValueAt(row,5) + "\n\n" +
-            "Thank You!\n" +
-            "=========================";
-
-    JOptionPane.showMessageDialog(
-            this,
-            receipt,
-            "Receipt",
-            JOptionPane.INFORMATION_MESSAGE
-    );
-});
-    }
-}
+}

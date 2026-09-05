@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 public class AppointmentPanel extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     JTextField txtAppointmentId;
 JTextField txtPatientId;
     JTextField txtDoctorId;
@@ -212,7 +214,6 @@ btnView.setFont(buttonFont);
 btnSearch.setFont(buttonFont);
 btnUpdate.setFont(buttonFont);
 btnDelete.setFont(buttonFont);
-        btnView.setFont(buttonFont);
 
 
         buttonPanel.add(btnAdd);

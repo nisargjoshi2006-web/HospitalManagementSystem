@@ -12,6 +12,8 @@ import java.util.ArrayList;
 
 public class EmergencyPanel extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     private JTextField txtEmergencyId;
     private JTextField txtPatientId;
     private JTextField txtEmergencyType;
@@ -297,54 +299,61 @@ if (!doctorDAO.doctorExists(assignedDoctor)) {
 
         btnSearch.addActionListener(e -> {
 
-            int id =
-                    Integer.parseInt(
-                            txtEmergencyId.getText()
+            try {
+
+                int id =
+                        Integer.parseInt(
+                                txtEmergencyId.getText().trim()
+                        );
+
+                Emergency em =
+                        dao.searchEmergency(id);
+
+                if (em != null) {
+
+                    txtPatientId.setText(
+                            String.valueOf(
+                                    em.getPatientId()
+                            )
                     );
 
-            Emergency em =
-                    dao.searchEmergency(id);
+                    txtEmergencyType.setText(
+                            em.getEmergencyType()
+                    );
 
-            if(em != null) {
+                    txtPriority.setText(
+                            em.getPriorityLevel()
+                    );
 
-                txtPatientId.setText(
-                        String.valueOf(
-                                em.getPatientId()
-                        )
-                );
+                    txtArrivalDate.setText(
+                            em.getArrivalDate()
+                    );
 
-                txtEmergencyType.setText(
-                        em.getEmergencyType()
-                );
+                    txtArrivalTime.setText(
+                            em.getArrivalTime()
+                    );
 
-                txtPriority.setText(
-                        em.getPriorityLevel()
-                );
+                    txtStatus.setText(
+                            em.getStatus()
+                    );
 
-                txtArrivalDate.setText(
-                        em.getArrivalDate()
-                );
+                    txtAssignedDoctor.setText(
+                            String.valueOf(
+                                    em.getAssignedDoctor()
+                            )
+                    );
 
-                txtArrivalTime.setText(
-                        em.getArrivalTime()
-                );
+                } else {
 
-                txtStatus.setText(
-                        em.getStatus()
-                );
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Emergency Not Found"
+                    );
+                }
 
-                txtAssignedDoctor.setText(
-                        String.valueOf(
-                                em.getAssignedDoctor()
-                        )
-                );
+            } catch (NumberFormatException ex) {
 
-            } else {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Emergency Not Found"
-                );
+                showValidationError("Emergency ID must be a valid number.");
             }
         });
 
@@ -406,18 +415,25 @@ if (!doctorDAO.doctorExists(assignedDoctor)) {
 
         btnDelete.addActionListener(e -> {
 
-            dao.deleteEmergency(
-                    Integer.parseInt(
-                            txtEmergencyId.getText()
-                    )
-            );
+            try {
 
-            loadTable();
+                int id = Integer.parseInt(
+                        txtEmergencyId.getText().trim()
+                );
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Emergency Deleted Successfully"
-            );
+                dao.deleteEmergency(id);
+
+                loadTable();
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Emergency Deleted Successfully"
+                );
+
+            } catch (NumberFormatException ex) {
+
+                showValidationError("Emergency ID must be a valid number.");
+            }
         });
 
         table.getSelectionModel()

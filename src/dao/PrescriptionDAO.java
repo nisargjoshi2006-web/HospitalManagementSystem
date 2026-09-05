@@ -1,9 +1,11 @@
 package dao;
 
 import db.DBConnection;
+import model.Prescription;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class PrescriptionDAO {
 
@@ -135,7 +137,9 @@ public class PrescriptionDAO {
         }
     }
 
-    public ResultSet getAllPrescriptions() {
+    public ArrayList<Prescription> getAllPrescriptions() {
+
+        ArrayList<Prescription> list = new ArrayList<>();
 
         try {
 
@@ -143,39 +147,75 @@ public class PrescriptionDAO {
 
             String query = "SELECT * FROM Prescriptions";
 
-            PreparedStatement pst =
-                    con.prepareStatement(query);
+            PreparedStatement pst = con.prepareStatement(query);
 
-            return pst.executeQuery();
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+
+                Prescription p = new Prescription();
+
+                p.setPrescriptionId(rs.getInt("prescription_id"));
+                p.setAppointmentId(rs.getInt("appointment_id"));
+                p.setDiagnosis(rs.getString("diagnosis"));
+                p.setMedicine(rs.getString("medicine"));
+                p.setNextVisitDate(rs.getDate("next_visit_date") != null
+                        ? rs.getDate("next_visit_date").toString() : "");
+                p.setRemarks(rs.getString("remarks"));
+
+                list.add(p);
+            }
+
+            con.close();
 
         } catch (Exception e) {
 
             e.printStackTrace();
         }
 
-        return null;
+        return list;
     }
+
     // SEARCH
-public ResultSet searchPrescription(int prescriptionId) {
-    try {
-        Connection con = DBConnection.getConnection();
+    public Prescription searchPrescription(int prescriptionId) {
 
-        String query =
-                "SELECT * FROM Prescriptions WHERE prescription_id=?";
+        Prescription p = null;
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+        try {
 
-        pst.setInt(1, prescriptionId);
+            Connection con = DBConnection.getConnection();
 
-        return pst.executeQuery();
+            String query =
+                    "SELECT * FROM Prescriptions WHERE prescription_id=?";
 
-    } catch (Exception e) {
-        e.printStackTrace();
+            PreparedStatement pst = con.prepareStatement(query);
+
+            pst.setInt(1, prescriptionId);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+
+                p = new Prescription();
+
+                p.setPrescriptionId(rs.getInt("prescription_id"));
+                p.setAppointmentId(rs.getInt("appointment_id"));
+                p.setDiagnosis(rs.getString("diagnosis"));
+                p.setMedicine(rs.getString("medicine"));
+                p.setNextVisitDate(rs.getDate("next_visit_date") != null
+                        ? rs.getDate("next_visit_date").toString() : "");
+                p.setRemarks(rs.getString("remarks"));
+            }
+
+            con.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return p;
     }
 
-    return null;
-}
 // CHECK PRESCRIPTION EXISTS
 
 public boolean prescriptionExists(int prescriptionId) {

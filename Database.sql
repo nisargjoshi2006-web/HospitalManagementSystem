@@ -187,4 +187,33 @@ VALUES
 (11,900.00,'2026-09-01','Cash','Pending'),
 (12,1000.00,'2026-09-02','UPI','Pending');
 
-//MAIN CODE FOR THE DATABASE//
+-- MAIN CODE FOR THE DATABASE --
+
+-- Emergency Table (required by EmergencyDAO and EmergencyPanel)
+CREATE TABLE IF NOT EXISTS Emergency (
+    emergency_id    INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id      INT,
+    emergency_type  VARCHAR(50),
+    priority_level  VARCHAR(20),
+    status          VARCHAR(20),
+    assigned_doctor INT,
+    arrival_date    DATE,
+    arrival_time    TIME,
+
+    FOREIGN KEY (patient_id)       REFERENCES Patients(patient_id),
+    FOREIGN KEY (assigned_doctor)  REFERENCES Doctor(doctor_id)
+);
+
+-- Users Table (Login System)
+CREATE TABLE IF NOT EXISTS Users (
+    user_id     INT AUTO_INCREMENT PRIMARY KEY,
+    username    VARCHAR(50) NOT NULL UNIQUE,
+    password    VARCHAR(128) NOT NULL,
+    full_name   VARCHAR(100) NOT NULL,
+    role        VARCHAR(20) NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Default admin account (password: admin123)
+INSERT INTO Users (username, password, full_name, role)
+VALUES ('admin', SHA2('admin123', 256), 'Administrator', 'Admin');

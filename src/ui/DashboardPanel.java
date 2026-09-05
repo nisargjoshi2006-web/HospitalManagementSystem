@@ -12,6 +12,8 @@ import java.time.LocalDate;
 
 public class DashboardPanel extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     public DashboardPanel() {
 
         setLayout(new GridLayout(7, 1, 20, 20));

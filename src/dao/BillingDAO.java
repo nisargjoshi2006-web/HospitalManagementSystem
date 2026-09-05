@@ -1,9 +1,11 @@
 package dao;
 
 import db.DBConnection;
+import model.Billing;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class BillingDAO {
 
@@ -151,28 +153,45 @@ public class BillingDAO {
             e.printStackTrace();
         }
     }
-    public ResultSet getAllBills() {
+    public ArrayList<Billing> getAllBills() {
 
-    try {
+        ArrayList<Billing> list = new ArrayList<>();
 
-        Connection con = DBConnection.getConnection();
+        try {
 
-        String query = "SELECT * FROM Billing";
+            Connection con = DBConnection.getConnection();
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+            String query = "SELECT * FROM Billing";
 
-        return pst.executeQuery();
+            PreparedStatement pst = con.prepareStatement(query);
 
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+
+                Billing b = new Billing();
+
+                b.setBillId(rs.getInt("bill_id"));
+                b.setAppointmentId(rs.getInt("appointment_id"));
+                b.setAmount(rs.getDouble("amount"));
+                b.setBillDate(rs.getDate("bill_date") != null
+                        ? rs.getDate("bill_date").toString() : "");
+                b.setPaymentMethod(rs.getString("payment_method"));
+                b.setPaymentStatus(rs.getString("payment_status"));
+
+                list.add(b);
+            }
+
+            con.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return list;
     }
 
-    catch(Exception e) {
-
-        e.printStackTrace();
-    }
-
-    return null;
-}
 // SEARCH BILL
 
 public boolean billExists(int billId) {

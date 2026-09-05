@@ -10,6 +10,8 @@ import java.util.ArrayList;
 
 public class PatientPanel extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     JTextField txtName;
     JComboBox<String> genderBox;
     JTextField txtAge;

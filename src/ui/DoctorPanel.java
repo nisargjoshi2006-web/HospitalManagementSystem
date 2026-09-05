@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 public class DoctorPanel extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     int selectedDoctorId = -1;
 
     JTextField txtName;
@@ -509,6 +511,7 @@ public class DoctorPanel extends JPanel {
 
                 txtContact.setText("");
 
+                btnView.doClick();
 
             } catch (Exception ex) {
 

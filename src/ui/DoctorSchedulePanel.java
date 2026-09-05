@@ -10,6 +10,8 @@ import java.util.ArrayList;
 
 public class DoctorSchedulePanel extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     private JTextField txtScheduleId;
     private JTextField txtDoctorId;
     private JComboBox<String> dayBox;

@@ -132,75 +132,98 @@ public class DoctorDAO {
     // DELETE DOCTOR
     public void deleteDoctor(int id) {
 
-    try {
+        Connection con = null;
 
-        Connection con = DBConnection.getConnection();
+        try {
 
-        // Delete prescriptions first
-        String sql0 =
-            "DELETE FROM prescriptions WHERE appointment_id IN " +
-            "(SELECT appointment_id FROM appointments WHERE doctor_id=?)";
+            con = DBConnection.getConnection();
+            con.setAutoCommit(false);
 
-        PreparedStatement ps0 =
-            con.prepareStatement(sql0);
+            // Delete prescriptions first
+            String sql0 =
+                "DELETE FROM prescriptions WHERE appointment_id IN " +
+                "(SELECT appointment_id FROM appointments WHERE doctor_id=?)";
 
-        ps0.setInt(1, id);
+            PreparedStatement ps0 =
+                con.prepareStatement(sql0);
 
-        ps0.executeUpdate();
+            ps0.setInt(1, id);
 
-        // Delete billing records
-        String sql1 =
-            "DELETE FROM billing WHERE appointment_id IN " +
-            "(SELECT appointment_id FROM appointments WHERE doctor_id=?)";
+            ps0.executeUpdate();
 
-        PreparedStatement ps1 =
-            con.prepareStatement(sql1);
+            // Delete billing records
+            String sql1 =
+                "DELETE FROM billing WHERE appointment_id IN " +
+                "(SELECT appointment_id FROM appointments WHERE doctor_id=?)";
 
-        ps1.setInt(1, id);
+            PreparedStatement ps1 =
+                con.prepareStatement(sql1);
 
-        ps1.executeUpdate();
+            ps1.setInt(1, id);
 
-        // Delete appointments
-        String sql2 =
-            "DELETE FROM appointments WHERE doctor_id=?";
+            ps1.executeUpdate();
 
-        PreparedStatement ps2 =
-            con.prepareStatement(sql2);
+            // Delete appointments
+            String sql2 =
+                "DELETE FROM appointments WHERE doctor_id=?";
 
-        ps2.setInt(1, id);
+            PreparedStatement ps2 =
+                con.prepareStatement(sql2);
 
-        ps2.executeUpdate();
+            ps2.setInt(1, id);
 
-        // Delete doctor schedule
-        String sql3 =
-            "DELETE FROM doctor_schedule WHERE doctor_id=?";
+            ps2.executeUpdate();
 
-        PreparedStatement ps3 =
-            con.prepareStatement(sql3);
+            // Delete doctor schedule
+            String sql3 =
+                "DELETE FROM doctor_schedule WHERE doctor_id=?";
 
-        ps3.setInt(1, id);
+            PreparedStatement ps3 =
+                con.prepareStatement(sql3);
 
-        ps3.executeUpdate();
+            ps3.setInt(1, id);
 
-        // Delete doctor
-        String sql4 =
-            "DELETE FROM Doctor WHERE doctor_id=?";
+            ps3.executeUpdate();
 
-        PreparedStatement ps4 =
-            con.prepareStatement(sql4);
+            // Delete doctor
+            String sql4 =
+                "DELETE FROM Doctor WHERE doctor_id=?";
 
-        ps4.setInt(1, id);
+            PreparedStatement ps4 =
+                con.prepareStatement(sql4);
 
-        int rows = ps4.executeUpdate();
+            ps4.setInt(1, id);
 
-        System.out.println("Rows Deleted = " + rows);
+            int rows = ps4.executeUpdate();
 
-        con.close();
+            System.out.println("Rows Deleted = " + rows);
 
-    } catch(Exception e) {
-        e.printStackTrace();
+            con.commit();
+
+        } catch(Exception e) {
+
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            e.printStackTrace();
+
+        } finally {
+
+            if (con != null) {
+                try {
+                    con.setAutoCommit(true);
+                    con.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
-}
 
     // SEARCH DOCTOR
     public Doctor searchDoctor(int id) {

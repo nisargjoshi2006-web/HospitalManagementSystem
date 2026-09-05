@@ -1,9 +1,11 @@
 package dao;
 
 import db.DBConnection;
+import model.Feedback;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class FeedbackDAO {
 
@@ -126,7 +128,9 @@ public class FeedbackDAO {
     }
 
     // GET ALL FEEDBACK
-    public ResultSet getAllFeedback() {
+    public ArrayList<Feedback> getAllFeedback() {
+
+        ArrayList<Feedback> list = new ArrayList<>();
 
         try {
 
@@ -136,15 +140,32 @@ public class FeedbackDAO {
 
             PreparedStatement pst = con.prepareStatement(query);
 
-            return pst.executeQuery();
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+
+                Feedback f = new Feedback();
+
+                f.setFeedbackId(rs.getInt("feedback_id"));
+                f.setPatientId(rs.getInt("patient_id"));
+                f.setRating(rs.getInt("rating"));
+                f.setFeedbackDate(rs.getDate("feedback_date") != null
+                        ? rs.getDate("feedback_date").toString() : "");
+                f.setComments(rs.getString("comments"));
+
+                list.add(f);
+            }
+
+            con.close();
 
         } catch (Exception e) {
 
             e.printStackTrace();
         }
 
-        return null;
+        return list;
     }
+
     public int getFeedbackCount() {
 
     int count = 0;
@@ -176,28 +197,41 @@ public class FeedbackDAO {
 
     return count;
 }
-public ResultSet searchFeedback(int feedbackId) {
+    public Feedback searchFeedback(int feedbackId) {
 
-    try {
+        Feedback f = null;
 
-        Connection con =
-                DBConnection.getConnection();
+        try {
 
-        String query =
-                "SELECT * FROM Feedback WHERE feedback_id=?";
+            Connection con = DBConnection.getConnection();
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+            String query =
+                    "SELECT * FROM Feedback WHERE feedback_id=?";
 
-        pst.setInt(1, feedbackId);
+            PreparedStatement pst = con.prepareStatement(query);
 
-        return pst.executeQuery();
+            pst.setInt(1, feedbackId);
 
-    } catch(Exception e) {
+            ResultSet rs = pst.executeQuery();
 
-        e.printStackTrace();
+            if (rs.next()) {
+
+                f = new Feedback();
+
+                f.setFeedbackId(rs.getInt("feedback_id"));
+                f.setPatientId(rs.getInt("patient_id"));
+                f.setRating(rs.getInt("rating"));
+                f.setFeedbackDate(rs.getDate("feedback_date") != null
+                        ? rs.getDate("feedback_date").toString() : "");
+                f.setComments(rs.getString("comments"));
+            }
+
+            con.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return f;
     }
-
-    return null;
-}
-}
+}

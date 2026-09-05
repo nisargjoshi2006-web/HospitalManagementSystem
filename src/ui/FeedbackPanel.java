@@ -1,13 +1,16 @@
 package ui;
 
 import dao.FeedbackDAO;
+import model.Feedback;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class FeedbackPanel extends JPanel {
+
+    private static final long serialVersionUID = 1L;
 
     JTextField txtPatientId;
     JTextField txtRating;
@@ -330,36 +333,21 @@ public class FeedbackPanel extends JPanel {
 
         btnView.addActionListener(e -> {
 
-            try {
+            tableModel.setRowCount(0);
 
-                tableModel.setRowCount(0);
+            ArrayList<Feedback> feedbackList = dao.getAllFeedback();
 
-                ResultSet rs =
-                        dao.getAllFeedback();
+            for (Feedback f : feedbackList) {
 
-                while (rs.next()) {
-
-                    tableModel.addRow(
-                            new Object[]{
-                                    rs.getInt("feedback_id"),
-                                    rs.getInt("patient_id"),
-                                    rs.getInt("rating"),
-                                    rs.getDate("feedback_date"),
-                                    rs.getString("comments")
-                            }
-                    );
-                }
-
-            } catch (Exception ex) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Unable to load feedback",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
+                tableModel.addRow(
+                        new Object[]{
+                                f.getFeedbackId(),
+                                f.getPatientId(),
+                                f.getRating(),
+                                f.getFeedbackDate(),
+                                f.getComments()
+                        }
                 );
-
-                ex.printStackTrace();
             }
         });
 

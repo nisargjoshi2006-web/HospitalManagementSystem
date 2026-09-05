@@ -36,8 +36,8 @@ public class EmergencyDAO {
             ps.setString(3, priorityLevel);
             ps.setString(4, status);
             ps.setInt(5, assignedDoctor);
-            ps.setString(6, arrivalDate);
-            ps.setString(7, arrivalTime);
+            ps.setDate(6, java.sql.Date.valueOf(arrivalDate));
+            ps.setTime(7, java.sql.Time.valueOf(arrivalTime));
 
             ps.executeUpdate();
 
@@ -203,8 +203,8 @@ public class EmergencyDAO {
             ps.setString(3, priorityLevel);
             ps.setString(4, status);
             ps.setInt(5, assignedDoctor);
-            ps.setString(6, arrivalDate);
-            ps.setString(7, arrivalTime);
+            ps.setDate(6, java.sql.Date.valueOf(arrivalDate));
+            ps.setTime(7, java.sql.Time.valueOf(arrivalTime));
             ps.setInt(8, emergencyId);
 
             ps.executeUpdate();

@@ -27,8 +27,8 @@ public class DoctorScheduleDAO {
 
             ps.setInt(1, doctorId);
             ps.setString(2, dayOfWeek);
-            ps.setString(3, startTime);
-            ps.setString(4, endTime);
+            ps.setTime(3, java.sql.Time.valueOf(startTime));
+            ps.setTime(4, java.sql.Time.valueOf(endTime));
 
             ps.executeUpdate();
 
@@ -49,15 +49,12 @@ public class DoctorScheduleDAO {
             Connection con =
                     DBConnection.getConnection();
 
-            String sql =
-                    "SELECT * FROM doctor_schedule";
-
             PreparedStatement ps =
-        con.prepareStatement(
-                "SELECT * FROM doctor_schedule"
-        );
+                    con.prepareStatement(
+                            "SELECT * FROM doctor_schedule"
+                    );
 
-ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             while(rs.next()) {
 
@@ -163,8 +160,8 @@ ResultSet rs = ps.executeQuery();
 
             ps.setInt(1, doctorId);
             ps.setString(2, day);
-            ps.setString(3, startTime);
-            ps.setString(4, endTime);
+            ps.setTime(3, java.sql.Time.valueOf(startTime));
+            ps.setTime(4, java.sql.Time.valueOf(endTime));
             ps.setInt(5, scheduleId);
 
             ps.executeUpdate();

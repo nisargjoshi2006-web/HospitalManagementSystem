@@ -2,8 +2,8 @@ package test;
 
 import dao.PrescriptionDAO;
 import dao.AppointmentDAO;
+import model.Prescription;
 
-import java.sql.ResultSet;
 import java.util.Scanner;
 
 public class TestPrescription {
@@ -106,57 +106,42 @@ public class TestPrescription {
                     int searchId =
                             sc.nextInt();
 
-                    try {
+                    Prescription p =
+                            dao.searchPrescription(searchId);
 
-                        ResultSet rs =
-                                dao.searchPrescription(
-                                        searchId);
+                    if (p != null) {
 
-                        if(rs != null &&
-                                rs.next()) {
+                        System.out.println(
+                                "\nPrescription Found");
 
-                            System.out.println(
-                                    "\nPrescription Found");
+                        System.out.println(
+                                "Prescription ID : "
+                                + p.getPrescriptionId());
 
-                            System.out.println(
-                                    "Prescription ID : "
-                                    + rs.getInt(
-                                    "prescription_id"));
+                        System.out.println(
+                                "Appointment ID : "
+                                + p.getAppointmentId());
 
-                            System.out.println(
-                                    "Appointment ID : "
-                                    + rs.getInt(
-                                    "appointment_id"));
+                        System.out.println(
+                                "Diagnosis : "
+                                + p.getDiagnosis());
 
-                            System.out.println(
-                                    "Diagnosis : "
-                                    + rs.getString(
-                                    "diagnosis"));
+                        System.out.println(
+                                "Medicine : "
+                                + p.getMedicine());
 
-                            System.out.println(
-                                    "Medicine : "
-                                    + rs.getString(
-                                    "medicine"));
+                        System.out.println(
+                                "Next Visit Date : "
+                                + p.getNextVisitDate());
 
-                            System.out.println(
-                                    "Next Visit Date : "
-                                    + rs.getDate(
-                                    "next_visit_date"));
+                        System.out.println(
+                                "Remarks : "
+                                + p.getRemarks());
+                    }
+                    else {
 
-                            System.out.println(
-                                    "Remarks : "
-                                    + rs.getString(
-                                    "remarks"));
-                        }
-                        else {
-
-                            System.out.println(
-                                    "Prescription Not Found");
-                        }
-
-                    } catch(Exception e) {
-
-                        e.printStackTrace();
+                        System.out.println(
+                                "Prescription Not Found");
                     }
 
                     break;

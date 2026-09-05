@@ -2,8 +2,9 @@ package test;
 
 import dao.FeedbackDAO;
 import dao.PatientDAO;
+import model.Feedback;
 
-import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class TestFeedback {
@@ -110,25 +111,22 @@ public class TestFeedback {
 
                 case 2:
 
-                    try {
+                    ArrayList<Feedback> feedbackList =
+                            dao.getAllFeedback();
 
-                        ResultSet rs =
-                                dao.getAllFeedback();
+                    if (feedbackList.isEmpty()) {
+                        System.out.println("No Feedback Found");
+                    }
 
-                        while(rs.next()) {
+                    for (Feedback f : feedbackList) {
 
-                            System.out.println(
-                                    rs.getInt("feedback_id") + " | " +
-                                    rs.getInt("patient_id") + " | " +
-                                    rs.getInt("rating") + " | " +
-                                    rs.getDate("feedback_date") + " | " +
-                                    rs.getString("comments")
-                            );
-                        }
-
-                    } catch(Exception e) {
-
-                        e.printStackTrace();
+                        System.out.println(
+                                f.getFeedbackId() + " | " +
+                                f.getPatientId() + " | " +
+                                f.getRating() + " | " +
+                                f.getFeedbackDate() + " | " +
+                                f.getComments()
+                        );
                     }
 
                     break;
@@ -141,45 +139,38 @@ public class TestFeedback {
                     int searchId =
                             sc.nextInt();
 
-                    try {
+                    Feedback found =
+                            dao.searchFeedback(searchId);
 
-                        ResultSet rs =
-                                dao.searchFeedback(searchId);
+                    if (found != null) {
 
-                        if(rs.next()) {
+                        System.out.println(
+                                "Feedback Found");
 
-                            System.out.println(
-                                    "Feedback Found");
+                        System.out.println(
+                                "Feedback ID : " +
+                                found.getFeedbackId());
 
-                            System.out.println(
-                                    "Feedback ID : " +
-                                    rs.getInt("feedback_id"));
+                        System.out.println(
+                                "Patient ID : " +
+                                found.getPatientId());
 
-                            System.out.println(
-                                    "Patient ID : " +
-                                    rs.getInt("patient_id"));
+                        System.out.println(
+                                "Rating : " +
+                                found.getRating());
 
-                            System.out.println(
-                                    "Rating : " +
-                                    rs.getInt("rating"));
+                        System.out.println(
+                                "Date : " +
+                                found.getFeedbackDate());
 
-                            System.out.println(
-                                    "Date : " +
-                                    rs.getDate("feedback_date"));
+                        System.out.println(
+                                "Comments : " +
+                                found.getComments());
+                    }
+                    else {
 
-                            System.out.println(
-                                    "Comments : " +
-                                    rs.getString("comments"));
-                        }
-                        else {
-
-                            System.out.println(
-                                    "Feedback Not Found");
-                        }
-
-                    } catch(Exception e) {
-
-                        e.printStackTrace();
+                        System.out.println(
+                                "Feedback Not Found");
                     }
 
                     break;
@@ -194,22 +185,12 @@ public class TestFeedback {
 
                     sc.nextLine();
 
-                    try {
+                    if (dao.searchFeedback(feedbackId) == null) {
 
-                        ResultSet rs =
-                                dao.searchFeedback(feedbackId);
+                        System.out.println(
+                                "Feedback ID does not exist!");
 
-                        if(!rs.next()) {
-
-                            System.out.println(
-                                    "Feedback ID does not exist!");
-
-                            break;
-                        }
-
-                    } catch(Exception e) {
-
-                        e.printStackTrace();
+                        break;
                     }
 
                     System.out.println(
@@ -262,22 +243,12 @@ public class TestFeedback {
                     int deleteId =
                             sc.nextInt();
 
-                    try {
+                    if (dao.searchFeedback(deleteId) == null) {
 
-                        ResultSet rs =
-                                dao.searchFeedback(deleteId);
+                        System.out.println(
+                                "Feedback ID does not exist!");
 
-                        if(!rs.next()) {
-
-                            System.out.println(
-                                    "Feedback ID does not exist!");
-
-                            break;
-                        }
-
-                    } catch(Exception e) {
-
-                        e.printStackTrace();
+                        break;
                     }
 
                     dao.deleteFeedback(deleteId);

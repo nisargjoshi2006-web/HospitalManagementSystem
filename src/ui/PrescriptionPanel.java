@@ -1,13 +1,16 @@
 package ui;
 
 import dao.PrescriptionDAO;
+import model.Prescription;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class PrescriptionPanel extends JPanel {
+
+    private static final long serialVersionUID = 1L;
 
     JTextField txtAppointmentId;
     JTextField txtDiagnosis;
@@ -16,9 +19,10 @@ public class PrescriptionPanel extends JPanel {
     JTextField txtRemarks;
 
     JButton btnAdd;
-JButton btnView;
-JButton btnUpdate;
-JButton btnDelete;
+    JButton btnView;
+    JButton btnSearch;
+    JButton btnUpdate;
+    JButton btnDelete;
 
     JTable table;
     DefaultTableModel model;
@@ -159,32 +163,31 @@ JButton btnDelete;
                 )
         );
 
-
         // ADD BUTTON
-
-        btnAdd =
-                new JButton("Add Prescription");
-
+        btnAdd = new JButton("Add Prescription");
         btnAdd.setFont(buttonFont);
 
-
         // VIEW BUTTON
-
-        btnView =
-                new JButton("View Prescriptions");
-
+        btnView = new JButton("View Prescriptions");
         btnView.setFont(buttonFont);
+
+        // SEARCH BUTTON
+        btnSearch = new JButton("Search");
+        btnSearch.setFont(buttonFont);
+
+        // UPDATE BUTTON
         btnUpdate = new JButton("Update Prescription");
-btnUpdate.setFont(buttonFont);
+        btnUpdate.setFont(buttonFont);
 
-btnDelete = new JButton("Delete Prescription");
-btnDelete.setFont(buttonFont);
-
+        // DELETE BUTTON
+        btnDelete = new JButton("Delete Prescription");
+        btnDelete.setFont(buttonFont);
 
         buttonPanel.add(btnAdd);
-buttonPanel.add(btnView);
-buttonPanel.add(btnUpdate);
-buttonPanel.add(btnDelete);
+        buttonPanel.add(btnView);
+        buttonPanel.add(btnSearch);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
 
         // ================= TOP PANEL =================
 
@@ -374,145 +377,160 @@ if(nextDate.isBefore(today))
 
         btnView.addActionListener(e -> {
 
+            model.setRowCount(0);
+
+            ArrayList<Prescription> list = dao.getAllPrescriptions();
+
+            for (Prescription p : list) {
+
+                model.addRow(
+                        new Object[]{
+                                p.getPrescriptionId(),
+                                p.getAppointmentId(),
+                                p.getDiagnosis(),
+                                p.getMedicine(),
+                                p.getNextVisitDate(),
+                                p.getRemarks()
+                        }
+                );
+            }
+        });
+
+
+        // ================= SEARCH PRESCRIPTION =================
+
+        btnSearch.addActionListener(e -> {
+
+            String idStr = JOptionPane.showInputDialog(
+                    this,
+                    "Enter Prescription ID"
+            );
+
+            if (idStr == null || idStr.trim().isEmpty()) return;
+
             try {
 
-                // Clear old rows
+                int id = Integer.parseInt(idStr.trim());
 
-                model.setRowCount(0);
+                boolean found = false;
 
+                for (int r = 0; r < model.getRowCount(); r++) {
 
-                ResultSet rs =
-                        dao.getAllPrescriptions();
+                    if (Integer.parseInt(model.getValueAt(r, 0).toString()) == id) {
 
+                        table.setRowSelectionInterval(r, r);
+                        table.scrollRectToVisible(table.getCellRect(r, 0, true));
+                        found = true;
+                        break;
+                    }
+                }
 
-                while (rs.next()) {
-
-                    model.addRow(
-                            new Object[]{
-
-                                    rs.getInt(
-                                            "prescription_id"
-                                    ),
-
-                                    rs.getInt(
-                                            "appointment_id"
-                                    ),
-
-                                    rs.getString(
-                                            "diagnosis"
-                                    ),
-
-                                    rs.getString(
-                                            "medicine"
-                                    ),
-
-                                    rs.getDate(
-                                            "next_visit_date"
-                                    ),
-
-                                    rs.getString(
-                                            "remarks"
-                                    )
-                            }
+                if (!found) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Prescription ID " + id + " not found. Try viewing first."
                     );
                 }
 
-
-            } catch (Exception ex) {
+            } catch (NumberFormatException ex) {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Unable to load prescriptions",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
+                        "Please enter a valid numeric ID."
                 );
+            }
+        });
+
+
+        // ================= UPDATE PRESCRIPTION =================
+
+        btnUpdate.addActionListener(e -> {
+
+            int row = table.getSelectedRow();
+
+            if (row == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a row first"
+                );
+
+                return;
+            }
+
+            try {
+
+                int prescriptionId =
+                        Integer.parseInt(
+                                model.getValueAt(row, 0).toString()
+                        );
+
+                int appointmentId =
+                        Integer.parseInt(
+                                txtAppointmentId.getText().trim()
+                        );
+
+                dao.updatePrescription(
+                        prescriptionId,
+                        appointmentId,
+                        txtDiagnosis.getText().trim(),
+                        txtMedicine.getText().trim(),
+                        txtNextVisit.getText().trim(),
+                        txtRemarks.getText().trim()
+                );
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Prescription Updated"
+                );
+
+                btnView.doClick();
+
+            } catch (Exception ex) {
 
                 ex.printStackTrace();
             }
         });
-        btnUpdate.addActionListener(e -> {
 
-    int row = table.getSelectedRow();
 
-    if(row == -1) {
+        // ================= DELETE PRESCRIPTION =================
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Select a row first"
-        );
+        btnDelete.addActionListener(e -> {
 
-        return;
-    }
+            int row = table.getSelectedRow();
 
-    try {
+            if (row == -1) {
 
-        int prescriptionId =
-                Integer.parseInt(
-                        model.getValueAt(row,0).toString()
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Select a row first"
                 );
 
-        int appointmentId =
-                Integer.parseInt(
-                        txtAppointmentId.getText().trim()
+                return;
+            }
+
+            try {
+
+                int prescriptionId =
+                        Integer.parseInt(
+                                model.getValueAt(row, 0).toString()
+                        );
+
+                dao.deletePrescription(
+                        prescriptionId
                 );
 
-        dao.updatePrescription(
-                prescriptionId,
-                appointmentId,
-                txtDiagnosis.getText().trim(),
-                txtMedicine.getText().trim(),
-                txtNextVisit.getText().trim(),
-                txtRemarks.getText().trim()
-        );
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Prescription Updated"
-        );
-
-    } catch(Exception ex) {
-
-        ex.printStackTrace();
-
-    }
-
-});
-btnDelete.addActionListener(e -> {
-
-    int row = table.getSelectedRow();
-
-    if(row == -1) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Select a row first"
-        );
-
-        return;
-    }
-
-    try {
-
-        int prescriptionId =
-                Integer.parseInt(
-                        model.getValueAt(row,0).toString()
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Prescription Deleted"
                 );
 
-        dao.deletePrescription(
-                prescriptionId
-        );
+                btnView.doClick();
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Prescription Deleted"
-        );
+            } catch (Exception ex) {
 
-    } catch(Exception ex) {
-
-        ex.printStackTrace();
-
+                ex.printStackTrace();
+            }
+        });
     }
-
-});
-    }
-}
+}

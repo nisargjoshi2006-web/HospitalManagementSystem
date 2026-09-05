@@ -80,23 +80,7 @@ public class TestPatient {
                     int bloodChoice = sc.nextInt();
                     sc.nextLine();
 
-                    String bloodGroup;
-
-                    switch(bloodChoice) {
-                        case 1: bloodGroup = "A+"; break;
-                        case 2: bloodGroup = "A-"; break;
-                        case 3: bloodGroup = "B+"; break;
-                        case 4: bloodGroup = "B-"; break;
-                        case 5: bloodGroup = "AB+"; break;
-                        case 6: bloodGroup = "AB-"; break;
-                        case 7: bloodGroup = "O+"; break;
-                        case 8: bloodGroup = "O-"; break;
-                        default:
-                            System.out.println("Invalid Blood Group!");
-                            break;
-                    }
-
-                    bloodGroup = switch(bloodChoice) {
+                    String bloodGroup = switch(bloodChoice) {
                         case 1 -> "A+";
                         case 2 -> "A-";
                         case 3 -> "B+";

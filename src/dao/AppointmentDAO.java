@@ -81,10 +81,12 @@ public class AppointmentDAO {
                         rs.getInt("doctor_id"));
 
                 a.setAppointmentDate(
-                        rs.getDate("appointment_date").toString());
+                        rs.getDate("appointment_date") != null
+                                ? rs.getDate("appointment_date").toString() : "");
 
                 a.setAppointmentTime(
-                        rs.getTime("appointment_time").toString());
+                        rs.getTime("appointment_time") != null
+                                ? rs.getTime("appointment_time").toString() : "");
 
                 a.setRoomNumber(
                         rs.getString("room_number"));
@@ -140,10 +142,12 @@ public class AppointmentDAO {
                         rs.getInt("doctor_id"));
 
                 a.setAppointmentDate(
-                        rs.getDate("appointment_date").toString());
+                        rs.getDate("appointment_date") != null
+                                ? rs.getDate("appointment_date").toString() : "");
 
                 a.setAppointmentTime(
-                        rs.getTime("appointment_time").toString());
+                        rs.getTime("appointment_time") != null
+                                ? rs.getTime("appointment_time").toString() : "");
 
                 a.setRoomNumber(
                         rs.getString("room_number"));

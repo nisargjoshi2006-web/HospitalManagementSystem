@@ -1,6 +1,6 @@
 {
     "java.project.sourcePaths": [
-        "."
+        "src"
     ],
     "java.project.referencedLibraries": [
         "c:\\Users\\nisar\\Downloads\\mysql-connector-j-26.7.0\\mysql-connector-j-26.7.0\\mysql-connector-j-26.7.0.jar",

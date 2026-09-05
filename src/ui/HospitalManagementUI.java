@@ -1,27 +1,47 @@
 package ui;
 
+import model.User;
+
 import javax.swing.*;
 
 public class HospitalManagementUI extends JFrame {
 
-    public HospitalManagementUI() {
+    private static final long serialVersionUID = 1L;
 
-        setTitle("Hospital Management System");
+    public HospitalManagementUI(User user) {
+
+        setTitle(
+                "Hospital Management System — Logged in as: " +
+                user.getFullName() + " (" + user.getRole() + ")"
+        );
+
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         JTabbedPane tabs = new JTabbedPane();
+
         tabs.add("Dashboard", new DashboardPanel());
 
-        tabs.add("Patients", new PatientPanel());
-        tabs.add("Doctors", new DoctorPanel());
-        tabs.add("Doctor Schedule", new DoctorSchedulePanel());
-        tabs.add("Appointments", new AppointmentPanel());
-        tabs.add("Prescriptions", new PrescriptionPanel());
-        tabs.add("Feedback", new FeedbackPanel());
-        tabs.add("Billing", new BillingPanel());
-        tabs.add("Emergency", new EmergencyPanel());
+        if (user.getRole().equalsIgnoreCase("Admin")) {
+
+            // Admin gets all tabs
+            tabs.add("Patients", new PatientPanel());
+            tabs.add("Doctors", new DoctorPanel());
+            tabs.add("Doctor Schedule", new DoctorSchedulePanel());
+            tabs.add("Appointments", new AppointmentPanel());
+            tabs.add("Prescriptions", new PrescriptionPanel());
+            tabs.add("Feedback", new FeedbackPanel());
+            tabs.add("Billing", new BillingPanel());
+            tabs.add("Emergency", new EmergencyPanel());
+
+        } else {
+
+            // Receptionist gets limited tabs
+            tabs.add("Patients", new PatientPanel());
+            tabs.add("Appointments", new AppointmentPanel());
+            tabs.add("Billing", new BillingPanel());
+        }
 
         add(tabs);
 
@@ -29,6 +49,6 @@ public class HospitalManagementUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        new HospitalManagementUI();
+        new LoginUI();
     }
 }
