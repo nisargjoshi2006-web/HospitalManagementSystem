@@ -31,8 +31,32 @@ public class AppointmentDAO {
         }
     }
 
+    /** Returns false when the doctor is already booked at the requested time. */
+    public boolean isDoctorAvailable(int doctorId, String appointmentDate,
+                                     String appointmentTime, Integer excludedAppointmentId) {
+        String query = "SELECT COUNT(*) FROM Appointments " +
+                "WHERE doctor_id=? AND appointment_date=? AND appointment_time=?" +
+                (excludedAppointmentId == null ? "" : " AND appointment_id<>?");
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query)) {
+            pst.setInt(1, doctorId);
+            pst.setDate(2, java.sql.Date.valueOf(appointmentDate));
+            pst.setTime(3, java.sql.Time.valueOf(appointmentTime));
+            if (excludedAppointmentId != null) {
+                pst.setInt(4, excludedAppointmentId);
+            }
+
+            try (ResultSet rs = pst.executeQuery()) {
+                return rs.next() && rs.getInt(1) == 0;
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to check doctor availability", e);
+        }
+    }
+
     // INSERT
-    public void addAppointment(
+    public boolean addAppointment(
             int patientId,
             int doctorId,
             String appointmentDate,
@@ -58,13 +82,16 @@ public class AppointmentDAO {
             pst.setString(5, roomNumber);
             pst.setString(6, status);
 
-            pst.executeUpdate();
+            int rows = pst.executeUpdate();
 
             con.close();
+
+            return rows == 1;
 
         } catch (Exception e) {
 
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -190,7 +217,7 @@ public class AppointmentDAO {
     
 
     // UPDATE COMPLETE RECORD
-    public void updateAppointment(
+    public boolean updateAppointment(
             int appointmentId,
             int patientId,
             int doctorId,
@@ -227,13 +254,16 @@ public class AppointmentDAO {
             pst.setString(6, status);
             pst.setInt(7, appointmentId);
 
-            pst.executeUpdate();
+            int rows = pst.executeUpdate();
 
             con.close();
+
+            return rows == 1;
 
         } catch (Exception e) {
 
             e.printStackTrace();
+            return false;
         }
     }
 

@@ -4,7 +4,7 @@ CREATE TABLE Patients(
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_name VARCHAR(50) NOT NULL,
     gender VARCHAR(10),
-    age INT,
+    age INT CHECK (age >= 0),
     blood_group VARCHAR(5),
     contact VARCHAR(15),
     address VARCHAR(100),
@@ -20,7 +20,7 @@ CREATE TABLE Doctor(
     doctor_name VARCHAR(50),
     specialization_id INT,
     qualification VARCHAR(50),
-    consultation_fee DECIMAL(10,2),
+    consultation_fee DECIMAL(10,2) CHECK (consultation_fee >= 0),
     contact VARCHAR(15),
 
     FOREIGN KEY (specialization_id)
@@ -36,7 +36,8 @@ CREATE TABLE Appointments(
     status VARCHAR(20),
 
     FOREIGN KEY(patient_id) REFERENCES Patients(patient_id),
-    FOREIGN KEY(doctor_id) REFERENCES Doctor(doctor_id)
+    FOREIGN KEY(doctor_id) REFERENCES Doctor(doctor_id),
+    UNIQUE (doctor_id, appointment_date, appointment_time)
 );
 
 -- Do not allow an appointment to be dated before the patient's registration.
@@ -97,7 +98,7 @@ CREATE TABLE Billing(
 CREATE TABLE Feedback(
     feedback_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT,
-    rating INT,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
     feedback_date DATE,
     comments VARCHAR(100),
 

@@ -332,14 +332,32 @@ buttonPanel.add(btnDelete);
                     return;
                 }
 
-                dao.addAppointment(
+                if (!dao.isDoctorAvailable(doctorId, date, time, null)) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "This doctor already has an appointment at the selected date and time.",
+                            "Doctor Unavailable",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                if (!dao.addAppointment(
                         patientId,
                         doctorId,
                         date,
                         time,
                         room,
                         status
-                );
+                )) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "The appointment could not be saved. Check the entered data.",
+                            "Save Failed",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
 
 
                 JOptionPane.showMessageDialog(
@@ -487,24 +505,46 @@ btnUpdate.addActionListener(e -> {
             return;
         }
 
-        dao.updateAppointment(
+        int appointmentId = Integer.parseInt(
+                txtAppointmentId.getText().trim());
+        int doctorId = Integer.parseInt(
+                txtDoctorId.getText().trim());
+        String appointmentTime = txtTime.getText().trim();
 
-                Integer.parseInt(
-                        txtAppointmentId.getText().trim()),
+        if (!dao.isDoctorAvailable(doctorId, appointmentDate, appointmentTime, appointmentId)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "This doctor already has an appointment at the selected date and time.",
+                    "Doctor Unavailable",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        if (!dao.updateAppointment(
+
+                appointmentId,
 
                 patientId,
 
-                Integer.parseInt(
-                        txtDoctorId.getText().trim()),
+                doctorId,
 
                 appointmentDate,
 
-                txtTime.getText().trim(),
+                appointmentTime,
 
                 txtRoom.getText().trim(),
 
                 txtStatus.getText().trim()
-        );
+        )) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "The appointment could not be updated. Check the entered data.",
+                    "Update Failed",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
 
         JOptionPane.showMessageDialog(
                 this,

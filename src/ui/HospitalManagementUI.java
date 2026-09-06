@@ -34,6 +34,7 @@ public class HospitalManagementUI extends JFrame {
             tabs.add("Feedback", new FeedbackPanel());
             tabs.add("Billing", new BillingPanel());
             tabs.add("Emergency", new EmergencyPanel());
+            tabs.add("Reports", new ReportsPanel());
 
         } else {
 
