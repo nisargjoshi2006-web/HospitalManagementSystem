@@ -9,6 +9,28 @@ import java.sql.ResultSet;
 
 public class AppointmentDAO {
 
+    /** Returns whether the appointment date is on or after the patient's registration date. */
+    public boolean isAppointmentDateValid(int patientId, String appointmentDate) {
+        String query = "SELECT registration_date FROM Patients WHERE patient_id=?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query)) {
+            pst.setInt(1, patientId);
+
+            try (ResultSet rs = pst.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+
+                java.sql.Date registrationDate = rs.getDate("registration_date");
+                java.sql.Date scheduledDate = java.sql.Date.valueOf(appointmentDate);
+                return registrationDate == null || !scheduledDate.before(registrationDate);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to validate the appointment date", e);
+        }
+    }
+
     // INSERT
     public void addAppointment(
             int patientId,

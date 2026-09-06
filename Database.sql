@@ -1,4 +1,4 @@
-CREATE DATABASE hospital;
+CREATE DATABASE IF NOT EXISTS hospital;
 USE hospital;
 CREATE TABLE Patients(
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,6 +38,42 @@ CREATE TABLE Appointments(
     FOREIGN KEY(patient_id) REFERENCES Patients(patient_id),
     FOREIGN KEY(doctor_id) REFERENCES Doctor(doctor_id)
 );
+
+-- Do not allow an appointment to be dated before the patient's registration.
+DROP TRIGGER IF EXISTS validate_appointment_registration_insert;
+DROP TRIGGER IF EXISTS validate_appointment_registration_update;
+
+DELIMITER //
+CREATE TRIGGER validate_appointment_registration_insert
+BEFORE INSERT ON Appointments
+FOR EACH ROW
+BEGIN
+    DECLARE patient_registration_date DATE;
+    SELECT registration_date INTO patient_registration_date
+    FROM Patients WHERE patient_id = NEW.patient_id;
+
+    IF patient_registration_date IS NOT NULL
+       AND NEW.appointment_date < patient_registration_date THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Appointment date cannot be before patient registration date';
+    END IF;
+END//
+
+CREATE TRIGGER validate_appointment_registration_update
+BEFORE UPDATE ON Appointments
+FOR EACH ROW
+BEGIN
+    DECLARE patient_registration_date DATE;
+    SELECT registration_date INTO patient_registration_date
+    FROM Patients WHERE patient_id = NEW.patient_id;
+
+    IF patient_registration_date IS NOT NULL
+       AND NEW.appointment_date < patient_registration_date THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Appointment date cannot be before patient registration date';
+    END IF;
+END//
+DELIMITER ;
 CREATE TABLE Prescriptions(
     prescription_id INT AUTO_INCREMENT PRIMARY KEY,
     appointment_id INT,

@@ -23,7 +23,9 @@ public class DBConnection {
                 props.load(is);
                 URL      = props.getProperty("db.url");
                 USER     = props.getProperty("db.user");
-                PASSWORD = props.getProperty("db.password").trim();
+                // A missing password setting means an empty password, rather than a
+                // NullPointerException while the application is starting.
+                PASSWORD = props.getProperty("db.password", "").trim();
             } else {
                 System.err.println("WARNING: config.properties not found on classpath. Using defaults.");
                 URL      = "jdbc:mysql://localhost:3306/hospital";
@@ -57,4 +59,4 @@ public class DBConnection {
 
         return null;
     }
-}
+}

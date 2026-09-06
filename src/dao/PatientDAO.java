@@ -137,25 +137,49 @@ public void updatePatient(
 
     System.out.println("Deleting ID = " + id);
 
+    Connection con = null;
     try {
+        con = DBConnection.getConnection();
+        con.setAutoCommit(false);
 
-        Connection con = DBConnection.getConnection();
+        String[] queries = {
+            "DELETE FROM Prescriptions WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
+            "DELETE FROM Billing WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
+            "DELETE FROM Appointments WHERE patient_id=?",
+            "DELETE FROM Feedback WHERE patient_id=?",
+            "DELETE FROM Emergency WHERE patient_id=?"
+        };
 
-        String query =
-            "DELETE FROM Patients WHERE patient_id=?";
+        for (String query : queries) {
+            try (PreparedStatement pst = con.prepareStatement(query)) {
+                pst.setInt(1, id);
+                pst.executeUpdate();
+            }
+        }
 
-        PreparedStatement pst = con.prepareStatement(query);
-
-        pst.setInt(1, id);
-
-        int rows = pst.executeUpdate();
-
-        System.out.println("Rows Deleted = " + rows);
-
-        con.close();
-
+        try (PreparedStatement pst = con.prepareStatement("DELETE FROM Patients WHERE patient_id=?")) {
+            pst.setInt(1, id);
+            System.out.println("Rows Deleted = " + pst.executeUpdate());
+        }
+        con.commit();
     } catch (Exception e) {
+        if (con != null) {
+            try {
+                con.rollback();
+            } catch (Exception rollbackError) {
+                rollbackError.printStackTrace();
+            }
+        }
         e.printStackTrace();
+    } finally {
+        if (con != null) {
+            try {
+                con.setAutoCommit(true);
+                con.close();
+            } catch (Exception closeError) {
+                closeError.printStackTrace();
+            }
+        }
     }
 }
     public ArrayList<Patient> getAllPatients() {

@@ -185,6 +185,17 @@ public class DoctorDAO {
 
             ps3.executeUpdate();
 
+            // Keep emergency records, but unassign this doctor before deleting it.
+            String sqlEmergency =
+                "UPDATE Emergency SET assigned_doctor=NULL WHERE assigned_doctor=?";
+
+            PreparedStatement psEmergency =
+                con.prepareStatement(sqlEmergency);
+
+            psEmergency.setInt(1, id);
+
+            psEmergency.executeUpdate();
+
             // Delete doctor
             String sql4 =
                 "DELETE FROM Doctor WHERE doctor_id=?";

@@ -322,6 +322,15 @@ buttonPanel.add(btnDelete);
                                 .getText()
                                 .trim();
 
+                if (!dao.isAppointmentDateValid(patientId, date)) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Appointment date must be on or after the patient's registration date.",
+                            "Invalid Appointment Date",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
 
                 dao.addAppointment(
                         patientId,
@@ -464,18 +473,31 @@ btnUpdate.addActionListener(e -> {
 
     try {
 
+        int patientId = Integer.parseInt(
+                txtPatientId.getText().trim());
+        String appointmentDate = txtDate.getText().trim();
+
+        if (!dao.isAppointmentDateValid(patientId, appointmentDate)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Appointment date must be on or after the patient's registration date.",
+                    "Invalid Appointment Date",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
         dao.updateAppointment(
 
                 Integer.parseInt(
                         txtAppointmentId.getText().trim()),
 
-                Integer.parseInt(
-                        txtPatientId.getText().trim()),
+                patientId,
 
                 Integer.parseInt(
                         txtDoctorId.getText().trim()),
 
-                txtDate.getText().trim(),
+                appointmentDate,
 
                 txtTime.getText().trim(),
 
