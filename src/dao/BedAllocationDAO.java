@@ -12,8 +12,50 @@ import java.util.ArrayList;
 
 public class BedAllocationDAO {
 
-    // ALLOCATE BED
-    public void allocateBed(int patientId, String wardType, String bedNumber, String admitDate, BigDecimal dailyCharge, String status) {
+    // CHECK IF BED IS OCCUPIED
+    public boolean isBedOccupied(String wardType, String bedNumber) {
+        String sql = "SELECT COUNT(*) FROM Bed_Allocation WHERE ward_type=? AND bed_number=? AND status='Occupied'";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, wardType);
+            pst.setString(2, bedNumber);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // CHECK IF PATIENT IS CURRENTLY ADMITTED
+    public boolean isPatientAdmitted(int patientId) {
+        String sql = "SELECT COUNT(*) FROM Bed_Allocation WHERE patient_id=? AND status='Occupied'";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, patientId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // ALLOCATE BED WITH VALIDATION
+    public void allocateBed(int patientId, String wardType, String bedNumber, String admitDate, BigDecimal dailyCharge, String status) throws Exception {
+        if (isPatientAdmitted(patientId)) {
+            throw new IllegalArgumentException("Patient ID " + patientId + " is already admitted to another active bed!");
+        }
+        if (isBedOccupied(wardType, bedNumber)) {
+            throw new IllegalArgumentException("Bed " + bedNumber + " in " + wardType + " is currently OCCUPIED!");
+        }
+
         String sql = "INSERT INTO Bed_Allocation (patient_id, ward_type, bed_number, admit_date, daily_charge, status) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
@@ -24,8 +66,6 @@ public class BedAllocationDAO {
             pst.setBigDecimal(5, dailyCharge);
             pst.setString(6, status);
             pst.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

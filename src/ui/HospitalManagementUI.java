@@ -16,7 +16,7 @@ public class HospitalManagementUI extends JFrame {
                 user.getFullName() + " (" + user.getRole() + ")"
         );
 
-        setSize(950, 650);
+        setSize(1020, 680);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -63,6 +63,7 @@ public class HospitalManagementUI extends JFrame {
 
         // ================= MODULE TABS =================
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
         tabs.add("Dashboard", new DashboardPanel());
 

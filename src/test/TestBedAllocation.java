@@ -43,8 +43,12 @@ public class TestBedAllocation {
                     System.out.print("Daily Bed Charge (₹): ");
                     BigDecimal charge = sc.nextBigDecimal();
 
-                    dao.allocateBed(patientId, wardType, bedNumber, admitDate, charge, "Occupied");
-                    System.out.println("Bed Allocated and Patient Admitted Successfully!");
+                    try {
+                        dao.allocateBed(patientId, wardType, bedNumber, admitDate, charge, "Occupied");
+                        System.out.println("Bed Allocated and Patient Admitted Successfully!");
+                    } catch (Exception ex) {
+                        System.out.println("Allocation Failed: " + ex.getMessage());
+                    }
                     break;
 
                 case 2:

@@ -47,7 +47,8 @@ public class BedAllocationPanel extends JPanel {
         cmbWardType = new JComboBox<>(new String[]{"General Ward", "ICU", "Private AC Room", "Emergency Ward", "Semi-Private"});
         txtBedNumber = new JTextField();
         txtAdmitDate = new JTextField(LocalDate.now().toString());
-        txtDischargeDate = new JTextField(LocalDate.now().toString());
+        txtDischargeDate = new JTextField("");
+        txtDischargeDate.setEnabled(false); // Only active when a bed is selected for discharge
         txtDailyCharge = new JTextField("1500.00");
 
         txtPatientId.setFont(fieldFont);
@@ -61,7 +62,7 @@ public class BedAllocationPanel extends JPanel {
         JLabel lblWard = new JLabel("Ward Type:"); lblWard.setFont(labelFont);
         JLabel lblBed = new JLabel("Bed Number (e.g., GW-101):"); lblBed.setFont(labelFont);
         JLabel lblAdmit = new JLabel("Admit Date (YYYY-MM-DD):"); lblAdmit.setFont(labelFont);
-        JLabel lblDischarge = new JLabel("Discharge Date (YYYY-MM-DD):"); lblDischarge.setFont(labelFont);
+        JLabel lblDischarge = new JLabel("Discharge Date (On Discharge):"); lblDischarge.setFont(labelFont);
         JLabel lblCharge = new JLabel("Daily Charge (Rs.):"); lblCharge.setFont(labelFont);
 
         formPanel.add(lblPid); formPanel.add(txtPatientId);
@@ -104,6 +105,8 @@ public class BedAllocationPanel extends JPanel {
                 txtBedNumber.setText(tableModel.getValueAt(row, 3).toString());
                 txtAdmitDate.setText(tableModel.getValueAt(row, 4).toString());
                 txtDailyCharge.setText(tableModel.getValueAt(row, 5).toString());
+                txtDischargeDate.setText(LocalDate.now().toString());
+                txtDischargeDate.setEnabled(true);
             }
         });
 
@@ -112,23 +115,45 @@ public class BedAllocationPanel extends JPanel {
 
         btnAdmit.addActionListener(e -> {
             try {
+                if (txtPatientId.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid Patient ID!", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 int pid = Integer.parseInt(txtPatientId.getText().trim());
                 String ward = (String) cmbWardType.getSelectedItem();
                 String bed = txtBedNumber.getText().trim();
                 String admit = txtAdmitDate.getText().trim();
+
+                if (bed.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please enter a bed number (e.g., GW-101, ICU-02)!", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
                 BigDecimal charge = new BigDecimal(txtDailyCharge.getText().trim());
 
                 if (!patientDAO.patientExists(pid)) {
-                    JOptionPane.showMessageDialog(this, "Patient ID does not exist!", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Patient ID " + pid + " does not exist in the database!", "Patient Not Found", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (dao.isPatientAdmitted(pid)) {
+                    JOptionPane.showMessageDialog(this, "Patient ID " + pid + " is already admitted in an active bed!\nA patient cannot occupy multiple beds concurrently.", "Patient Already Admitted", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                if (dao.isBedOccupied(ward, bed)) {
+                    JOptionPane.showMessageDialog(this, "Bed " + bed + " in " + ward + " is currently OCCUPIED!\nPlease select an available bed or discharge the current occupant.", "Bed Occupied", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 dao.allocateBed(pid, ward, bed, admit, charge, "Occupied");
-                JOptionPane.showMessageDialog(this, "Patient Admitted & Bed Allocated! (ID auto-assigned)");
+                JOptionPane.showMessageDialog(this, "Patient Admitted & Bed Allocated Successfully!\nAllocation ID auto-generated.");
                 clearForm();
                 refreshTable();
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(this, "Invalid number format in Patient ID or Daily Charge!", "Input Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Invalid input: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Admission Failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -139,12 +164,25 @@ public class BedAllocationPanel extends JPanel {
             }
             try {
                 String disDate = txtDischargeDate.getText().trim();
-                dao.dischargePatient(selectedAllocationId, disDate);
-                JOptionPane.showMessageDialog(this, "Patient Discharged Successfully!");
-                clearForm();
-                refreshTable();
+                if (disDate.isEmpty()) {
+                    disDate = LocalDate.now().toString();
+                }
+
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Discharge Patient " + txtPatientId.getText() + " from Bed " + txtBedNumber.getText() + " (" + cmbWardType.getSelectedItem() + ") on " + disDate + "?",
+                        "Confirm Discharge",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    dao.dischargePatient(selectedAllocationId, disDate);
+                    JOptionPane.showMessageDialog(this, "Patient Discharged Successfully!\nBed is now freed and available for new admissions.");
+                    clearForm();
+                    refreshTable();
+                }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Discharge Failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -156,7 +194,8 @@ public class BedAllocationPanel extends JPanel {
         txtPatientId.setText("");
         txtBedNumber.setText("");
         txtAdmitDate.setText(LocalDate.now().toString());
-        txtDischargeDate.setText(LocalDate.now().toString());
+        txtDischargeDate.setText("");
+        txtDischargeDate.setEnabled(false);
         txtDailyCharge.setText("1500.00");
         cmbWardType.setSelectedIndex(0);
         table.clearSelection();

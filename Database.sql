@@ -665,6 +665,37 @@ INSERT INTO Bed_Allocation (patient_id, ward_type, bed_number, admit_date, disch
 (3, 'Private AC Room', 'PVT-205', '2026-09-01', NULL, 3000.00, 'Occupied'),
 (5, 'Emergency Ward', 'EMG-02', '2026-09-04', NULL, 2500.00, 'Occupied');
 
+-- Trigger: Enforce Single-Admission and Bed Availability on INSERT
+DELIMITER //
+CREATE TRIGGER trg_CheckBedAllocationInsert
+BEFORE INSERT ON Bed_Allocation
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Occupied' THEN
+        IF (SELECT COUNT(*) FROM Bed_Allocation WHERE ward_type = NEW.ward_type AND bed_number = NEW.bed_number AND status = 'Occupied') > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Bed is already occupied by another patient!';
+        END IF;
+        IF (SELECT COUNT(*) FROM Bed_Allocation WHERE patient_id = NEW.patient_id AND status = 'Occupied') > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Patient is already admitted in a bed!';
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger: Enforce Bed Availability on UPDATE
+DELIMITER //
+CREATE TRIGGER trg_CheckBedAllocationUpdate
+BEFORE UPDATE ON Bed_Allocation
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Occupied' AND (OLD.status != 'Occupied' OR OLD.bed_number != NEW.bed_number OR OLD.ward_type != NEW.ward_type) THEN
+        IF (SELECT COUNT(*) FROM Bed_Allocation WHERE ward_type = NEW.ward_type AND bed_number = NEW.bed_number AND status = 'Occupied' AND allocation_id != NEW.allocation_id) > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Bed is already occupied by another patient!';
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
 -- ==================================================================================
 -- NEW ENTITY 3: AUDIT_LOGS (SYSTEM SECURITY & COMPLIANCE LOGGING)
 -- ==================================================================================
