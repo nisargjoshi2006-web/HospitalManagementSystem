@@ -16,7 +16,6 @@ public class LabTestPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
-    private JTextField txtTestId;
     private JTextField txtPatientId;
     private JTextField txtDoctorId;
     private JTextField txtTestName;
@@ -32,6 +31,7 @@ public class LabTestPanel extends JPanel {
 
     private JTable table;
     private DefaultTableModel tableModel;
+    private int selectedTestId = -1;
 
     private LabTestDAO dao = new LabTestDAO();
     private PatientDAO patientDAO = new PatientDAO();
@@ -44,12 +44,8 @@ public class LabTestPanel extends JPanel {
         Font labelFont = new Font("Arial", Font.BOLD, 14);
         Font fieldFont = new Font("Arial", Font.PLAIN, 14);
 
-        // Form Panel
-        JPanel formPanel = new JPanel(new GridLayout(8, 2, 8, 8));
-
-        txtTestId = new JTextField();
-        txtTestId.setEditable(false);
-        txtTestId.setBackground(new Color(240, 240, 240));
+        // Form Panel (Clean form without redundant ID field)
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 8, 8));
 
         txtPatientId = new JTextField();
         txtDoctorId = new JTextField();
@@ -57,10 +53,8 @@ public class LabTestPanel extends JPanel {
         txtTestDate = new JTextField(LocalDate.now().toString());
         txtCost = new JTextField();
         txtResult = new JTextField("Pending Analysis");
-
         cmbStatus = new JComboBox<>(new String[]{"Pending", "Sample Collected", "Completed"});
 
-        txtTestId.setFont(fieldFont);
         txtPatientId.setFont(fieldFont);
         txtDoctorId.setFont(fieldFont);
         txtTestName.setFont(fieldFont);
@@ -69,16 +63,14 @@ public class LabTestPanel extends JPanel {
         txtResult.setFont(fieldFont);
         cmbStatus.setFont(fieldFont);
 
-        JLabel lblId = new JLabel("Test ID (Auto):"); lblId.setFont(labelFont);
         JLabel lblPid = new JLabel("Patient ID:"); lblPid.setFont(labelFont);
         JLabel lblDid = new JLabel("Doctor ID:"); lblDid.setFont(labelFont);
         JLabel lblName = new JLabel("Test Name (CBC, MRI, etc.):"); lblName.setFont(labelFont);
-        JLabel lblDate = new JLabel("Date (YYYY-MM-DD):"); lblDate.setFont(labelFont);
-        JLabel lblCost = new JLabel("Cost (Rs.):"); lblCost.setFont(labelFont);
+        JLabel lblDate = new JLabel("Test Date (YYYY-MM-DD):"); lblDate.setFont(labelFont);
+        JLabel lblCost = new JLabel("Test Cost (Rs.):"); lblCost.setFont(labelFont);
         JLabel lblRes = new JLabel("Findings / Result:"); lblRes.setFont(labelFont);
         JLabel lblStat = new JLabel("Status:"); lblStat.setFont(labelFont);
 
-        formPanel.add(lblId); formPanel.add(txtTestId);
         formPanel.add(lblPid); formPanel.add(txtPatientId);
         formPanel.add(lblDid); formPanel.add(txtDoctorId);
         formPanel.add(lblName); formPanel.add(txtTestName);
@@ -112,11 +104,11 @@ public class LabTestPanel extends JPanel {
         table.setRowHeight(22);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Populate table on select
+        // Select row from table to populate form for update/delete
         table.getSelectionModel().addListSelectionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
-                txtTestId.setText(tableModel.getValueAt(row, 0).toString());
+                selectedTestId = Integer.parseInt(tableModel.getValueAt(row, 0).toString());
                 txtPatientId.setText(tableModel.getValueAt(row, 1).toString());
                 txtDoctorId.setText(tableModel.getValueAt(row, 2).toString());
                 txtTestName.setText(tableModel.getValueAt(row, 3).toString());
@@ -150,7 +142,8 @@ public class LabTestPanel extends JPanel {
                 }
 
                 dao.addLabTest(pid, did, name, date, cost, res, stat);
-                JOptionPane.showMessageDialog(this, "Lab Test Ordered Successfully!");
+                JOptionPane.showMessageDialog(this, "Lab Test Ordered Successfully! (ID auto-assigned)");
+                clearForm();
                 refreshTable();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Invalid input: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -158,30 +151,49 @@ public class LabTestPanel extends JPanel {
         });
 
         btnUpdate.addActionListener(e -> {
+            if (selectedTestId == -1) {
+                JOptionPane.showMessageDialog(this, "Please select a test from the table below to update.", "Select Test", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             try {
-                int tid = Integer.parseInt(txtTestId.getText().trim());
                 String res = txtResult.getText().trim();
                 String stat = (String) cmbStatus.getSelectedItem();
-                dao.updateTestResult(tid, res, stat);
+                dao.updateTestResult(selectedTestId, res, stat);
                 JOptionPane.showMessageDialog(this, "Test Result Updated Successfully!");
+                clearForm();
                 refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Select a test from the table first.", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         btnDelete.addActionListener(e -> {
-            try {
-                int tid = Integer.parseInt(txtTestId.getText().trim());
-                dao.deleteLabTest(tid);
-                JOptionPane.showMessageDialog(this, "Lab Test Deleted!");
+            if (selectedTestId == -1) {
+                JOptionPane.showMessageDialog(this, "Please select a test from the table below to delete.", "Select Test", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete Test #" + selectedTestId + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                dao.deleteLabTest(selectedTestId);
+                JOptionPane.showMessageDialog(this, "Lab Test Record Deleted!");
+                clearForm();
                 refreshTable();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Select a test from the table to delete.", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
 
         refreshTable();
+    }
+
+    private void clearForm() {
+        selectedTestId = -1;
+        txtPatientId.setText("");
+        txtDoctorId.setText("");
+        txtTestName.setText("");
+        txtTestDate.setText(LocalDate.now().toString());
+        txtCost.setText("");
+        txtResult.setText("Pending Analysis");
+        cmbStatus.setSelectedIndex(0);
+        table.clearSelection();
     }
 
     private void refreshTable() {

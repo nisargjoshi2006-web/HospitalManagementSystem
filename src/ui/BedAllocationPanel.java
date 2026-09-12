@@ -15,7 +15,6 @@ public class BedAllocationPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
-    private JTextField txtAllocationId;
     private JTextField txtPatientId;
     private JComboBox<String> cmbWardType;
     private JTextField txtBedNumber;
@@ -29,6 +28,7 @@ public class BedAllocationPanel extends JPanel {
 
     private JTable table;
     private DefaultTableModel tableModel;
+    private int selectedAllocationId = -1;
 
     private BedAllocationDAO dao = new BedAllocationDAO();
     private PatientDAO patientDAO = new PatientDAO();
@@ -40,12 +40,8 @@ public class BedAllocationPanel extends JPanel {
         Font labelFont = new Font("Arial", Font.BOLD, 14);
         Font fieldFont = new Font("Arial", Font.PLAIN, 14);
 
-        // Form Panel
-        JPanel formPanel = new JPanel(new GridLayout(7, 2, 8, 8));
-
-        txtAllocationId = new JTextField();
-        txtAllocationId.setEditable(false);
-        txtAllocationId.setBackground(new Color(240, 240, 240));
+        // Form Panel (Clean form without redundant ID box)
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 8, 8));
 
         txtPatientId = new JTextField();
         cmbWardType = new JComboBox<>(new String[]{"General Ward", "ICU", "Private AC Room", "Emergency Ward", "Semi-Private"});
@@ -54,7 +50,6 @@ public class BedAllocationPanel extends JPanel {
         txtDischargeDate = new JTextField(LocalDate.now().toString());
         txtDailyCharge = new JTextField("1500.00");
 
-        txtAllocationId.setFont(fieldFont);
         txtPatientId.setFont(fieldFont);
         cmbWardType.setFont(fieldFont);
         txtBedNumber.setFont(fieldFont);
@@ -62,15 +57,13 @@ public class BedAllocationPanel extends JPanel {
         txtDischargeDate.setFont(fieldFont);
         txtDailyCharge.setFont(fieldFont);
 
-        JLabel lblId = new JLabel("Allocation ID (Auto):"); lblId.setFont(labelFont);
         JLabel lblPid = new JLabel("Patient ID:"); lblPid.setFont(labelFont);
         JLabel lblWard = new JLabel("Ward Type:"); lblWard.setFont(labelFont);
         JLabel lblBed = new JLabel("Bed Number (e.g., GW-101):"); lblBed.setFont(labelFont);
         JLabel lblAdmit = new JLabel("Admit Date (YYYY-MM-DD):"); lblAdmit.setFont(labelFont);
-        JLabel lblDischarge = new JLabel("Discharge Date:"); lblDischarge.setFont(labelFont);
+        JLabel lblDischarge = new JLabel("Discharge Date (YYYY-MM-DD):"); lblDischarge.setFont(labelFont);
         JLabel lblCharge = new JLabel("Daily Charge (Rs.):"); lblCharge.setFont(labelFont);
 
-        formPanel.add(lblId); formPanel.add(txtAllocationId);
         formPanel.add(lblPid); formPanel.add(txtPatientId);
         formPanel.add(lblWard); formPanel.add(cmbWardType);
         formPanel.add(lblBed); formPanel.add(txtBedNumber);
@@ -105,7 +98,7 @@ public class BedAllocationPanel extends JPanel {
         table.getSelectionModel().addListSelectionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
-                txtAllocationId.setText(tableModel.getValueAt(row, 0).toString());
+                selectedAllocationId = Integer.parseInt(tableModel.getValueAt(row, 0).toString());
                 txtPatientId.setText(tableModel.getValueAt(row, 1).toString());
                 cmbWardType.setSelectedItem(tableModel.getValueAt(row, 2).toString());
                 txtBedNumber.setText(tableModel.getValueAt(row, 3).toString());
@@ -131,7 +124,8 @@ public class BedAllocationPanel extends JPanel {
                 }
 
                 dao.allocateBed(pid, ward, bed, admit, charge, "Occupied");
-                JOptionPane.showMessageDialog(this, "Patient Admitted & Bed Allocated Successfully!");
+                JOptionPane.showMessageDialog(this, "Patient Admitted & Bed Allocated! (ID auto-assigned)");
+                clearForm();
                 refreshTable();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Invalid input: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -139,18 +133,33 @@ public class BedAllocationPanel extends JPanel {
         });
 
         btnDischarge.addActionListener(e -> {
+            if (selectedAllocationId == -1) {
+                JOptionPane.showMessageDialog(this, "Please select an active bed from the table below to discharge.", "Select Bed", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             try {
-                int aid = Integer.parseInt(txtAllocationId.getText().trim());
                 String disDate = txtDischargeDate.getText().trim();
-                dao.dischargePatient(aid, disDate);
+                dao.dischargePatient(selectedAllocationId, disDate);
                 JOptionPane.showMessageDialog(this, "Patient Discharged Successfully!");
+                clearForm();
                 refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Please select an active bed from the table first.", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         refreshTable();
+    }
+
+    private void clearForm() {
+        selectedAllocationId = -1;
+        txtPatientId.setText("");
+        txtBedNumber.setText("");
+        txtAdmitDate.setText(LocalDate.now().toString());
+        txtDischargeDate.setText(LocalDate.now().toString());
+        txtDailyCharge.setText("1500.00");
+        cmbWardType.setSelectedIndex(0);
+        table.clearSelection();
     }
 
     private void refreshTable() {
