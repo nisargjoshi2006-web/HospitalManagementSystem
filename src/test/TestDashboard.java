@@ -35,7 +35,7 @@ public class TestDashboard {
         System.out.println("Total Prescriptions   : " + prescriptionDAO.getPrescriptionCount());
         System.out.println("Pending Lab Tests     : " + labTestDAO.getPendingTestCount());
         System.out.println("Total Bills           : " + billingDAO.getBillCount());
-        System.out.printf("Total Revenue (Paid)  : ₹ %.2f\n", billingDAO.getTotalRevenue());
+        System.out.printf("Total Revenue (Paid)  : Rs. %.2f\n", billingDAO.getTotalRevenue());
         System.out.println("Total Feedbacks       : " + feedbackDAO.getFeedbackCount());
         System.out.println("Total Schedules       : " + scheduleDAO.getScheduleCount());
     }

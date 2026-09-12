@@ -77,6 +77,8 @@ public class HospitalManagementUI extends JFrame {
             tabs.add("Feedback", new FeedbackPanel());
             tabs.add("Billing", new BillingPanel());
             tabs.add("Emergency", new EmergencyPanel());
+            tabs.add("Lab Tests", new LabTestPanel());
+            tabs.add("Bed Allocation", new BedAllocationPanel());
             tabs.add("Reports", new ReportsPanel());
 
         } else {
@@ -85,6 +87,8 @@ public class HospitalManagementUI extends JFrame {
             tabs.add("Patients", new PatientPanel());
             tabs.add("Appointments", new AppointmentPanel());
             tabs.add("Billing", new BillingPanel());
+            tabs.add("Lab Tests", new LabTestPanel());
+            tabs.add("Bed Allocation", new BedAllocationPanel());
         }
 
         add(tabs, BorderLayout.CENTER);

@@ -262,7 +262,7 @@ public class TestBilling {
 
                 case 7:
 
-                    System.out.printf("Total Revenue Collected (Paid): ₹ %.2f\n", dao.getTotalRevenue());
+                    System.out.printf("Total Revenue Collected (Paid): Rs. %.2f\n", dao.getTotalRevenue());
                     break;
 
                 case 0:
