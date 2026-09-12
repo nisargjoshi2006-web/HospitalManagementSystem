@@ -23,8 +23,6 @@ public class DBConnection {
                 props.load(is);
                 URL      = props.getProperty("db.url");
                 USER     = props.getProperty("db.user");
-                // A missing password setting means an empty password, rather than a
-                // NullPointerException while the application is starting.
                 PASSWORD = props.getProperty("db.password", "").trim();
             } else {
                 System.err.println("WARNING: config.properties not found on classpath. Using defaults.");
@@ -38,25 +36,27 @@ public class DBConnection {
     }
 
     public static Connection getConnection() {
-
-        System.out.println("DBConnection class loaded");
-
         try {
-
             Class.forName("com.mysql.cj.jdbc.Driver");
-
-            Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
-
-            System.out.println("Database Connected Successfully");
-
-            return con;
-
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
-
         return null;
+    }
+
+    // DATABASE HEALTH CHECK & DIAGNOSTICS
+    public static String checkDatabaseHealth() {
+        long start = System.currentTimeMillis();
+        try (Connection con = getConnection()) {
+            if (con != null && !con.isClosed()) {
+                java.sql.DatabaseMetaData meta = con.getMetaData();
+                long latency = System.currentTimeMillis() - start;
+                return "ONLINE | DBMS: " + meta.getDatabaseProductName() + " " + meta.getDatabaseProductVersion() + " | Latency: " + latency + "ms";
+            }
+        } catch (Exception e) {
+            return "OFFLINE | Error: " + e.getMessage();
+        }
+        return "OFFLINE | Unable to establish connection";
     }
 }

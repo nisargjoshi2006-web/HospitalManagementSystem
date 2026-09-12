@@ -334,4 +334,33 @@ public boolean patientExists(int patientId) {
     return exists;
 }
 
+    // SMART MULTI-CRITERIA SEARCH (NAME, CONTACT, BLOOD GROUP)
+    public ArrayList<Patient> searchPatientsByKeyword(String keyword) {
+        ArrayList<Patient> list = new ArrayList<>();
+        String sql = "SELECT * FROM Patients WHERE patient_name LIKE ? OR contact LIKE ? OR blood_group = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            String pattern = "%" + keyword + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, keyword);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Patient p = new Patient();
+                    p.setPatientId(rs.getInt("patient_id"));
+                    p.setPatientName(rs.getString("patient_name"));
+                    p.setGender(rs.getString("gender"));
+                    p.setAge(rs.getInt("age"));
+                    p.setBloodGroup(rs.getString("blood_group"));
+                    p.setContact(rs.getString("contact"));
+                    p.setAddress(rs.getString("address"));
+                    list.add(p);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
+

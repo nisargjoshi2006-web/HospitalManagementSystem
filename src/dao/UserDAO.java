@@ -111,4 +111,28 @@ public class UserDAO {
 
         return exists;
     }
+
+    // CHANGE PASSWORD WITH SHA-256 VERIFICATION
+    public boolean changePassword(int userId, String oldPassword, String newPassword) {
+        String verifySql = "SELECT user_id FROM Users WHERE user_id=? AND password=SHA2(?, 256)";
+        String updateSql = "UPDATE Users SET password=SHA2(?, 256) WHERE user_id=?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement verifyPs = con.prepareStatement(verifySql)) {
+            verifyPs.setInt(1, userId);
+            verifyPs.setString(2, oldPassword);
+            try (ResultSet rs = verifyPs.executeQuery()) {
+                if (rs.next()) {
+                    try (PreparedStatement updatePs = con.prepareStatement(updateSql)) {
+                        updatePs.setString(1, newPassword);
+                        updatePs.setInt(2, userId);
+                        return updatePs.executeUpdate() > 0;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
+

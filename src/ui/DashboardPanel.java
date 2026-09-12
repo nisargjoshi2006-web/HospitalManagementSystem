@@ -7,6 +7,8 @@ import dao.FeedbackDAO;
 import dao.EmergencyDAO;
 import dao.BillingDAO;
 import dao.PrescriptionDAO;
+import dao.LabTestDAO;
+import dao.BedAllocationDAO;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,24 +44,30 @@ public class DashboardPanel extends JPanel {
         PrescriptionDAO prescriptionDAO = new PrescriptionDAO();
         BillingDAO billingDAO = new BillingDAO();
         FeedbackDAO feedbackDAO = new FeedbackDAO();
+        LabTestDAO labTestDAO = new LabTestDAO();
+        BedAllocationDAO bedDAO = new BedAllocationDAO();
 
         int patients = patientDAO.getPatientCount();
         int doctors = doctorDAO.getDoctorCount();
         int appointments = appointmentDAO.getAppointmentCount();
         int emergencies = emergencyDAO.getEmergencyCount();
+        int bedsOccupied = bedDAO.getOccupiedBedCount();
         int prescriptions = prescriptionDAO.getPrescriptionCount();
+        int pendingLabs = labTestDAO.getPendingTestCount();
         int bills = billingDAO.getBillCount();
         double revenue = billingDAO.getTotalRevenue();
         int feedback = feedbackDAO.getFeedbackCount();
 
-        // Metric Cards Grid (4 rows x 2 columns)
-        JPanel cardsGrid = new JPanel(new GridLayout(4, 2, 15, 15));
+        // Metric Cards Grid (5 rows x 2 columns)
+        JPanel cardsGrid = new JPanel(new GridLayout(5, 2, 12, 12));
 
         cardsGrid.add(createMetricCard("👥 Total Patients", String.valueOf(patients), new Color(230, 242, 255)));
         cardsGrid.add(createMetricCard("🩺 Total Doctors", String.valueOf(doctors), new Color(235, 250, 235)));
         cardsGrid.add(createMetricCard("📅 Appointments Scheduled", String.valueOf(appointments), new Color(255, 245, 230)));
         cardsGrid.add(createMetricCard("🚨 Emergency Cases", String.valueOf(emergencies), new Color(255, 235, 235)));
+        cardsGrid.add(createMetricCard("🛏️ Inpatient Beds Occupied", String.valueOf(bedsOccupied), new Color(240, 248, 255)));
         cardsGrid.add(createMetricCard("💊 Prescriptions Issued", String.valueOf(prescriptions), new Color(245, 235, 255)));
+        cardsGrid.add(createMetricCard("🧪 Pending Lab Tests", String.valueOf(pendingLabs), new Color(255, 240, 245)));
         cardsGrid.add(createMetricCard("🧾 Invoices & Bills", String.valueOf(bills), new Color(240, 255, 240)));
         cardsGrid.add(createMetricCard("💰 Total Revenue Collected", String.format("₹ %.2f", revenue), new Color(255, 255, 225)));
         cardsGrid.add(createMetricCard("⭐ Patient Reviews", String.valueOf(feedback), new Color(240, 240, 255)));
@@ -72,15 +80,15 @@ public class DashboardPanel extends JPanel {
         card.setBackground(bgColor);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(12, 15, 12, 15)
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
 
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 15));
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 14));
         lblTitle.setForeground(new Color(60, 60, 60));
 
         JLabel lblValue = new JLabel(value, SwingConstants.RIGHT);
-        lblValue.setFont(new Font("Arial", Font.BOLD, 22));
+        lblValue.setFont(new Font("Arial", Font.BOLD, 20));
         lblValue.setForeground(new Color(20, 20, 20));
 
         card.add(lblTitle, BorderLayout.WEST);

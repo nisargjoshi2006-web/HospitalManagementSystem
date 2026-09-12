@@ -28,6 +28,8 @@ A full-featured **Hospital Management System** developed using Java Swing, JDBC,
 | **Billing** | Auto-calculate fee from Doctor, Add Bill, View, Search, Update Status, Delete, Count |
 | **Feedback** | Patient Rating (1-5), Comments, View, Search, Update, Delete, Count |
 | **Emergency** | Priority Triage (Low to Critical), Status tracking, Assign Doctor, Update, Delete |
+| **Lab Tests & Diagnostics** | Diagnostic orders (CBC, MRI, X-Ray), Result updates, Status tracking, Cost calculation |
+| **Bed & Ward Allocation** | Inpatient admissions (ICU, Private, General), Bed tracking, Auto-stay calculation, Discharge |
 | **Reports & Analytics** | Workload analytics, Revenue breakdowns, Pending bills, Database Views, **Export to CSV** |
 
 ## 🛠️ Technology Stack
@@ -149,7 +151,7 @@ The `Database.sql` script includes dedicated review demonstration queries for:
 
 ## 🗄️ Database Schema & Advanced Concepts
 
-The database consists of **10 interconnected tables**:
+The database consists of **13 interconnected tables**:
 1. `Users` — Credentials, SHA-256 passwords, full name, role (`Admin`/`Receptionist`)
 2. `Patients` — Patient demographics and registration history
 3. `Specializations` — Medical specializations lookup
@@ -160,6 +162,9 @@ The database consists of **10 interconnected tables**:
 8. `Billing` — Automated consultation billing and payment tracking
 9. `Feedback` — Patient satisfaction ratings (1–5) and review comments
 10. `Emergency` — Emergency room admissions and priority triage management
+11. `Lab_Tests` — Diagnostic orders (CBC, MRI, ECG), results, and lab charges
+12. `Bed_Allocation` — Inpatient admissions (ICU, Private, General), stay tracking, and bed status
+13. `Audit_Logs` — System security, traceability, and automated trigger logging
 
 ### ⚡ Advanced Database Implementations:
 - **Views**:
@@ -167,8 +172,11 @@ The database consists of **10 interconnected tables**:
   - `v_HospitalRevenueSummary`: Aggregated revenue summary grouped by payment method.
 - **Stored Procedure**:
   - `sp_GetPatientHistory(IN p_patient_id INT)`: Fetches a patient's complete clinical, prescription, and billing timeline.
-- **Trigger**:
+- **Triggers**:
   - `trg_AfterBillPaid`: Automatically updates appointment status to `'Completed'` when corresponding bill is marked `'Paid'`.
+  - `trg_AuditAppointmentCancel`: Automatically logs appointment cancellations into `Audit_Logs`.
+- **Date Arithmetic**:
+  - `DATEDIFF(discharge_date, admit_date) * daily_charge` on `Bed_Allocation` to calculate total stay charges.
 - **Performance Indexes**:
   - B-Tree secondary indexes on `Patients(contact)`, `Appointments(appointment_date)`, `Doctor(specialization_id)`, `Billing(payment_status)`, and `Emergency(priority_level)` for query optimization.
 

@@ -617,3 +617,92 @@ SELECT * FROM v_ActiveAppointments;
 CREATE INDEX idx_patient_contact ON Patients(contact);
 CREATE INDEX idx_appointment_date ON Appointments(appointment_date);
 CREATE INDEX idx_billing_status ON Billing(payment_status);
+
+-- ==================================================================================
+-- NEW ENTITY 1: LAB_TESTS (DIAGNOSTIC LABORATORY MANAGEMENT)
+-- ==================================================================================
+CREATE TABLE IF NOT EXISTS Lab_Tests (
+    test_id       INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id    INT NOT NULL,
+    doctor_id     INT NOT NULL,
+    test_name     VARCHAR(100) NOT NULL,
+    test_date     DATE NOT NULL,
+    cost          DECIMAL(10,2) NOT NULL,
+    result        VARCHAR(255),
+    status        VARCHAR(30) NOT NULL DEFAULT 'Pending',
+    
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id)  REFERENCES Doctor(doctor_id) ON DELETE CASCADE
+);
+
+INSERT INTO Lab_Tests (patient_id, doctor_id, test_name, test_date, cost, result, status) VALUES
+(1, 1, 'Complete Blood Count (CBC)', '2026-09-01', 450.00, 'Hemoglobin 13.5 g/dL (Normal)', 'Completed'),
+(2, 2, 'Brain MRI Scan', '2026-09-02', 3500.00, 'Mild migraine changes, no lesion', 'Completed'),
+(3, 3, 'Knee X-Ray (AP/Lateral)', '2026-09-03', 800.00, 'Grade 1 Osteoarthritis', 'Completed'),
+(4, 4, 'Skin Allergy Panel', '2026-09-04', 1200.00, 'Positive for pollen & dust mite', 'Completed'),
+(5, 5, 'Dengue Serology NS1', '2026-09-05', 600.00, 'Negative', 'Completed'),
+(1, 1, 'Lipid Profile', '2026-09-06', 750.00, 'Pending Lab Analysis', 'Pending');
+
+-- ==================================================================================
+-- NEW ENTITY 2: BED_ALLOCATION (IN-PATIENT & WARD MANAGEMENT)
+-- ==================================================================================
+CREATE TABLE IF NOT EXISTS Bed_Allocation (
+    allocation_id  INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id     INT NOT NULL,
+    ward_type      VARCHAR(50) NOT NULL,
+    bed_number     VARCHAR(10) NOT NULL,
+    admit_date     DATE NOT NULL,
+    discharge_date DATE,
+    daily_charge   DECIMAL(10,2) NOT NULL,
+    status         VARCHAR(20) NOT NULL DEFAULT 'Occupied',
+    
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id) ON DELETE CASCADE
+);
+
+INSERT INTO Bed_Allocation (patient_id, ward_type, bed_number, admit_date, discharge_date, daily_charge, status) VALUES
+(1, 'General Ward', 'GW-101', '2026-08-20', '2026-08-25', 1500.00, 'Discharged'),
+(2, 'ICU', 'ICU-04', '2026-08-22', '2026-08-26', 5000.00, 'Discharged'),
+(3, 'Private AC Room', 'PVT-205', '2026-09-01', NULL, 3000.00, 'Occupied'),
+(5, 'Emergency Ward', 'EMG-02', '2026-09-04', NULL, 2500.00, 'Occupied');
+
+-- ==================================================================================
+-- NEW ENTITY 3: AUDIT_LOGS (SYSTEM SECURITY & COMPLIANCE LOGGING)
+-- ==================================================================================
+CREATE TABLE IF NOT EXISTS Audit_Logs (
+    log_id      INT AUTO_INCREMENT PRIMARY KEY,
+    action_type VARCHAR(50) NOT NULL,
+    record_id   INT NOT NULL,
+    log_time    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    details     TEXT
+);
+
+INSERT INTO Audit_Logs (action_type, record_id, details) VALUES
+('INITIAL_SEED', 1, 'System initialized with default admin account'),
+('BED_ALLOCATED', 3, 'Patient 3 admitted to PVT-205'),
+('LAB_TEST_ORDERED', 6, 'Lipid Profile ordered for Patient 1');
+
+-- Trigger: Automatically Log Cancelled Appointments into Audit_Logs
+DELIMITER //
+CREATE TRIGGER trg_AuditAppointmentCancel
+AFTER UPDATE ON Appointments
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Cancelled' AND OLD.status != 'Cancelled' THEN
+        INSERT INTO Audit_Logs (action_type, record_id, details)
+        VALUES ('APPOINTMENT_CANCELLED', NEW.appointment_id, CONCAT('Appointment cancelled for Patient ID: ', NEW.patient_id));
+    END IF;
+END //
+DELIMITER ;
+
+-- Date Arithmetic Query (Stay charges demonstration)
+SELECT 
+    b.allocation_id,
+    p.patient_name,
+    b.ward_type,
+    b.admit_date,
+    b.discharge_date,
+    DATEDIFF(b.discharge_date, b.admit_date) AS total_days_admitted,
+    DATEDIFF(b.discharge_date, b.admit_date) * b.daily_charge AS total_stay_charge
+FROM Bed_Allocation b
+JOIN Patients p ON b.patient_id = p.patient_id
+WHERE b.status = 'Discharged';
