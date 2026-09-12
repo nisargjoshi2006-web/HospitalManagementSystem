@@ -28,6 +28,7 @@ A full-featured **Hospital Management System** developed using Java Swing, JDBC,
 | **Billing** | Auto-calculate fee from Doctor, Add Bill, View, Search, Update Status, Delete, Count |
 | **Feedback** | Patient Rating (1-5), Comments, View, Search, Update, Delete, Count |
 | **Emergency** | Priority Triage (Low to Critical), Status tracking, Assign Doctor, Update, Delete |
+| **Reports & Analytics** | Workload analytics, Revenue breakdowns, Pending bills, Database Views, **Export to CSV** |
 
 ## 🛠️ Technology Stack
 
@@ -168,6 +169,8 @@ The database consists of **10 interconnected tables**:
   - `sp_GetPatientHistory(IN p_patient_id INT)`: Fetches a patient's complete clinical, prescription, and billing timeline.
 - **Trigger**:
   - `trg_AfterBillPaid`: Automatically updates appointment status to `'Completed'` when corresponding bill is marked `'Paid'`.
+- **Performance Indexes**:
+  - B-Tree secondary indexes on `Patients(contact)`, `Appointments(appointment_date)`, `Doctor(specialization_id)`, `Billing(payment_status)`, and `Emergency(priority_level)` for query optimization.
 
 ## 👥 Team Members
 

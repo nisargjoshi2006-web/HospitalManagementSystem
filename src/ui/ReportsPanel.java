@@ -2,23 +2,19 @@ package ui;
 
 import db.DBConnection;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
-/** Displays the aggregate and join queries required for the database demonstration. */
+/** Displays the aggregate, join, and view queries required for the database demonstration with CSV export. */
 public class ReportsPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
@@ -31,18 +27,34 @@ public class ReportsPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        JLabel title = new JLabel("Database Reports", SwingConstants.CENTER);
+        JLabel title = new JLabel("Database Reports & Analytical Views", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 18));
 
         reportSelector = new JComboBox<>(new String[]{
                 "Revenue by Payment Method",
                 "Doctor Appointment Workload",
-                "Pending Bills"
+                "Pending Bills",
+                "Active Appointments (View)",
+                "Hospital Revenue Summary (View)"
         });
-        JButton refreshButton = new JButton("Refresh Report");
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        reportSelector.setFont(new Font("Arial", Font.PLAIN, 13));
+
+        JButton refreshButton = new JButton("🔄 Refresh Report");
+        refreshButton.setFont(new Font("Arial", Font.BOLD, 12));
+
+        JButton exportCsvButton = new JButton("📥 Export to CSV");
+        exportCsvButton.setFont(new Font("Arial", Font.BOLD, 12));
+        exportCsvButton.setBackground(new Color(40, 167, 69));
+        exportCsvButton.setForeground(Color.WHITE);
+        exportCsvButton.setFocusPainted(false);
+
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        controls.add(new JLabel("Select Report:"));
         controls.add(reportSelector);
         controls.add(refreshButton);
-        JPanel header = new JPanel(new BorderLayout());
+        controls.add(exportCsvButton);
+
+        JPanel header = new JPanel(new BorderLayout(5, 10));
         header.add(title, BorderLayout.NORTH);
         header.add(controls, BorderLayout.SOUTH);
         add(header, BorderLayout.NORTH);
@@ -50,13 +62,18 @@ public class ReportsPanel extends JPanel {
         tableModel = new DefaultTableModel();
         JTable table = new JTable(tableModel);
         table.setAutoCreateRowSorter(true);
+        table.setRowHeight(24);
+        table.setFont(new Font("Arial", Font.PLAIN, 13));
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         statusLabel = new JLabel("Select a report and click Refresh Report.", SwingConstants.CENTER);
+        statusLabel.setFont(new Font("Arial", Font.ITALIC, 12));
         add(statusLabel, BorderLayout.SOUTH);
 
         refreshButton.addActionListener(event -> loadSelectedReport());
         reportSelector.addActionListener(event -> loadSelectedReport());
+        exportCsvButton.addActionListener(event -> exportToCsv());
+
         loadSelectedReport();
     }
 
@@ -86,7 +103,7 @@ public class ReportsPanel extends JPanel {
                 tableModel.addRow(values);
                 rows++;
             }
-            statusLabel.setText(rows + " row(s) loaded.");
+            statusLabel.setText("Loaded " + rows + " row(s) successfully for: " + reportName);
         } catch (Exception exception) {
             tableModel.setRowCount(0);
             tableModel.setColumnCount(0);
@@ -94,7 +111,86 @@ public class ReportsPanel extends JPanel {
         }
     }
 
+    private void exportToCsv() {
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No data to export. Please load a report first.",
+                    "Export Warning",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Report as CSV");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files (*.csv)", "csv"));
+        fileChooser.setSelectedFile(new File("hospital_report.csv"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+
+            // Ensure .csv extension
+            if (!fileToSave.getName().toLowerCase().endsWith(".csv")) {
+                fileToSave = new File(fileToSave.getAbsolutePath() + ".csv");
+            }
+
+            try (PrintWriter writer = new PrintWriter(new FileWriter(fileToSave))) {
+                int colCount = tableModel.getColumnCount();
+                int rowCount = tableModel.getRowCount();
+
+                // Write Header row
+                for (int i = 0; i < colCount; i++) {
+                    writer.print(escapeCsv(tableModel.getColumnName(i)));
+                    if (i < colCount - 1) writer.print(",");
+                }
+                writer.println();
+
+                // Write Data rows
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        Object val = tableModel.getValueAt(row, col);
+                        writer.print(escapeCsv(val != null ? val.toString() : ""));
+                        if (col < colCount - 1) writer.print(",");
+                    }
+                    writer.println();
+                }
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Report successfully exported to:\n" + fileToSave.getAbsolutePath(),
+                        "Export Successful",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error exporting report: " + ex.getMessage(),
+                        "Export Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
+    private String escapeCsv(String data) {
+        if (data.contains(",") || data.contains("\"") || data.contains("\n")) {
+            data = data.replace("\"", "\"\"");
+            return "\"" + data + "\"";
+        }
+        return data;
+    }
+
     private String queryFor(String reportName) {
+        if ("Active Appointments (View)".equals(reportName)) {
+            return "SELECT * FROM v_ActiveAppointments";
+        }
+        if ("Hospital Revenue Summary (View)".equals(reportName)) {
+            return "SELECT * FROM v_HospitalRevenueSummary";
+        }
         if ("Doctor Appointment Workload".equals(reportName)) {
             return "SELECT d.doctor_id AS Doctor_ID, d.doctor_name AS Doctor_Name, " +
                     "COUNT(a.appointment_id) AS Total_Appointments " +
