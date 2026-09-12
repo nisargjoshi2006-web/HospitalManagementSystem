@@ -1,186 +1,309 @@
 # 🏥 Hospital Management System
 
-A full-featured **Hospital Management System** developed using Java Swing, JDBC, and MySQL. It manages patients, doctors, appointments, billing, prescriptions, feedback, emergency cases, and doctor schedules through both an intuitive tabbed GUI interface and backend console test suites.
+A full-featured **Hospital Management System** built with **Java Swing**, **JDBC**, and **MySQL**. It manages patients, doctors, appointments, billing, prescriptions, feedback, emergency cases, lab tests, bed allocation, and audit logging — through an intuitive tabbed GUI interface with role-based access control and a full suite of backend console tests.
+
+---
 
 ## 📋 Features
 
-### 🔐 Login System & Security
-- **Authentication**: Secure login with **SHA-256** password hashing.
+### 🔐 Authentication & Security
+- **SHA-256 Password Hashing** for secure credential storage
 - **Role-Based Access Control (RBAC)**:
-  - **Admin**: Full access to all modules and configurations.
-  - **Receptionist**: Dedicated access to Dashboard, Patients, Appointments, and Billing.
-- **One-Click Logout**: Easily switch between user accounts and roles seamlessly.
-- **Failed Attempt Tracking**: Security warnings on multiple consecutive failed login attempts.
+  - **Admin**: Full access to all 12 modules
+  - **Receptionist**: Access to Dashboard, Patients, Appointments, Billing, Lab Tests, Bed Allocation
+- Logout confirmation with session management
 
-### 📊 Dashboard
-- Real-time live counts of Patients, Doctors, Appointments, Feedback, and Emergencies.
-- **Financial & Clinical Metrics**: Live Total Revenue collected (₹), Total Invoices/Bills, and Prescriptions Issued.
-- Live current date display.
+### 📊 Live Dashboard
+- Real-time metric cards: Patients, Doctors, Appointments, Emergencies, Occupied Beds, Prescriptions, Pending Lab Tests, Bills, Revenue, Feedback
+- **Refresh Dashboard** button for live data updates
+- Database health status indicator
 
-### 🗂️ Core Modules (CRUD Operations)
-| Module | Supported Operations |
-|--------|---------------------|
-| **Patients** | Add, View, Search by ID, Update details, Delete, Count |
-| **Doctors** | Add, View, Search, Update, Safe Cascade Delete (Appointments, Billing, Prescriptions, Schedule), Count |
-| **Doctor Schedule** | Add, View, Search, Update, Delete, Count |
-| **Appointments** | Book, View, Search, Update, Cancel/Delete, Count |
-| **Prescriptions** | Add Prescription, View, Search by ID, Update, Delete, Count |
-| **Billing** | Auto-calculate fee from Doctor, Add Bill, View, Search, Update Status, Delete, Count |
-| **Feedback** | Patient Rating (1-5), Comments, View, Search, Update, Delete, Count |
-| **Emergency** | Priority Triage (Low to Critical), Status tracking, Assign Doctor, Update, Delete |
-| **Lab Tests & Diagnostics** | Diagnostic orders (CBC, MRI, X-Ray), Result updates, Status tracking, Cost calculation |
-| **Bed & Ward Allocation** | Inpatient admissions (ICU, Private, General), Bed tracking, Auto-stay calculation, Discharge |
-| **Reports & Analytics** | Workload analytics, Revenue breakdowns, Pending bills, Database Views, **Export to CSV** |
+### 🗂️ Core Modules (Full CRUD)
+| Module | Key Features |
+|--------|-------------|
+| **Patients** | Add, View, Search by ID **or Name**, Update, Safe Cascade Delete, Registration Date tracking |
+| **Doctors** | Add, View, Search by ID **or Name/Specialization**, Update, Cascade Delete with confirmation dialog |
+| **Doctor Schedule** | Day-wise scheduling with time slots |
+| **Appointments** | Book, View, Search, Update, Cancel/Delete, Doctor availability & date validation |
+| **Prescriptions** | Add, View, **Database-powered search**, Update, Delete, nullable next visit date |
+| **Billing** | Auto-calculate fee from Doctor, **validated bill creation**, Update payment status, Delete |
+| **Feedback** | Patient ratings (1-5), comments, **full field update** (Patient ID, Date, Rating, Comments) |
+| **Emergency** | Priority triage (Low → Critical), doctor assignment, status tracking |
+| **Lab Tests** | Diagnostic orders (CBC, MRI, X-Ray), result updates, cost tracking |
+| **Bed Allocation** | Ward management (ICU, Private, General), **duplicate prevention triggers**, discharge with confirmation |
+| **Reports** | 8 built-in reports with **Export to CSV** |
+
+### 📊 Advanced Reports (Built-in)
+| Report | SQL Concepts Used |
+|--------|------------------|
+| Active Appointments | `JOIN`, `WHERE` filter |
+| Hospital Revenue Summary | `SUM`, `GROUP BY` |
+| Patient History | Stored Procedure call |
+| Pending Bills | `WHERE` filter |
+| **Revenue by Doctor** | `LEFT JOIN` (3 tables), `GROUP BY`, `SUM`, `COUNT` |
+| **Monthly Patient Trends** | `DATE_FORMAT`, `GROUP BY`, aggregate |
+| **Bed Occupancy History** | `CASE WHEN`, `DATEDIFF`, `CURDATE()`, computed columns |
+| **Doctor Workload Analysis** | `LEFT JOIN` (4 tables), `COUNT(DISTINCT)`, multi-table aggregation |
+
+---
 
 ## 🛠️ Technology Stack
 
 | Technology | Purpose |
 |-----------|---------|
-| **Java (JDK 17+)** | Core programming language |
-| **Java Swing & AWT** | Desktop GUI interface |
-| **MySQL 8.0+** | Relational Database Management System |
-| **JDBC** | Database connectivity & PreparedStatements |
-| **SHA-256** | Password hashing for authentication |
+| **Java (JDK 17+)** | Core language |
+| **Java Swing & AWT** | Desktop GUI |
+| **MySQL 8.0+** | RDBMS |
+| **JDBC** | Database connectivity with PreparedStatements |
+| **SHA-256** | Password hashing |
+| **MySQL Connector/J** | JDBC driver (included in `lib/`) |
+
+---
 
 ## 📁 Project Structure
 
 ```
 HospitalManagementSystem/
-├── Database.sql              # Complete database schema + seed data
-├── config.properties         # Database connection settings
+├── Database.sql                  # Complete schema + seed data + triggers + views + procedures
+├── config.properties             # Database connection settings
+├── config.properties.example     # Template for new setups
 ├── lib/
 │   └── mysql-connector-j-26.7.0.jar
+├── sql/
+│   └── queries.sql               # 11 demonstration SQL queries (joins, subqueries, aggregates)
 ├── src/
-│   ├── config.properties     # Classpath connection config
+│   ├── config.properties         # Classpath connection config
 │   ├── db/
-│   │   └── DBConnection.java        # Centralized DB connection manager
-│   ├── model/
-│   │   ├── Patient.java
-│   │   ├── Doctor.java
-│   │   ├── Appointment.java
-│   │   ├── Billing.java
-│   │   ├── Prescription.java
-│   │   ├── Feedback.java
-│   │   ├── DoctorSchedule.java
-│   │   ├── Emergency.java
-│   │   └── User.java
-│   ├── dao/
-│   │   ├── PatientDAO.java
-│   │   ├── DoctorDAO.java
-│   │   ├── AppointmentDAO.java
-│   │   ├── BillingDAO.java
-│   │   ├── PrescriptionDAO.java
-│   │   ├── FeedbackDAO.java
-│   │   ├── DoctorScheduleDAO.java
-│   │   ├── EmergencyDAO.java
-│   │   └── UserDAO.java
-│   ├── ui/
-│   │   ├── LoginUI.java              # Application entry point & login dialog
-│   │   ├── HospitalManagementUI.java # Main tabbed application window
-│   │   ├── DashboardPanel.java
-│   │   ├── PatientPanel.java
-│   │   ├── DoctorPanel.java
-│   │   ├── DoctorSchedulePanel.java
-│   │   ├── AppointmentPanel.java
-│   │   ├── PrescriptionPanel.java
-│   │   ├── FeedbackPanel.java
-│   │   ├── BillingPanel.java
-│   │   └── EmergencyPanel.java
-│   └── test/
-│       ├── TestPatient.java
-│       ├── TestDoctor.java
-│       ├── TestAppointment.java
-│       ├── TestBilling.java
-│       ├── TestPrescription.java
-│       ├── TestFeedback.java
-│       ├── TestDoctorSchedule.java
-│       ├── TestEmergency.java
-│       ├── TestDashboard.java
+│   │   └── DBConnection.java           # Centralized DB connection + health check
+│   ├── model/                           # 12 POJO model classes
+│   │   ├── Patient.java, Doctor.java, Appointment.java
+│   │   ├── Billing.java, Prescription.java, Feedback.java
+│   │   ├── DoctorSchedule.java, Emergency.java
+│   │   ├── LabTest.java, BedAllocation.java
+│   │   ├── AuditLog.java, User.java
+│   ├── dao/                             # 12 Data Access Objects (all use try-with-resources)
+│   │   ├── PatientDAO.java, DoctorDAO.java, AppointmentDAO.java
+│   │   ├── BillingDAO.java, PrescriptionDAO.java, FeedbackDAO.java
+│   │   ├── DoctorScheduleDAO.java, EmergencyDAO.java
+│   │   ├── LabTestDAO.java, BedAllocationDAO.java
+│   │   ├── AuditLogDAO.java, UserDAO.java
+│   ├── ui/                              # 14 Swing UI panels
+│   │   ├── LoginUI.java                 # Application entry point
+│   │   ├── HospitalManagementUI.java    # Main tabbed window
+│   │   ├── DashboardPanel.java          # Live metrics + Refresh button
+│   │   ├── PatientPanel.java, DoctorPanel.java
+│   │   ├── DoctorSchedulePanel.java, AppointmentPanel.java
+│   │   ├── PrescriptionPanel.java, FeedbackPanel.java
+│   │   ├── BillingPanel.java, EmergencyPanel.java
+│   │   ├── LabTestPanel.java, BedAllocationPanel.java
+│   │   └── ReportsPanel.java           # 8 reports + CSV export
+│   └── test/                            # 13 CLI test harnesses
+│       ├── TestPatient.java, TestDoctor.java
+│       ├── TestAppointment.java, TestAppointmentBusinessRules.java
+│       ├── TestBilling.java, TestPrescription.java
+│       ├── TestFeedback.java, TestDoctorSchedule.java
+│       ├── TestEmergency.java, TestLabTest.java
+│       ├── TestBedAllocation.java, TestDashboard.java
 │       └── TestLogin.java
 └── README.md
 ```
 
+---
+
 ## ⚙️ Setup & Installation
 
 ### Prerequisites
-- **Java Development Kit (JDK 17 or higher)**
-- **MySQL Server 8.0+**
-- **MySQL Connector/J** (provided in `lib/`)
+- **Java Development Kit (JDK 17 or higher)** — [Download](https://www.oracle.com/java/technologies/downloads/)
+- **MySQL Server 8.0+** — [Download](https://dev.mysql.com/downloads/mysql/)
+- **MySQL Connector/J** — Already included in `lib/`
 
-### 1. Database Setup
-Open MySQL Workbench or MySQL CLI and run:
+### Step 1: Database Setup
+Open **MySQL Workbench** or **MySQL CLI** and run:
 ```sql
-SOURCE Database.sql;
+SOURCE C:/path/to/HospitalManagementSystem/Database.sql;
 ```
-This will create the `hospital` database along with all tables, constraints, foreign keys, and seed the default admin account.
+This creates the `hospital` database with all 13 tables, triggers, views, stored procedure, indexes, and seed data.
 
-### 2. Configure Database Credentials
-Verify or edit `config.properties` (in both the project root and `src/` directory):
+### Step 2: Configure Database Credentials
+Edit `config.properties` (in **both** project root and `src/` directory):
 ```properties
 db.url=jdbc:mysql://localhost:3306/hospital
 db.user=root
-db.password=your_password
+db.password=your_mysql_password
 ```
 
-### 3. Compile Project
+### Step 3: Compile the Project
 ```bash
-javac -cp "lib/mysql-connector-j-26.7.0.jar" -d out src/db/*.java src/model/*.java src/dao/*.java src/ui/*.java src/test/*.java
+javac -cp "lib/mysql-connector-j-26.7.0.jar;src" -d out src/db/*.java src/model/*.java src/dao/*.java src/ui/*.java src/test/*.java
 ```
 
-### 4. Run Application
+### Step 4: Run the Application (GUI)
 ```bash
-# Launch Desktop GUI (starts at Login window)
-java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" ui.LoginUI
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" ui.HospitalManagementUI
+```
+This opens the **Login Window**. Enter credentials and the main application launches.
 
-# Or run console backend tests:
-java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestLogin
+---
+
+## 🖥️ Running Backend (Console Tests)
+
+Each module has a dedicated CLI test harness. Run them individually:
+
+```bash
+# Dashboard — shows all system metrics at a glance
 java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDashboard
+
+# Login — test authentication, registration, password change
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestLogin
+
+# Patient CRUD — interactive menu for add/view/search/update/delete
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestPatient
+
+# Doctor CRUD
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDoctor
+
+# Appointment Booking + Business Rules
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestAppointment
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestAppointmentBusinessRules
+
+# Prescription Management
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestPrescription
+
+# Billing
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestBilling
+
+# Feedback
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestFeedback
+
+# Doctor Schedule
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDoctorSchedule
+
+# Emergency Cases
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestEmergency
+
+# Lab Tests
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestLabTest
+
+# Bed Allocation (with business rule validation)
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestBedAllocation
 ```
 
-### Default Credentials
-| Username | Password | Role | Permissions |
-|----------|----------|------|-------------|
-| `admin` | `admin123` | Admin | Full access to all modules |
-| `receptionist` | `recep123` | Receptionist | Access to Dashboard, Patients, Appointments, Billing |
+> **Note for macOS/Linux**: Replace `;` with `:` in the classpath:
+> `java -cp "out:lib/mysql-connector-j-26.7.0.jar:src" test.TestDashboard`
 
-### 📊 Review & Viva Demonstration Queries
-The `Database.sql` script includes dedicated review demonstration queries for:
-- **4-Table Joins** (Appointments + Patients + Doctor + Specializations)
-- **Aggregates with `GROUP BY` & `HAVING`** (Revenue by payment method, doctor popularity)
-- **Nested Subqueries** (Scalar, `IN`, and `EXISTS` subqueries)
+---
 
-## 🗄️ Database Schema & Advanced Concepts
+## 🔑 Default Login Credentials
 
-The database consists of **13 interconnected tables**:
-1. `Users` — Credentials, SHA-256 passwords, full name, role (`Admin`/`Receptionist`)
-2. `Patients` — Patient demographics and registration history
-3. `Specializations` — Medical specializations lookup
-4. `Doctor` — Doctor profiles, specialization mapping, consultation fees
-5. `Doctor_Schedule` — Doctor availability schedule by day and time
-6. `Appointments` — Patient-Doctor appointment bookings with status
-7. `Prescriptions` — Medical prescriptions, diagnoses, and remarks
-8. `Billing` — Automated consultation billing and payment tracking
-9. `Feedback` — Patient satisfaction ratings (1–5) and review comments
-10. `Emergency` — Emergency room admissions and priority triage management
-11. `Lab_Tests` — Diagnostic orders (CBC, MRI, ECG), results, and lab charges
-12. `Bed_Allocation` — Inpatient admissions (ICU, Private, General), stay tracking, and bed status
-13. `Audit_Logs` — System security, traceability, and automated trigger logging
+| Username | Password | Role | Access |
+|----------|----------|------|--------|
+| `admin` | `admin123` | Admin | All 12 modules |
+| `receptionist` | `recep123` | Receptionist | Dashboard, Patients, Appointments, Billing, Lab Tests, Bed Allocation |
 
-### ⚡ Advanced Database Implementations:
-- **Views**:
-  - `v_ActiveAppointments`: Pre-joined view for all non-cancelled appointments.
-  - `v_HospitalRevenueSummary`: Aggregated revenue summary grouped by payment method.
-- **Stored Procedure**:
-  - `sp_GetPatientHistory(IN p_patient_id INT)`: Fetches a patient's complete clinical, prescription, and billing timeline.
-- **Triggers**:
-  - `trg_AfterBillPaid`: Automatically updates appointment status to `'Completed'` when corresponding bill is marked `'Paid'`.
-  - `trg_AuditAppointmentCancel`: Automatically logs appointment cancellations into `Audit_Logs`.
-- **Date Arithmetic**:
-  - `DATEDIFF(discharge_date, admit_date) * daily_charge` on `Bed_Allocation` to calculate total stay charges.
-- **Performance Indexes**:
-  - B-Tree secondary indexes on `Patients(contact)`, `Appointments(appointment_date)`, `Doctor(specialization_id)`, `Billing(payment_status)`, and `Emergency(priority_level)` for query optimization.
+---
+
+## 🗄️ Database Schema (13 Tables)
+
+| # | Table | Description |
+|---|-------|-------------|
+| 1 | `Users` | Login credentials with SHA-256 hashed passwords, roles |
+| 2 | `Patients` | Patient demographics, blood group, registration date |
+| 3 | `Specializations` | Medical specialization lookup (Cardiology, Neurology, etc.) |
+| 4 | `Doctor` | Doctor profiles with specialization FK, consultation fees |
+| 5 | `Doctor_Schedule` | Weekly availability (day, start/end time) |
+| 6 | `Appointments` | Patient-Doctor bookings with date, time, room, status |
+| 7 | `Prescriptions` | Diagnosis, medicine, next visit date, remarks |
+| 8 | `Billing` | Auto-calculated fees, payment method/status tracking |
+| 9 | `Feedback` | Patient satisfaction ratings (1-5) and comments |
+| 10 | `Emergency` | Emergency triage (priority levels), doctor assignment |
+| 11 | `Lab_Tests` | Diagnostic test orders, results, costs, status |
+| 12 | `Bed_Allocation` | Inpatient admissions (ICU, Private, General), stay tracking |
+| 13 | `Audit_Logs` | Automated security & compliance logging |
+
+---
+
+## ⚡ Advanced DBMS Concepts Implemented
+
+### Views (2)
+| View | Purpose |
+|------|---------|
+| `v_ActiveAppointments` | Pre-joined view for all non-cancelled appointments with patient & doctor names |
+| `v_HospitalRevenueSummary` | Aggregated revenue grouped by payment method |
+
+### Stored Procedure (1)
+| Procedure | Purpose |
+|-----------|---------|
+| `sp_GetPatientHistory(IN p_patient_id INT)` | Fetches complete clinical, prescription, and billing timeline for a patient |
+
+### Triggers (4)
+| Trigger | Event | Action |
+|---------|-------|--------|
+| `trg_AfterBillPaid` | After bill marked 'Paid' | Auto-updates appointment status to 'Completed' |
+| `trg_AuditAppointmentCancel` | After appointment cancelled | Logs cancellation into `Audit_Logs` |
+| `trg_CheckBedAllocationInsert` | Before bed allocation insert | Prevents duplicate beds & multiple patient admissions |
+| `trg_CheckBedAllocationUpdate` | Before bed allocation update | Prevents bed conflicts on status change |
+
+### Indexes (B-Tree)
+- `Patients(contact)`, `Appointments(appointment_date)`, `Doctor(specialization_id)`, `Billing(payment_status)`, `Emergency(priority_level)`
+
+### Date Arithmetic
+- `DATEDIFF(discharge_date, admit_date) * daily_charge` — calculates total inpatient stay charges
+
+### Demonstration Queries (`sql/queries.sql`)
+- 4-Table Joins (Appointments + Patients + Doctor + Specializations)
+- Aggregates with `GROUP BY` & `HAVING`
+- Nested Subqueries (Scalar, `IN`, `EXISTS`)
+- `AVG`, `SUM`, `COUNT` aggregations
+
+---
+
+## 🔒 Backend Security & Data Integrity
+
+| Feature | Implementation |
+|---------|----------------|
+| SQL Injection Prevention | All queries use `PreparedStatement` with `?` bind parameters |
+| Resource Management | All 12 DAOs use `try-with-resources` for Connection, PreparedStatement, ResultSet |
+| Business Rule Enforcement | Bed allocation triggers + DAO-level validation (fail-safe on error) |
+| Cascade Delete Safety | Confirmation dialogs before cascade deletions |
+| Input Validation | Patient/Doctor existence checks, date format validation, null-safe table handling |
+| Audit Trail | Automatic logging of appointment cancellations |
+| Password Security | SHA-256 hashing via MySQL `SHA2()` function |
+
+---
+
+## 🧪 How to Verify the System
+
+### Quick Smoke Test
+```bash
+# 1. Compile (should show 0 errors)
+javac -cp "lib/mysql-connector-j-26.7.0.jar;src" -d out src/db/*.java src/model/*.java src/dao/*.java src/ui/*.java src/test/*.java
+
+# 2. Run dashboard test (verifies DB connection + all DAOs)
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDashboard
+
+# 3. Launch GUI
+java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" ui.HospitalManagementUI
+```
+
+### Manual Test Checklist
+| # | Test Scenario | Expected Result |
+|---|--------------|-----------------|
+| 1 | Login with `admin`/`admin123` | Main window opens with all 12 tabs |
+| 2 | Login with `receptionist`/`recep123` | Main window opens with 6 tabs only |
+| 3 | Dashboard → Click "Refresh Dashboard" | All metrics update from DB |
+| 4 | Patients → Search by name (e.g., "Rahul") | Shows matching patients |
+| 5 | Doctors → Table shows specialization names | "Cardiology" instead of "1" |
+| 6 | Doctors → Delete → Confirmation dialog | Warns about cascade deletion |
+| 7 | Bed Allocation → Admit same patient twice | Error: "Patient already admitted" |
+| 8 | Bed Allocation → Admit to occupied bed | Error: "Bed is occupied" |
+| 9 | Billing → Add bill with invalid appointment | Error: "Failed to create bill" |
+| 10 | Reports → Select "Revenue by Doctor" | Shows revenue breakdown by doctor |
+| 11 | Reports → Click "Export to CSV" | CSV file saved to disk |
+
+---
 
 ## 👥 Team Members
 
 - **Nisarg Joshi**
-- **Shilajit Banerjees**
+- **Shilajit Banerjee**
+
