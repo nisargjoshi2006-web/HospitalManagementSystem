@@ -265,20 +265,20 @@ public class DoctorSchedulePanel extends JPanel {
 
                 int row = table.getSelectedRow();
 
-                txtScheduleId.setText(
-                        tableModel.getValueAt(row,0).toString());
+                Object val0 = tableModel.getValueAt(row, 0);
+                txtScheduleId.setText(val0 != null ? val0.toString() : "");
 
-                txtDoctorId.setText(
-                        tableModel.getValueAt(row,1).toString());
+                Object val1 = tableModel.getValueAt(row, 1);
+                txtDoctorId.setText(val1 != null ? val1.toString() : "");
 
-                dayBox.setSelectedItem(
-                        tableModel.getValueAt(row,2).toString());
+                Object val2 = tableModel.getValueAt(row, 2);
+                dayBox.setSelectedItem(val2 != null ? val2.toString() : "");
 
-                txtStartTime.setText(
-                        tableModel.getValueAt(row,3).toString());
+                Object val3 = tableModel.getValueAt(row, 3);
+                txtStartTime.setText(val3 != null ? val3.toString() : "");
 
-                txtEndTime.setText(
-                        tableModel.getValueAt(row,4).toString());
+                Object val4 = tableModel.getValueAt(row, 4);
+                txtEndTime.setText(val4 != null ? val4.toString() : "");
             }
         });
     }

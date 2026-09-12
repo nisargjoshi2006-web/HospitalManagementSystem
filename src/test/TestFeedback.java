@@ -192,6 +192,10 @@ public class TestFeedback {
 
                         break;
                     }
+                    
+                    System.out.print("Patient ID : ");
+                    int newPatientId = sc.nextInt();
+                    sc.nextLine();
 
                     System.out.println(
                             "1. Poor");
@@ -217,6 +221,10 @@ public class TestFeedback {
 
                         break;
                     }
+                    
+                    System.out.print(
+                            "Date (YYYY-MM-DD) : ");
+                    String newDate = sc.nextLine();
 
                     System.out.print(
                             "Comments : ");
@@ -226,7 +234,9 @@ public class TestFeedback {
 
                     dao.updateFeedback(
                             feedbackId,
+                            newPatientId,
                             newRating,
+                            newDate,
                             newComments
                     );
 

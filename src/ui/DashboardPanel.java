@@ -18,6 +18,9 @@ public class DashboardPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    private JPanel cardsGrid;
+    private JLabel lblDate;
+
     public DashboardPanel() {
 
         setLayout(new BorderLayout(15, 15));
@@ -28,13 +31,31 @@ public class DashboardPanel extends JPanel {
         JLabel lblTitle = new JLabel("Hospital Management System Dashboard", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Arial", Font.BOLD, 26));
 
-        JLabel lblDate = new JLabel("Today's Date: " + LocalDate.now(), SwingConstants.CENTER);
+        lblDate = new JLabel("Today's Date: " + LocalDate.now(), SwingConstants.CENTER);
         lblDate.setFont(new Font("Arial", Font.BOLD, 16));
         lblDate.setForeground(Color.DARK_GRAY);
 
         headerPanel.add(lblTitle);
         headerPanel.add(lblDate);
         add(headerPanel, BorderLayout.NORTH);
+
+        cardsGrid = new JPanel(new GridLayout(5, 2, 12, 12));
+        add(new JScrollPane(cardsGrid), BorderLayout.CENTER);
+
+        JButton btnRefresh = new JButton("Refresh Dashboard");
+        btnRefresh.setFont(new Font("Arial", Font.BOLD, 14));
+        btnRefresh.addActionListener(e -> refreshDashboard());
+        JPanel footerPanel = new JPanel();
+        footerPanel.add(btnRefresh);
+        add(footerPanel, BorderLayout.SOUTH);
+
+        refreshDashboard();
+    }
+
+    private void refreshDashboard() {
+        cardsGrid.removeAll();
+
+        lblDate.setText("Today's Date: " + LocalDate.now());
 
         // Fetch counts from DAOs
         PatientDAO patientDAO = new PatientDAO();
@@ -58,9 +79,6 @@ public class DashboardPanel extends JPanel {
         double revenue = billingDAO.getTotalRevenue();
         int feedback = feedbackDAO.getFeedbackCount();
 
-        // Metric Cards Grid (5 rows x 2 columns)
-        JPanel cardsGrid = new JPanel(new GridLayout(5, 2, 12, 12));
-
         cardsGrid.add(createMetricCard("👥 Total Patients", String.valueOf(patients), new Color(230, 242, 255)));
         cardsGrid.add(createMetricCard("🩺 Total Doctors", String.valueOf(doctors), new Color(235, 250, 235)));
         cardsGrid.add(createMetricCard("📅 Appointments Scheduled", String.valueOf(appointments), new Color(255, 245, 230)));
@@ -72,7 +90,8 @@ public class DashboardPanel extends JPanel {
         cardsGrid.add(createMetricCard("💰 Total Revenue Collected", String.format("₹ %.2f", revenue), new Color(255, 255, 225)));
         cardsGrid.add(createMetricCard("⭐ Patient Reviews", String.valueOf(feedback), new Color(240, 240, 255)));
 
-        add(new JScrollPane(cardsGrid), BorderLayout.CENTER);
+        cardsGrid.revalidate();
+        cardsGrid.repaint();
     }
 
     private JPanel createMetricCard(String title, String value, Color bgColor) {

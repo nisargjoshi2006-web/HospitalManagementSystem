@@ -9,6 +9,7 @@ public class Patient {
     private String bloodGroup;
     private String contact;
     private String address;
+    private String registrationDate;
 
     public Patient() {
 
@@ -85,5 +86,13 @@ public class Patient {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(String registrationDate) {
+        this.registrationDate = registrationDate;
     }
 }

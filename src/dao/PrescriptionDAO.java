@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
+import java.sql.Types;
+
 public class PrescriptionDAO {
 
     // INSERT
@@ -30,7 +32,11 @@ public class PrescriptionDAO {
             pst.setInt(1, appointmentId);
             pst.setString(2, diagnosis);
             pst.setString(3, medicine);
-            pst.setDate(4, java.sql.Date.valueOf(nextVisitDate));
+            if (nextVisitDate != null && !nextVisitDate.trim().isEmpty()) {
+                pst.setDate(4, java.sql.Date.valueOf(nextVisitDate));
+            } else {
+                pst.setNull(4, java.sql.Types.DATE);
+            }
             pst.setString(5, remarks);
 
             int rows = pst.executeUpdate();
@@ -97,7 +103,11 @@ public class PrescriptionDAO {
             pst.setInt(1, appointmentId);
             pst.setString(2, diagnosis);
             pst.setString(3, medicine);
-            pst.setDate(4, java.sql.Date.valueOf(nextVisitDate));
+            if (nextVisitDate != null && !nextVisitDate.trim().isEmpty()) {
+                pst.setDate(4, java.sql.Date.valueOf(nextVisitDate));
+            } else {
+                pst.setNull(4, java.sql.Types.DATE);
+            }
             pst.setString(5, remarks);
             pst.setInt(6, id);
 

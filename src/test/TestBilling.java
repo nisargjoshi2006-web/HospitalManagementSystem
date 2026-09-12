@@ -114,15 +114,20 @@ public class TestBilling {
                         break;
                     }
 
-                    dao.addBill(
+                    boolean added = dao.addBill(
                             appointmentId,
                             billDate,
                             paymentMethod,
                             paymentStatus
                     );
 
-                    System.out.println(
-                            "Bill Added Successfully!");
+                    if (added) {
+                        System.out.println(
+                                "Bill Added Successfully!");
+                    } else {
+                        System.out.println(
+                                "Failed to create bill! Verify the Appointment ID has a valid doctor assigned.");
+                    }
 
                     break;
 

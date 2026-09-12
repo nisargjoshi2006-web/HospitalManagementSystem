@@ -27,7 +27,7 @@ public class BedAllocationDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return true;
     }
 
     // CHECK IF PATIENT IS CURRENTLY ADMITTED
@@ -44,7 +44,7 @@ public class BedAllocationDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return true;
     }
 
     // ALLOCATE BED WITH VALIDATION

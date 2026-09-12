@@ -211,7 +211,8 @@ public class PatientPanel extends JPanel {
                         "Age",
                         "Blood Group",
                         "Contact",
-                        "Address"
+                        "Address",
+                        "Reg. Date"
                 }
         );
 
@@ -279,6 +280,9 @@ public class PatientPanel extends JPanel {
                                 tableModel.getValueAt(row, 6)
                                         .toString()
                         );
+
+                        Object val = tableModel.getValueAt(row, 7);
+                        txtDate.setText(val != null ? val.toString() : "");
                     }
                 });
 
@@ -336,7 +340,8 @@ public class PatientPanel extends JPanel {
                                 p.getAge(),
                                 p.getBloodGroup(),
                                 p.getContact(),
-                                p.getAddress()
+                                p.getAddress(),
+                                p.getRegistrationDate()
                         }
                 );
             }
@@ -459,6 +464,9 @@ public class PatientPanel extends JPanel {
 
             txtAddress.setText(
                     p.getAddress());
+
+            txtDate.setText(
+                    p.getRegistrationDate() != null ? p.getRegistrationDate() : "");
 
         } else {
 

@@ -260,30 +260,23 @@ public class DoctorPanel extends JPanel {
 
                         int row = table.getSelectedRow();
 
-                        selectedDoctorId =
-                                Integer.parseInt(
-                                        tableModel.getValueAt(row, 0)
-                                                .toString());
+                        Object val0 = tableModel.getValueAt(row, 0);
+                        selectedDoctorId = Integer.parseInt(val0 != null ? val0.toString() : "-1");
 
-                        txtName.setText(
-                                tableModel.getValueAt(row, 1)
-                                        .toString());
+                        Object val1 = tableModel.getValueAt(row, 1);
+                        txtName.setText(val1 != null ? val1.toString() : "");
 
-                        txtSpecializationId.setText(
-                                tableModel.getValueAt(row, 2)
-                                        .toString());
+                        Object val2 = tableModel.getValueAt(row, 2);
+                        txtSpecializationId.setText(val2 != null ? val2.toString() : "");
 
-                        txtQualification.setText(
-                                tableModel.getValueAt(row, 3)
-                                        .toString());
+                        Object val3 = tableModel.getValueAt(row, 3);
+                        txtQualification.setText(val3 != null ? val3.toString() : "");
 
-                        txtFee.setText(
-                                tableModel.getValueAt(row, 4)
-                                        .toString());
+                        Object val4 = tableModel.getValueAt(row, 4);
+                        txtFee.setText(val4 != null ? val4.toString() : "");
 
-                        txtContact.setText(
-                                tableModel.getValueAt(row, 5)
-                                        .toString());
+                        Object val5 = tableModel.getValueAt(row, 5);
+                        txtContact.setText(val5 != null ? val5.toString() : "");
                     }
                 });
 
@@ -546,7 +539,7 @@ public class DoctorPanel extends JPanel {
                             new Object[]{
                                     d.getDoctorId(),
                                     d.getDoctorName(),
-                                    d.getSpecializationId(),
+                                    d.getSpecializationName() != null ? d.getSpecializationName() : String.valueOf(d.getSpecializationId()),
                                     d.getQualification(),
                                     d.getConsultationFee(),
                                     d.getContact()
@@ -623,15 +616,35 @@ public class DoctorPanel extends JPanel {
                 return;
             }
 
-            dao.deleteDoctor(selectedDoctorId);
-
-            JOptionPane.showMessageDialog(
+            int confirm = JOptionPane.showConfirmDialog(
                     this,
-                    "Doctor Deleted Successfully");
+                    "Are you sure you want to delete this doctor? This will also delete all associated appointments, prescriptions, billing, and schedules.",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
 
-            selectedDoctorId = -1;
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    dao.deleteDoctor(selectedDoctorId);
 
-            btnView.doClick();
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Doctor Deleted Successfully");
+
+                    selectedDoctorId = -1;
+
+                    btnView.doClick();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Unable to delete doctor. " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    ex.printStackTrace();
+                }
+            }
         });
 
 

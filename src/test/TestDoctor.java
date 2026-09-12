@@ -41,16 +41,17 @@ public class TestDoctor {
                     }
 
                     System.out.println("Specialization:");
-                    System.out.println("1. Cardiologist");
-                    System.out.println("2. Neurologist");
-                    System.out.println("3. Orthopedic");
-                    System.out.println("4. Pediatrician");
+                    System.out.println("1. Cardiology");
+                    System.out.println("2. Neurology");
+                    System.out.println("3. Orthopedics");
+                    System.out.println("4. Dermatology");
+                    System.out.println("5. General Medicine");
 
                     System.out.print("Enter Choice : ");
                     int specializationId = sc.nextInt();
                     sc.nextLine();
 
-                    if(specializationId < 1 || specializationId > 4) {
+                    if(specializationId < 1 || specializationId > 5) {
                         System.out.println("Invalid Specialization!");
                         break;
                     }
@@ -208,16 +209,17 @@ public class TestDoctor {
                     }
 
                     System.out.println("Specialization:");
-                    System.out.println("1. Cardiologist");
-                    System.out.println("2. Neurologist");
-                    System.out.println("3. Orthopedic");
-                    System.out.println("4. Pediatrician");
+                    System.out.println("1. Cardiology");
+                    System.out.println("2. Neurology");
+                    System.out.println("3. Orthopedics");
+                    System.out.println("4. Dermatology");
+                    System.out.println("5. General Medicine");
 
                     System.out.print("Enter Choice : ");
                     int newSpecId = sc.nextInt();
                     sc.nextLine();
 
-                    if(newSpecId < 1 || newSpecId > 4) {
+                    if(newSpecId < 1 || newSpecId > 5) {
                         System.out.println(
                                 "Invalid Specialization!");
                         break;

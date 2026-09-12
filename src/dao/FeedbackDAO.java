@@ -72,10 +72,12 @@ public class FeedbackDAO {
         }
     }
 
-    // UPDATE FEEDBACK (updates rating and comments only)
+    // UPDATE FEEDBACK
     public void updateFeedback(
             int feedbackId,
+            int patientId,
             int rating,
+            String feedbackDate,
             String comments) {
 
         try {
@@ -83,13 +85,15 @@ public class FeedbackDAO {
             Connection con = DBConnection.getConnection();
 
             String query =
-                    "UPDATE Feedback SET rating=?, comments=? WHERE feedback_id=?";
+                    "UPDATE Feedback SET patient_id=?, rating=?, feedback_date=?, comments=? WHERE feedback_id=?";
 
             PreparedStatement pst = con.prepareStatement(query);
 
-            pst.setInt(1, rating);
-            pst.setString(2, comments);
-            pst.setInt(3, feedbackId);
+            pst.setInt(1, patientId);
+            pst.setInt(2, rating);
+            pst.setDate(3, java.sql.Date.valueOf(feedbackDate));
+            pst.setString(4, comments);
+            pst.setInt(5, feedbackId);
 
             int rows = pst.executeUpdate();
 

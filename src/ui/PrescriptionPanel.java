@@ -258,25 +258,20 @@ public class PrescriptionPanel extends JPanel {
 
     if(row >= 0) {
 
-        txtAppointmentId.setText(
-                model.getValueAt(row,1).toString()
-        );
+        Object val1 = model.getValueAt(row, 1);
+        txtAppointmentId.setText(val1 != null ? val1.toString() : "");
 
-        txtDiagnosis.setText(
-                model.getValueAt(row,2).toString()
-        );
+        Object val2 = model.getValueAt(row, 2);
+        txtDiagnosis.setText(val2 != null ? val2.toString() : "");
 
-        txtMedicine.setText(
-                model.getValueAt(row,3).toString()
-        );
+        Object val3 = model.getValueAt(row, 3);
+        txtMedicine.setText(val3 != null ? val3.toString() : "");
 
-        txtNextVisit.setText(
-                model.getValueAt(row,4).toString()
-        );
+        Object val4 = model.getValueAt(row, 4);
+        txtNextVisit.setText(val4 != null ? val4.toString() : "");
 
-        txtRemarks.setText(
-                model.getValueAt(row,5).toString()
-        );
+        Object val5 = model.getValueAt(row, 5);
+        txtRemarks.setText(val5 != null ? val5.toString() : "");
     }
 
 });
@@ -400,7 +395,6 @@ if(nextDate.isBefore(today))
         // ================= SEARCH PRESCRIPTION =================
 
         btnSearch.addActionListener(e -> {
-
             String idStr = JOptionPane.showInputDialog(
                     this,
                     "Enter Prescription ID"
@@ -409,35 +403,23 @@ if(nextDate.isBefore(today))
             if (idStr == null || idStr.trim().isEmpty()) return;
 
             try {
-
                 int id = Integer.parseInt(idStr.trim());
-
-                boolean found = false;
-
-                for (int r = 0; r < model.getRowCount(); r++) {
-
-                    if (Integer.parseInt(model.getValueAt(r, 0).toString()) == id) {
-
-                        table.setRowSelectionInterval(r, r);
-                        table.scrollRectToVisible(table.getCellRect(r, 0, true));
-                        found = true;
-                        break;
-                    }
+                Prescription p = dao.searchPrescription(id);
+                if (p != null) {
+                    model.setRowCount(0);
+                    model.addRow(new Object[]{
+                            p.getPrescriptionId(), p.getAppointmentId(), p.getDiagnosis(),
+                            p.getMedicine(), p.getNextVisitDate(), p.getRemarks()
+                    });
+                    
+                    table.setRowSelectionInterval(0, 0);
+                    
+                    JOptionPane.showMessageDialog(this, "Prescription found!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Prescription ID " + id + " not found.", "Not Found", JOptionPane.WARNING_MESSAGE);
                 }
-
-                if (!found) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Prescription ID " + id + " not found. Try viewing first."
-                    );
-                }
-
             } catch (NumberFormatException ex) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Please enter a valid numeric ID."
-                );
+                JOptionPane.showMessageDialog(this, "Please enter a valid numeric Prescription ID.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 

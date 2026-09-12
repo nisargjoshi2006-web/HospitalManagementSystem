@@ -272,27 +272,36 @@ public class BillingPanel extends JPanel {
                     return;
                 }
 
-                dao.addBill(
+                boolean added = dao.addBill(
                         appointmentId,
                         billDate,
                         paymentMethod,
                         paymentStatus
                 );
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Bill Added Successfully",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
+                if (added) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Bill Added Successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
 
-                // Clear fields
-                txtAppointmentId.setText("");
-                txtBillDate.setText("");
-                txtPaymentMethod.setText("");
-                txtPaymentStatus.setText("");
+                    // Clear fields
+                    txtAppointmentId.setText("");
+                    txtBillDate.setText("");
+                    txtPaymentMethod.setText("");
+                    txtPaymentStatus.setText("");
 
-                btnView.doClick();
+                    btnView.doClick();
+                } else {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Failed to create bill! Verify the Appointment ID has a valid doctor assigned.",
+                            "Bill Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
 
             } catch (Exception ex) {
 
@@ -439,21 +448,17 @@ public class BillingPanel extends JPanel {
 
             if (row >= 0) {
 
-                txtAppointmentId.setText(
-                        tableModel.getValueAt(row, 1).toString()
-                );
+                Object val1 = tableModel.getValueAt(row, 1);
+                txtAppointmentId.setText(val1 != null ? val1.toString() : "");
 
-                txtBillDate.setText(
-                        tableModel.getValueAt(row, 3).toString()
-                );
+                Object val3 = tableModel.getValueAt(row, 3);
+                txtBillDate.setText(val3 != null ? val3.toString() : "");
 
-                txtPaymentMethod.setText(
-                        tableModel.getValueAt(row, 4).toString()
-                );
+                Object val4 = tableModel.getValueAt(row, 4);
+                txtPaymentMethod.setText(val4 != null ? val4.toString() : "");
 
-                txtPaymentStatus.setText(
-                        tableModel.getValueAt(row, 5).toString()
-                );
+                Object val5 = tableModel.getValueAt(row, 5);
+                txtPaymentStatus.setText(val5 != null ? val5.toString() : "");
             }
         });
 

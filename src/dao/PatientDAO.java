@@ -143,6 +143,8 @@ public void updatePatient(
         con.setAutoCommit(false);
 
         String[] queries = {
+            "DELETE FROM Bed_Allocation WHERE patient_id=?",
+            "DELETE FROM Lab_Tests WHERE patient_id=?",
             "DELETE FROM Prescriptions WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
             "DELETE FROM Billing WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
             "DELETE FROM Appointments WHERE patient_id=?",
@@ -207,6 +209,7 @@ public void updatePatient(
             p.setBloodGroup(rs.getString("blood_group"));
             p.setContact(rs.getString("contact"));
             p.setAddress(rs.getString("address"));
+            p.setRegistrationDate(rs.getDate("registration_date") != null ? rs.getDate("registration_date").toString() : "");
 
             patients.add(p);
         }
@@ -261,6 +264,8 @@ public Patient searchPatient(int id) {
 
             p.setAddress(
                     rs.getString("address"));
+            
+            p.setRegistrationDate(rs.getDate("registration_date") != null ? rs.getDate("registration_date").toString() : "");
         }
 
         con.close();
@@ -354,6 +359,7 @@ public boolean patientExists(int patientId) {
                     p.setBloodGroup(rs.getString("blood_group"));
                     p.setContact(rs.getString("contact"));
                     p.setAddress(rs.getString("address"));
+                    p.setRegistrationDate(rs.getDate("registration_date") != null ? rs.getDate("registration_date").toString() : "");
                     list.add(p);
                 }
             }

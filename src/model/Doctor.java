@@ -5,6 +5,7 @@ public class Doctor {
     private int doctorId;
     private String doctorName;
     private int specializationId;
+    private String specializationName;
     private String qualification;
     private double consultationFee;
     private String contact;
@@ -49,6 +50,14 @@ public class Doctor {
 
     public void setSpecializationId(int specializationId) {
         this.specializationId = specializationId;
+    }
+
+    public String getSpecializationName() {
+        return specializationName;
+    }
+
+    public void setSpecializationName(String specializationName) {
+        this.specializationName = specializationName;
     }
 
     public String getQualification() {

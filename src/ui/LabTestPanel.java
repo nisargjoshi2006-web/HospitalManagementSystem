@@ -108,14 +108,29 @@ public class LabTestPanel extends JPanel {
         table.getSelectionModel().addListSelectionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
-                selectedTestId = Integer.parseInt(tableModel.getValueAt(row, 0).toString());
-                txtPatientId.setText(tableModel.getValueAt(row, 1).toString());
-                txtDoctorId.setText(tableModel.getValueAt(row, 2).toString());
-                txtTestName.setText(tableModel.getValueAt(row, 3).toString());
-                txtTestDate.setText(tableModel.getValueAt(row, 4).toString());
-                txtCost.setText(tableModel.getValueAt(row, 5).toString());
-                cmbStatus.setSelectedItem(tableModel.getValueAt(row, 6).toString());
-                txtResult.setText(tableModel.getValueAt(row, 7) != null ? tableModel.getValueAt(row, 7).toString() : "");
+                Object val0 = tableModel.getValueAt(row, 0);
+                selectedTestId = Integer.parseInt(val0 != null ? val0.toString() : "-1");
+                
+                Object val1 = tableModel.getValueAt(row, 1);
+                txtPatientId.setText(val1 != null ? val1.toString() : "");
+                
+                Object val2 = tableModel.getValueAt(row, 2);
+                txtDoctorId.setText(val2 != null ? val2.toString() : "");
+                
+                Object val3 = tableModel.getValueAt(row, 3);
+                txtTestName.setText(val3 != null ? val3.toString() : "");
+                
+                Object val4 = tableModel.getValueAt(row, 4);
+                txtTestDate.setText(val4 != null ? val4.toString() : "");
+                
+                Object val5 = tableModel.getValueAt(row, 5);
+                txtCost.setText(val5 != null ? val5.toString() : "");
+                
+                Object val6 = tableModel.getValueAt(row, 6);
+                cmbStatus.setSelectedItem(val6 != null ? val6.toString() : "");
+                
+                Object val7 = tableModel.getValueAt(row, 7);
+                txtResult.setText(val7 != null ? val7.toString() : "");
             }
         });
 

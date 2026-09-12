@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class BillingDAO {
 
     // INSERT
-    public void addBill(
+    public boolean addBill(
             int appointmentId,
             String billDate,
             String paymentMethod,
@@ -55,12 +55,17 @@ public class BillingDAO {
 
                 System.out.println("Bill Amount = " + amount);
                 System.out.println("Rows Inserted = " + rows);
+                
+                con.close();
+                return true;
             }
 
             con.close();
+            return false;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 

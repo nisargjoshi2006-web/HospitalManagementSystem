@@ -553,7 +553,6 @@ btnUpdate.addActionListener(e -> {
         btnView.doClick();
 
     } catch(Exception ex){
-
         ex.printStackTrace();
     }
 });
@@ -575,7 +574,6 @@ btnDelete.addActionListener(e -> {
         btnView.doClick();
 
     } catch(Exception ex){
-
         ex.printStackTrace();
     }
 });
@@ -589,26 +587,26 @@ table.getSelectionModel()
         int row =
                 table.getSelectedRow();
 
-        txtAppointmentId.setText(
-                tableModel.getValueAt(row,0).toString());
+        Object val0 = tableModel.getValueAt(row, 0);
+        txtAppointmentId.setText(val0 != null ? val0.toString() : "");
 
-        txtPatientId.setText(
-                tableModel.getValueAt(row,1).toString());
+        Object val1 = tableModel.getValueAt(row, 1);
+        txtPatientId.setText(val1 != null ? val1.toString() : "");
 
-        txtDoctorId.setText(
-                tableModel.getValueAt(row,2).toString());
+        Object val2 = tableModel.getValueAt(row, 2);
+        txtDoctorId.setText(val2 != null ? val2.toString() : "");
 
-        txtDate.setText(
-                tableModel.getValueAt(row,3).toString());
+        Object val3 = tableModel.getValueAt(row, 3);
+        txtDate.setText(val3 != null ? val3.toString() : "");
 
-        txtTime.setText(
-                tableModel.getValueAt(row,4).toString());
+        Object val4 = tableModel.getValueAt(row, 4);
+        txtTime.setText(val4 != null ? val4.toString() : "");
 
-        txtRoom.setText(
-                tableModel.getValueAt(row,5).toString());
+        Object val5 = tableModel.getValueAt(row, 5);
+        txtRoom.setText(val5 != null ? val5.toString() : "");
 
-        txtStatus.setText(
-                tableModel.getValueAt(row,6).toString());
+        Object val6 = tableModel.getValueAt(row, 6);
+        txtStatus.setText(val6 != null ? val6.toString() : "");
     }
 });
     }
