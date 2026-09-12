@@ -16,14 +16,8 @@ public class FeedbackDAO {
             String feedbackDate,
             String comments) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "INSERT INTO Feedback(patient_id, rating, feedback_date, comments) VALUES (?, ?, ?, ?)";
-
-            PreparedStatement pst = con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("INSERT INTO Feedback(patient_id, rating, feedback_date, comments) VALUES (?, ?, ?, ?)")) {
 
             pst.setInt(1, patientId);
             pst.setInt(2, rating);
@@ -34,8 +28,6 @@ public class FeedbackDAO {
 
             System.out.println("Rows Inserted = " + rows);
 
-            con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -44,15 +36,9 @@ public class FeedbackDAO {
     // VIEW ALL FEEDBACK
     public void viewFeedback() {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT * FROM Feedback";
-
-            PreparedStatement pst = con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Feedback");
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
 
@@ -64,8 +50,6 @@ public class FeedbackDAO {
                         rs.getString("comments")
                 );
             }
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -80,14 +64,8 @@ public class FeedbackDAO {
             String feedbackDate,
             String comments) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "UPDATE Feedback SET patient_id=?, rating=?, feedback_date=?, comments=? WHERE feedback_id=?";
-
-            PreparedStatement pst = con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("UPDATE Feedback SET patient_id=?, rating=?, feedback_date=?, comments=? WHERE feedback_id=?")) {
 
             pst.setInt(1, patientId);
             pst.setInt(2, rating);
@@ -99,8 +77,6 @@ public class FeedbackDAO {
 
             System.out.println("Rows Updated = " + rows);
 
-            con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -109,22 +85,14 @@ public class FeedbackDAO {
     // DELETE FEEDBACK
     public void deleteFeedback(int feedbackId) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "DELETE FROM Feedback WHERE feedback_id=?";
-
-            PreparedStatement pst = con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("DELETE FROM Feedback WHERE feedback_id=?")) {
 
             pst.setInt(1, feedbackId);
 
             int rows = pst.executeUpdate();
 
             System.out.println("Rows Deleted = " + rows);
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -136,15 +104,9 @@ public class FeedbackDAO {
 
         ArrayList<Feedback> list = new ArrayList<>();
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT * FROM Feedback";
-
-            PreparedStatement pst = con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Feedback");
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
 
@@ -160,10 +122,7 @@ public class FeedbackDAO {
                 list.add(f);
             }
 
-            con.close();
-
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
@@ -174,29 +133,16 @@ public class FeedbackDAO {
 
     int count = 0;
 
-    try {
-
-        Connection con = DBConnection.getConnection();
-
-        String query = "SELECT COUNT(*) FROM Feedback";
-
-        PreparedStatement pst =
-                con.prepareStatement(query);
-
-        ResultSet rs = pst.executeQuery();
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement("SELECT COUNT(*) FROM Feedback");
+         ResultSet rs = pst.executeQuery()) {
 
         if(rs.next()) {
-
             count = rs.getInt(1);
-
         }
 
-        con.close();
-
     } catch(Exception e) {
-
         e.printStackTrace();
-
     }
 
     return count;
@@ -205,32 +151,22 @@ public class FeedbackDAO {
 
         Feedback f = null;
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "SELECT * FROM Feedback WHERE feedback_id=?";
-
-            PreparedStatement pst = con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Feedback WHERE feedback_id=?")) {
 
             pst.setInt(1, feedbackId);
 
-            ResultSet rs = pst.executeQuery();
-
-            if (rs.next()) {
-
-                f = new Feedback();
-
-                f.setFeedbackId(rs.getInt("feedback_id"));
-                f.setPatientId(rs.getInt("patient_id"));
-                f.setRating(rs.getInt("rating"));
-                f.setFeedbackDate(rs.getDate("feedback_date") != null
-                        ? rs.getDate("feedback_date").toString() : "");
-                f.setComments(rs.getString("comments"));
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    f = new Feedback();
+                    f.setFeedbackId(rs.getInt("feedback_id"));
+                    f.setPatientId(rs.getInt("patient_id"));
+                    f.setRating(rs.getInt("rating"));
+                    f.setFeedbackDate(rs.getDate("feedback_date") != null
+                            ? rs.getDate("feedback_date").toString() : "");
+                    f.setComments(rs.getString("comments"));
+                }
             }
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();

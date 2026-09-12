@@ -654,23 +654,35 @@ public class DoctorPanel extends JPanel {
 
         btnSearch.addActionListener(e -> {
 
-            String idStr =
+            String inputStr =
                     JOptionPane.showInputDialog(
                             this,
-                            "Enter Doctor ID");
+                            "Enter Doctor ID or Keyword");
 
-            if (idStr == null || idStr.trim().isEmpty())
+            if (inputStr == null || inputStr.trim().isEmpty())
                 return;
 
             try {
 
-                int id = Integer.parseInt(idStr.trim());
+                int id = Integer.parseInt(inputStr.trim());
 
                 Doctor d = dao.searchDoctor(id);
 
                 if (d != null) {
 
                     selectedDoctorId = d.getDoctorId();
+                    
+                    tableModel.setRowCount(0);
+                    tableModel.addRow(
+                            new Object[]{
+                                    d.getDoctorId(),
+                                    d.getDoctorName(),
+                                    d.getSpecializationName() != null ? d.getSpecializationName() : String.valueOf(d.getSpecializationId()),
+                                    d.getQualification(),
+                                    d.getConsultationFee(),
+                                    d.getContact()
+                            }
+                    );
 
                     txtName.setText(
                             d.getDoctorName());
@@ -699,8 +711,26 @@ public class DoctorPanel extends JPanel {
                 }
 
             } catch (NumberFormatException ex) {
-
-                showValidationError("Doctor ID must be a valid number.");
+                ArrayList<Doctor> results = dao.searchDoctorsByKeyword(inputStr.trim());
+                if (results.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "No doctors found for: " + inputStr.trim(), "Not Found", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    tableModel.setRowCount(0);
+                    for (Doctor d : results) {
+                        tableModel.addRow(
+                                new Object[]{
+                                        d.getDoctorId(),
+                                        d.getDoctorName(),
+                                        d.getSpecializationName() != null ? d.getSpecializationName() : String.valueOf(d.getSpecializationId()),
+                                        d.getQualification(),
+                                        d.getConsultationFee(),
+                                        d.getContact()
+                                }
+                        );
+                    }
+                }
+            } catch (Exception ex) {
+                showValidationError("Error searching doctor.");
             }
         });
     }

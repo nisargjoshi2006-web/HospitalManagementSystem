@@ -16,51 +16,39 @@ public class BillingDAO {
             String paymentMethod,
             String paymentStatus) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            // Get consultation fee of the doctor for this appointment
-            String feeQuery =
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement feePst = con.prepareStatement(
                 "SELECT d.consultation_fee " +
                 "FROM Appointments a " +
                 "JOIN Doctor d ON a.doctor_id = d.doctor_id " +
-                "WHERE a.appointment_id = ?";
-
-            PreparedStatement feePst =
-                con.prepareStatement(feeQuery);
+                "WHERE a.appointment_id = ?")) {
 
             feePst.setInt(1, appointmentId);
 
-            ResultSet rs = feePst.executeQuery();
+            try (ResultSet rs = feePst.executeQuery()) {
+                if (rs.next()) {
+                    double amount = rs.getDouble("consultation_fee");
+                    String query =
+                        "INSERT INTO Billing(appointment_id, amount, bill_date, payment_method, payment_status) " +
+                        "VALUES (?, ?, ?, ?, ?)";
+                    
+                    try (PreparedStatement pst = con.prepareStatement(query)) {
+                        pst.setInt(1, appointmentId);
+                        pst.setDouble(2, amount);
+                        pst.setDate(3, java.sql.Date.valueOf(billDate));
+                        pst.setString(4, paymentMethod);
+                        pst.setString(5, paymentStatus);
 
-            if (rs.next()) {
+                        int rows = pst.executeUpdate();
 
-                double amount = rs.getDouble("consultation_fee");
-
-                String query =
-                    "INSERT INTO Billing(appointment_id, amount, bill_date, payment_method, payment_status) " +
-                    "VALUES (?, ?, ?, ?, ?)";
-
-                PreparedStatement pst =
-                    con.prepareStatement(query);
-
-                pst.setInt(1, appointmentId);
-                pst.setDouble(2, amount);
-                pst.setDate(3, java.sql.Date.valueOf(billDate));
-                pst.setString(4, paymentMethod);
-                pst.setString(5, paymentStatus);
-
-                int rows = pst.executeUpdate();
-
-                System.out.println("Bill Amount = " + amount);
-                System.out.println("Rows Inserted = " + rows);
-                
-                con.close();
-                return true;
+                        System.out.println("Bill Amount = " + amount);
+                        System.out.println("Rows Inserted = " + rows);
+                        
+                        return true;
+                    }
+                }
             }
 
-            con.close();
             return false;
 
         } catch (Exception e) {
@@ -72,16 +60,9 @@ public class BillingDAO {
     // VIEW
     public void viewBills() {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT * FROM Billing";
-
-            PreparedStatement pst =
-                con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Billing");
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
 
@@ -95,8 +76,6 @@ public class BillingDAO {
                 );
             }
 
-            con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -108,15 +87,9 @@ public class BillingDAO {
             String newPaymentMethod,
             String newPaymentStatus) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                "UPDATE Billing SET payment_method=?, payment_status=? WHERE bill_id=?";
-
-            PreparedStatement pst =
-                con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(
+                "UPDATE Billing SET payment_method=?, payment_status=? WHERE bill_id=?")) {
 
             pst.setString(1, newPaymentMethod);
             pst.setString(2, newPaymentStatus);
@@ -126,8 +99,6 @@ public class BillingDAO {
 
             System.out.println("Rows Updated = " + rows);
 
-            con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,23 +107,14 @@ public class BillingDAO {
     // DELETE
     public void deleteBill(int id) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                "DELETE FROM Billing WHERE bill_id=?";
-
-            PreparedStatement pst =
-                con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("DELETE FROM Billing WHERE bill_id=?")) {
 
             pst.setInt(1, id);
 
             int rows = pst.executeUpdate();
 
             System.out.println("Rows Deleted = " + rows);
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -162,15 +124,9 @@ public class BillingDAO {
 
         ArrayList<Billing> list = new ArrayList<>();
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT * FROM Billing";
-
-            PreparedStatement pst = con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Billing");
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
 
@@ -187,10 +143,7 @@ public class BillingDAO {
                 list.add(b);
             }
 
-            con.close();
-
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
@@ -201,28 +154,16 @@ public class BillingDAO {
 
 public boolean billExists(int billId) {
 
-    try {
-
-        Connection con = DBConnection.getConnection();
-
-        String query =
-                "SELECT * FROM Billing WHERE bill_id=?";
-
-        PreparedStatement pst =
-                con.prepareStatement(query);
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement("SELECT * FROM Billing WHERE bill_id=?")) {
 
         pst.setInt(1, billId);
 
-        ResultSet rs = pst.executeQuery();
-
-        boolean exists = rs.next();
-
-        con.close();
-
-        return exists;
+        try (ResultSet rs = pst.executeQuery()) {
+            return rs.next();
+        }
 
     } catch(Exception e) {
-
         e.printStackTrace();
     }
 
@@ -234,27 +175,15 @@ public boolean billExists(int billId) {
 
         int count = 0;
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "SELECT COUNT(*) FROM Billing";
-
-            PreparedStatement pst =
-                    con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT COUNT(*) FROM Billing");
+             ResultSet rs = pst.executeQuery()) {
 
             if(rs.next()) {
-
                 count = rs.getInt(1);
             }
 
-            con.close();
-
         } catch(Exception e) {
-
             e.printStackTrace();
         }
 
@@ -266,30 +195,23 @@ public boolean billExists(int billId) {
 
         Billing bill = null;
 
-        try {
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Billing WHERE bill_id=?")) {
 
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT * FROM Billing WHERE bill_id=?";
-
-            PreparedStatement pst = con.prepareStatement(query);
             pst.setInt(1, billId);
 
-            ResultSet rs = pst.executeQuery();
-
-            if (rs.next()) {
-
-                bill = new Billing();
-                bill.setBillId(rs.getInt("bill_id"));
-                bill.setAppointmentId(rs.getInt("appointment_id"));
-                bill.setAmount(rs.getDouble("amount"));
-                bill.setBillDate(rs.getDate("bill_date") != null
-                        ? rs.getDate("bill_date").toString() : "");
-                bill.setPaymentMethod(rs.getString("payment_method"));
-                bill.setPaymentStatus(rs.getString("payment_status"));
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    bill = new Billing();
+                    bill.setBillId(rs.getInt("bill_id"));
+                    bill.setAppointmentId(rs.getInt("appointment_id"));
+                    bill.setAmount(rs.getDouble("amount"));
+                    bill.setBillDate(rs.getDate("bill_date") != null
+                            ? rs.getDate("bill_date").toString() : "");
+                    bill.setPaymentMethod(rs.getString("payment_method"));
+                    bill.setPaymentStatus(rs.getString("payment_status"));
+                }
             }
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -303,21 +225,13 @@ public boolean billExists(int billId) {
 
         double total = 0.0;
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT SUM(amount) FROM Billing WHERE payment_status='Paid'";
-
-            PreparedStatement pst = con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT SUM(amount) FROM Billing WHERE payment_status='Paid'");
+             ResultSet rs = pst.executeQuery()) {
 
             if (rs.next()) {
                 total = rs.getDouble(1);
             }
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();

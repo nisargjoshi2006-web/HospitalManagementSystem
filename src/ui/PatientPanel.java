@@ -428,23 +428,36 @@ public class PatientPanel extends JPanel {
         });
         btnSearch.addActionListener(e -> {
 
-    String idStr =
+    String inputStr =
             JOptionPane.showInputDialog(
                     this,
-                    "Enter Patient ID");
+                    "Enter Patient ID or Keyword");
 
-    if(idStr == null)
+    if(inputStr == null || inputStr.trim().isEmpty())
         return;
 
     try {
 
         int id =
-                Integer.parseInt(idStr);
+                Integer.parseInt(inputStr.trim());
 
         Patient p =
                 dao.searchPatient(id);
 
         if(p != null) {
+            tableModel.setRowCount(0);
+            tableModel.addRow(
+                    new Object[]{
+                            p.getPatientId(),
+                            p.getPatientName(),
+                            p.getGender(),
+                            p.getAge(),
+                            p.getBloodGroup(),
+                            p.getContact(),
+                            p.getAddress(),
+                            p.getRegistrationDate()
+                    }
+            );
 
             txtName.setText(
                     p.getPatientName());
@@ -475,11 +488,31 @@ public class PatientPanel extends JPanel {
                     "Patient Not Found");
         }
 
+    } catch(NumberFormatException ex) {
+        ArrayList<Patient> results = dao.searchPatientsByKeyword(inputStr.trim());
+        if (results.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No patients found for: " + inputStr.trim());
+        } else {
+            tableModel.setRowCount(0);
+            for (Patient p : results) {
+                tableModel.addRow(
+                        new Object[]{
+                                p.getPatientId(),
+                                p.getPatientName(),
+                                p.getGender(),
+                                p.getAge(),
+                                p.getBloodGroup(),
+                                p.getContact(),
+                                p.getAddress(),
+                                p.getRegistrationDate()
+                        }
+                );
+            }
+        }
     } catch(Exception ex) {
-
         JOptionPane.showMessageDialog(
                 this,
-                "Invalid ID");
+                "Error searching patient.");
     }
 });
 

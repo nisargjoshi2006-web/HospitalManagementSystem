@@ -18,14 +18,8 @@ public class PatientDAO {
             String address,
             String registrationDate) {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "INSERT INTO Patients(patient_name, gender, age, blood_group, contact, address, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-            PreparedStatement pst = con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("INSERT INTO Patients(patient_name, gender, age, blood_group, contact, address, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
 
             pst.setString(1, name);
             pst.setString(2, gender);
@@ -43,8 +37,6 @@ public class PatientDAO {
                 System.out.println("Patient Added Successfully");
             }
 
-            con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,15 +45,9 @@ public class PatientDAO {
     // VIEW ALL PATIENTS
     public void viewPatients() {
 
-        try {
-
-            Connection con = DBConnection.getConnection();
-
-            String query = "SELECT * FROM Patients";
-
-            PreparedStatement pst = con.prepareStatement(query);
-
-            ResultSet rs = pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement("SELECT * FROM Patients");
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
 
@@ -76,8 +62,6 @@ public class PatientDAO {
                         rs.getDate("registration_date")
                 );
             }
-
-            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,11 +79,8 @@ public void updatePatient(
         String contact,
         String address) {
 
-    try {
-
-        Connection con = DBConnection.getConnection();
-
-        String query =
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement(
                 "UPDATE Patients SET " +
                 "patient_name=?, " +
                 "gender=?, " +
@@ -107,10 +88,7 @@ public void updatePatient(
                 "blood_group=?, " +
                 "contact=?, " +
                 "address=? " +
-                "WHERE patient_id=?";
-
-        PreparedStatement pst =
-                con.prepareStatement(query);
+                "WHERE patient_id=?")) {
 
         pst.setString(1, name);
         pst.setString(2, gender);
@@ -122,10 +100,7 @@ public void updatePatient(
 
         int rows = pst.executeUpdate();
 
-        System.out.println(
-                "Rows Updated = " + rows);
-
-        con.close();
+        System.out.println("Rows Updated = " + rows);
 
     } catch (Exception e) {
         e.printStackTrace();
@@ -137,66 +112,48 @@ public void updatePatient(
 
     System.out.println("Deleting ID = " + id);
 
-    Connection con = null;
-    try {
-        con = DBConnection.getConnection();
+    try (Connection con = DBConnection.getConnection()) {
         con.setAutoCommit(false);
+        try {
+            String[] queries = {
+                "DELETE FROM Bed_Allocation WHERE patient_id=?",
+                "DELETE FROM Lab_Tests WHERE patient_id=?",
+                "DELETE FROM Prescriptions WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
+                "DELETE FROM Billing WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
+                "DELETE FROM Appointments WHERE patient_id=?",
+                "DELETE FROM Feedback WHERE patient_id=?",
+                "DELETE FROM Emergency WHERE patient_id=?"
+            };
 
-        String[] queries = {
-            "DELETE FROM Bed_Allocation WHERE patient_id=?",
-            "DELETE FROM Lab_Tests WHERE patient_id=?",
-            "DELETE FROM Prescriptions WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
-            "DELETE FROM Billing WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)",
-            "DELETE FROM Appointments WHERE patient_id=?",
-            "DELETE FROM Feedback WHERE patient_id=?",
-            "DELETE FROM Emergency WHERE patient_id=?"
-        };
+            for (String query : queries) {
+                try (PreparedStatement pst = con.prepareStatement(query)) {
+                    pst.setInt(1, id);
+                    pst.executeUpdate();
+                }
+            }
 
-        for (String query : queries) {
-            try (PreparedStatement pst = con.prepareStatement(query)) {
+            try (PreparedStatement pst = con.prepareStatement("DELETE FROM Patients WHERE patient_id=?")) {
                 pst.setInt(1, id);
-                pst.executeUpdate();
+                System.out.println("Rows Deleted = " + pst.executeUpdate());
             }
+            con.commit();
+        } catch (Exception e) {
+            con.rollback();
+            e.printStackTrace();
+        } finally {
+            con.setAutoCommit(true);
         }
-
-        try (PreparedStatement pst = con.prepareStatement("DELETE FROM Patients WHERE patient_id=?")) {
-            pst.setInt(1, id);
-            System.out.println("Rows Deleted = " + pst.executeUpdate());
-        }
-        con.commit();
     } catch (Exception e) {
-        if (con != null) {
-            try {
-                con.rollback();
-            } catch (Exception rollbackError) {
-                rollbackError.printStackTrace();
-            }
-        }
         e.printStackTrace();
-    } finally {
-        if (con != null) {
-            try {
-                con.setAutoCommit(true);
-                con.close();
-            } catch (Exception closeError) {
-                closeError.printStackTrace();
-            }
-        }
     }
 }
     public ArrayList<Patient> getAllPatients() {
 
     ArrayList<Patient> patients = new ArrayList<>();
 
-    try {
-
-        Connection con = DBConnection.getConnection();
-
-        String query = "SELECT * FROM Patients";
-
-        PreparedStatement pst = con.prepareStatement(query);
-
-        ResultSet rs = pst.executeQuery();
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement("SELECT * FROM Patients");
+         ResultSet rs = pst.executeQuery()) {
 
         while (rs.next()) {
 
@@ -214,8 +171,6 @@ public void updatePatient(
             patients.add(p);
         }
 
-        con.close();
-
     } catch (Exception e) {
         e.printStackTrace();
     }
@@ -226,49 +181,40 @@ public Patient searchPatient(int id) {
 
     Patient p = null;
 
-    try {
-
-        Connection con = DBConnection.getConnection();
-
-        String query =
-                "SELECT * FROM Patients WHERE patient_id=?";
-
-        PreparedStatement pst =
-                con.prepareStatement(query);
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement("SELECT * FROM Patients WHERE patient_id=?")) {
 
         pst.setInt(1, id);
 
-        ResultSet rs = pst.executeQuery();
+        try (ResultSet rs = pst.executeQuery()) {
+            if(rs.next()) {
 
-        if(rs.next()) {
+                p = new Patient();
 
-            p = new Patient();
+                p.setPatientId(
+                        rs.getInt("patient_id"));
 
-            p.setPatientId(
-                    rs.getInt("patient_id"));
+                p.setPatientName(
+                        rs.getString("patient_name"));
 
-            p.setPatientName(
-                    rs.getString("patient_name"));
+                p.setGender(
+                        rs.getString("gender"));
 
-            p.setGender(
-                    rs.getString("gender"));
+                p.setAge(
+                        rs.getInt("age"));
 
-            p.setAge(
-                    rs.getInt("age"));
+                p.setBloodGroup(
+                        rs.getString("blood_group"));
 
-            p.setBloodGroup(
-                    rs.getString("blood_group"));
+                p.setContact(
+                        rs.getString("contact"));
 
-            p.setContact(
-                    rs.getString("contact"));
-
-            p.setAddress(
-                    rs.getString("address"));
-            
-            p.setRegistrationDate(rs.getDate("registration_date") != null ? rs.getDate("registration_date").toString() : "");
+                p.setAddress(
+                        rs.getString("address"));
+                
+                p.setRegistrationDate(rs.getDate("registration_date") != null ? rs.getDate("registration_date").toString() : "");
+            }
         }
-
-        con.close();
 
     } catch(Exception e) {
         e.printStackTrace();
@@ -280,29 +226,16 @@ public int getPatientCount() {
 
     int count = 0;
 
-    try {
-
-        Connection con = DBConnection.getConnection();
-
-        String query = "SELECT COUNT(*) FROM Patients";
-
-        PreparedStatement pst =
-                con.prepareStatement(query);
-
-        ResultSet rs = pst.executeQuery();
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement("SELECT COUNT(*) FROM Patients");
+         ResultSet rs = pst.executeQuery()) {
 
         if(rs.next()) {
-
             count = rs.getInt(1);
-
         }
 
-        con.close();
-
     } catch(Exception e) {
-
         e.printStackTrace();
-
     }
 
     return count;
@@ -311,26 +244,16 @@ public boolean patientExists(int patientId) {
 
     boolean exists = false;
 
-    try {
-
-        Connection con =
-                DBConnection.getConnection();
-
-        String sql =
-                "SELECT * FROM patients WHERE patient_id=?";
-
-        PreparedStatement ps =
-                con.prepareStatement(sql);
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement ps = con.prepareStatement("SELECT * FROM patients WHERE patient_id=?")) {
 
         ps.setInt(1, patientId);
 
-        ResultSet rs = ps.executeQuery();
-
-        if(rs.next()) {
-            exists = true;
+        try (ResultSet rs = ps.executeQuery()) {
+            if(rs.next()) {
+                exists = true;
+            }
         }
-
-        con.close();
 
     } catch(Exception e) {
         e.printStackTrace();

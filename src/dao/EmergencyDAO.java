@@ -18,18 +18,13 @@ public class EmergencyDAO {
             String arrivalDate,
             String arrivalTime) {
 
-        try {
+        String sql =
+                "INSERT INTO emergency " +
+                "(patient_id, emergency_type, priority_level, status, assigned_doctor, arrival_date, arrival_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String sql =
-                    "INSERT INTO emergency " +
-                    "(patient_id, emergency_type, priority_level, status, assigned_doctor, arrival_date, arrival_time) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ps.setString(2, emergencyType);
@@ -40,8 +35,6 @@ public class EmergencyDAO {
             ps.setTime(7, java.sql.Time.valueOf(arrivalTime));
 
             ps.executeUpdate();
-
-            con.close();
 
         } catch(Exception e) {
 
@@ -55,17 +48,11 @@ public class EmergencyDAO {
         ArrayList<Emergency> list =
                 new ArrayList<>();
 
-        try {
+        String sql = "SELECT * FROM emergency";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            PreparedStatement ps =
-                    con.prepareStatement(
-                            "SELECT * FROM emergency");
-
-            ResultSet rs =
-                    ps.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while(rs.next()) {
 
@@ -99,8 +86,6 @@ public class EmergencyDAO {
                 list.add(e);
             }
 
-            con.close();
-
         } catch(Exception e) {
 
             e.printStackTrace();
@@ -115,50 +100,44 @@ public class EmergencyDAO {
 
         Emergency e = null;
 
-        try {
+        String sql = "SELECT * FROM emergency WHERE emergency_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            PreparedStatement ps =
-                    con.prepareStatement(
-                            "SELECT * FROM emergency WHERE emergency_id=?");
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, emergencyId);
 
-            ResultSet rs =
-                    ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            if(rs.next()) {
+                if(rs.next()) {
 
-                e = new Emergency();
+                    e = new Emergency();
 
-                e.setEmergencyId(
-                        rs.getInt("emergency_id"));
+                    e.setEmergencyId(
+                            rs.getInt("emergency_id"));
 
-                e.setPatientId(
-                        rs.getInt("patient_id"));
+                    e.setPatientId(
+                            rs.getInt("patient_id"));
 
-                e.setEmergencyType(
-                        rs.getString("emergency_type"));
+                    e.setEmergencyType(
+                            rs.getString("emergency_type"));
 
-                e.setPriorityLevel(
-                        rs.getString("priority_level"));
+                    e.setPriorityLevel(
+                            rs.getString("priority_level"));
 
-                e.setStatus(
-                        rs.getString("status"));
+                    e.setStatus(
+                            rs.getString("status"));
 
-                e.setAssignedDoctor(
-                        rs.getInt("assigned_doctor"));
+                    e.setAssignedDoctor(
+                            rs.getInt("assigned_doctor"));
 
-                e.setArrivalDate(
-                        rs.getString("arrival_date"));
+                    e.setArrivalDate(
+                            rs.getString("arrival_date"));
 
-                e.setArrivalTime(
-                        rs.getString("arrival_time"));
+                    e.setArrivalTime(
+                            rs.getString("arrival_time"));
+                }
             }
-
-            con.close();
 
         } catch(Exception ex) {
 
@@ -179,24 +158,19 @@ public class EmergencyDAO {
             String arrivalDate,
             String arrivalTime) {
 
-        try {
+        String sql =
+                "UPDATE emergency SET " +
+                "patient_id=?, " +
+                "emergency_type=?, " +
+                "priority_level=?, " +
+                "status=?, " +
+                "assigned_doctor=?, " +
+                "arrival_date=?, " +
+                "arrival_time=? " +
+                "WHERE emergency_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String sql =
-                    "UPDATE emergency SET " +
-                    "patient_id=?, " +
-                    "emergency_type=?, " +
-                    "priority_level=?, " +
-                    "status=?, " +
-                    "assigned_doctor=?, " +
-                    "arrival_date=?, " +
-                    "arrival_time=? " +
-                    "WHERE emergency_id=?";
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ps.setString(2, emergencyType);
@@ -209,8 +183,6 @@ public class EmergencyDAO {
 
             ps.executeUpdate();
 
-            con.close();
-
         } catch(Exception e) {
 
             e.printStackTrace();
@@ -221,20 +193,14 @@ public class EmergencyDAO {
     public void deleteEmergency(
             int emergencyId) {
 
-        try {
+        String sql = "DELETE FROM emergency WHERE emergency_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            PreparedStatement ps =
-                    con.prepareStatement(
-                            "DELETE FROM emergency WHERE emergency_id=?");
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, emergencyId);
 
             ps.executeUpdate();
-
-            con.close();
 
         } catch(Exception e) {
 
@@ -245,23 +211,15 @@ public class EmergencyDAO {
 
     int count = 0;
 
-    try {
-        Connection con =
-                DBConnection.getConnection();
+    String sql = "SELECT COUNT(*) FROM emergency";
 
-        PreparedStatement ps =
-                con.prepareStatement(
-                        "SELECT COUNT(*) FROM emergency"
-                );
-
-        ResultSet rs =
-                ps.executeQuery();
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
 
         if(rs.next()) {
             count = rs.getInt(1);
         }
-
-        con.close();
 
     } catch(Exception e) {
         e.printStackTrace();

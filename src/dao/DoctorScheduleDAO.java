@@ -14,16 +14,13 @@ public class DoctorScheduleDAO {
             String startTime,
             String endTime) {
 
-        try {
-            Connection con = DBConnection.getConnection();
+        String sql =
+                "INSERT INTO doctor_schedule " +
+                "(doctor_id, day_of_week, start_time, end_time) " +
+                "VALUES (?, ?, ?, ?)";
 
-            String sql =
-                    "INSERT INTO doctor_schedule " +
-                    "(doctor_id, day_of_week, start_time, end_time) " +
-                    "VALUES (?, ?, ?, ?)";
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, doctorId);
             ps.setString(2, dayOfWeek);
@@ -31,8 +28,6 @@ public class DoctorScheduleDAO {
             ps.setTime(4, java.sql.Time.valueOf(endTime));
 
             ps.executeUpdate();
-
-            con.close();
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -44,17 +39,11 @@ public class DoctorScheduleDAO {
         ArrayList<DoctorSchedule> list =
                 new ArrayList<>();
 
-        try {
+        String sql = "SELECT * FROM doctor_schedule";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            PreparedStatement ps =
-                    con.prepareStatement(
-                            "SELECT * FROM doctor_schedule"
-                    );
-
-            ResultSet rs = ps.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while(rs.next()) {
 
@@ -79,8 +68,6 @@ public class DoctorScheduleDAO {
                 list.add(ds);
             }
 
-            con.close();
-
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -93,43 +80,36 @@ public class DoctorScheduleDAO {
 
         DoctorSchedule ds = null;
 
-        try {
+        String sql =
+                "SELECT * FROM doctor_schedule WHERE schedule_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String sql =
-                    "SELECT * FROM doctor_schedule WHERE schedule_id=?";
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, scheduleId);
 
-            ResultSet rs =
-                    ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            if(rs.next()) {
+                if(rs.next()) {
 
-                ds = new DoctorSchedule();
+                    ds = new DoctorSchedule();
 
-                ds.setScheduleId(
-                        rs.getInt("schedule_id"));
+                    ds.setScheduleId(
+                            rs.getInt("schedule_id"));
 
-                ds.setDoctorId(
-                        rs.getInt("doctor_id"));
+                    ds.setDoctorId(
+                            rs.getInt("doctor_id"));
 
-                ds.setDayOfWeek(
-                        rs.getString("day_of_week"));
+                    ds.setDayOfWeek(
+                            rs.getString("day_of_week"));
 
-                ds.setStartTime(
-                        rs.getString("start_time"));
+                    ds.setStartTime(
+                            rs.getString("start_time"));
 
-                ds.setEndTime(
-                        rs.getString("end_time"));
+                    ds.setEndTime(
+                            rs.getString("end_time"));
+                }
             }
-
-            con.close();
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -145,18 +125,13 @@ public class DoctorScheduleDAO {
             String startTime,
             String endTime) {
 
-        try {
+        String sql =
+                "UPDATE doctor_schedule " +
+                "SET doctor_id=?, day_of_week=?, start_time=?, end_time=? " +
+                "WHERE schedule_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String sql =
-                    "UPDATE doctor_schedule " +
-                    "SET doctor_id=?, day_of_week=?, start_time=?, end_time=? " +
-                    "WHERE schedule_id=?";
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, doctorId);
             ps.setString(2, day);
@@ -166,8 +141,6 @@ public class DoctorScheduleDAO {
 
             ps.executeUpdate();
 
-            con.close();
-
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -176,22 +149,15 @@ public class DoctorScheduleDAO {
     public void deleteSchedule(
             int scheduleId) {
 
-        try {
+        String sql =
+                "DELETE FROM doctor_schedule WHERE schedule_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String sql =
-                    "DELETE FROM doctor_schedule WHERE schedule_id=?";
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, scheduleId);
 
             ps.executeUpdate();
-
-            con.close();
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -201,26 +167,17 @@ public class DoctorScheduleDAO {
 
     int count = 0;
 
-    try {
+    String sql =
+            "SELECT COUNT(*) FROM doctor_schedule";
 
-        Connection con =
-                DBConnection.getConnection();
-
-        String sql =
-                "SELECT COUNT(*) FROM doctor_schedule";
-
-        PreparedStatement ps =
-                con.prepareStatement(sql);
-
-        ResultSet rs =
-                ps.executeQuery();
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
 
         if(rs.next()) {
 
             count = rs.getInt(1);
         }
-
-        con.close();
 
     } catch(Exception e) {
 

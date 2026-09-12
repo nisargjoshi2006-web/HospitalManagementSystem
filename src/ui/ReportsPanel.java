@@ -35,7 +35,11 @@ public class ReportsPanel extends JPanel {
                 "Doctor Appointment Workload",
                 "Pending Bills",
                 "Active Appointments (View)",
-                "Hospital Revenue Summary (View)"
+                "Hospital Revenue Summary (View)",
+                "Revenue by Doctor",
+                "Monthly Patient Registration Trends",
+                "Bed Occupancy History",
+                "Doctor Workload Analysis"
         });
         reportSelector.setFont(new Font("Arial", Font.PLAIN, 13));
 
@@ -203,6 +207,18 @@ public class ReportsPanel extends JPanel {
                     "FROM Billing b JOIN Appointments a ON b.appointment_id=a.appointment_id " +
                     "JOIN Patients p ON a.patient_id=p.patient_id " +
                     "WHERE b.payment_status='Pending' ORDER BY b.bill_date DESC";
+        }
+        if ("Revenue by Doctor".equals(reportName)) {
+            return "SELECT d.doctor_id, d.doctor_name, s.specialization_name, COUNT(b.bill_id) AS total_bills, SUM(b.amount) AS total_revenue FROM Doctor d LEFT JOIN Specializations s ON d.specialization_id = s.specialization_id LEFT JOIN Appointments a ON d.doctor_id = a.doctor_id LEFT JOIN Billing b ON a.appointment_id = b.appointment_id AND b.payment_status = 'Paid' GROUP BY d.doctor_id, d.doctor_name, s.specialization_name ORDER BY total_revenue DESC";
+        }
+        if ("Monthly Patient Registration Trends".equals(reportName)) {
+            return "SELECT DATE_FORMAT(registration_date, '%Y-%m') AS month, COUNT(*) AS new_patients FROM Patients GROUP BY DATE_FORMAT(registration_date, '%Y-%m') ORDER BY month DESC";
+        }
+        if ("Bed Occupancy History".equals(reportName)) {
+            return "SELECT ba.allocation_id, p.patient_name, ba.ward_type, ba.bed_number, ba.admit_date, ba.discharge_date, CASE WHEN ba.discharge_date IS NOT NULL THEN DATEDIFF(ba.discharge_date, ba.admit_date) ELSE DATEDIFF(CURDATE(), ba.admit_date) END AS days_stayed, ba.daily_charge, CASE WHEN ba.discharge_date IS NOT NULL THEN DATEDIFF(ba.discharge_date, ba.admit_date) * ba.daily_charge ELSE DATEDIFF(CURDATE(), ba.admit_date) * ba.daily_charge END AS total_charge, ba.status FROM Bed_Allocation ba JOIN Patients p ON ba.patient_id = p.patient_id ORDER BY ba.admit_date DESC";
+        }
+        if ("Doctor Workload Analysis".equals(reportName)) {
+            return "SELECT d.doctor_id, d.doctor_name, s.specialization_name, COUNT(DISTINCT a.appointment_id) AS total_appointments, COUNT(DISTINCT e.emergency_id) AS total_emergencies, COUNT(DISTINCT lt.test_id) AS total_lab_tests FROM Doctor d LEFT JOIN Specializations s ON d.specialization_id = s.specialization_id LEFT JOIN Appointments a ON d.doctor_id = a.doctor_id LEFT JOIN emergency e ON d.doctor_id = e.assigned_doctor LEFT JOIN Lab_Tests lt ON d.doctor_id = lt.doctor_id GROUP BY d.doctor_id, d.doctor_name, s.specialization_name ORDER BY total_appointments DESC";
         }
         return "SELECT payment_method AS Payment_Method, COUNT(*) AS Transactions, " +
                 "SUM(amount) AS Total_Revenue, AVG(amount) AS Average_Bill " +

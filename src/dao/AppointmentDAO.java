@@ -64,16 +64,12 @@ public class AppointmentDAO {
             String roomNumber,
             String status) {
 
-        try {
+        String query =
+                "INSERT INTO Appointments(patient_id, doctor_id, appointment_date, appointment_time, room_number, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
-            Connection con = DBConnection.getConnection();
-
-            String query =
-                    "INSERT INTO Appointments(patient_id, doctor_id, appointment_date, appointment_time, room_number, status) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
-
-            PreparedStatement pst =
-                    con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query)) {
 
             pst.setInt(1, patientId);
             pst.setInt(2, doctorId);
@@ -83,8 +79,6 @@ public class AppointmentDAO {
             pst.setString(6, status);
 
             int rows = pst.executeUpdate();
-
-            con.close();
 
             return rows == 1;
 
@@ -101,19 +95,12 @@ public class AppointmentDAO {
         ArrayList<Appointment> appointmentList =
                 new ArrayList<>();
 
-        try {
+        String query =
+                "SELECT * FROM Appointments";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String query =
-                    "SELECT * FROM Appointments";
-
-            PreparedStatement pst =
-                    con.prepareStatement(query);
-
-            ResultSet rs =
-                    pst.executeQuery();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query);
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
 
@@ -146,8 +133,6 @@ public class AppointmentDAO {
                 appointmentList.add(a);
             }
 
-            con.close();
-
         } catch (Exception e) {
 
             e.printStackTrace();
@@ -161,51 +146,43 @@ public class AppointmentDAO {
 
         Appointment a = null;
 
-        try {
+        String query =
+                "SELECT * FROM Appointments WHERE appointment_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String query =
-                    "SELECT * FROM Appointments WHERE appointment_id=?";
-
-            PreparedStatement pst =
-                    con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query)) {
 
             pst.setInt(1, appointmentId);
 
-            ResultSet rs =
-                    pst.executeQuery();
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
 
-            if (rs.next()) {
+                    a = new Appointment();
 
-                a = new Appointment();
+                    a.setAppointmentId(
+                            rs.getInt("appointment_id"));
 
-                a.setAppointmentId(
-                        rs.getInt("appointment_id"));
+                    a.setPatientId(
+                            rs.getInt("patient_id"));
 
-                a.setPatientId(
-                        rs.getInt("patient_id"));
+                    a.setDoctorId(
+                            rs.getInt("doctor_id"));
 
-                a.setDoctorId(
-                        rs.getInt("doctor_id"));
+                    a.setAppointmentDate(
+                            rs.getDate("appointment_date") != null
+                                    ? rs.getDate("appointment_date").toString() : "");
 
-                a.setAppointmentDate(
-                        rs.getDate("appointment_date") != null
-                                ? rs.getDate("appointment_date").toString() : "");
+                    a.setAppointmentTime(
+                            rs.getTime("appointment_time") != null
+                                    ? rs.getTime("appointment_time").toString() : "");
 
-                a.setAppointmentTime(
-                        rs.getTime("appointment_time") != null
-                                ? rs.getTime("appointment_time").toString() : "");
+                    a.setRoomNumber(
+                            rs.getString("room_number"));
 
-                a.setRoomNumber(
-                        rs.getString("room_number"));
-
-                a.setStatus(
-                        rs.getString("status"));
+                    a.setStatus(
+                            rs.getString("status"));
+                }
             }
-
-            con.close();
 
         } catch (Exception e) {
 
@@ -226,23 +203,18 @@ public class AppointmentDAO {
             String roomNumber,
             String status) {
 
-        try {
+        String query =
+                "UPDATE Appointments SET " +
+                "patient_id=?, " +
+                "doctor_id=?, " +
+                "appointment_date=?, " +
+                "appointment_time=?, " +
+                "room_number=?, " +
+                "status=? " +
+                "WHERE appointment_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String query =
-                    "UPDATE Appointments SET " +
-                    "patient_id=?, " +
-                    "doctor_id=?, " +
-                    "appointment_date=?, " +
-                    "appointment_time=?, " +
-                    "room_number=?, " +
-                    "status=? " +
-                    "WHERE appointment_id=?";
-
-            PreparedStatement pst =
-                    con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query)) {
 
             pst.setInt(1, patientId);
             pst.setInt(2, doctorId);
@@ -256,8 +228,6 @@ public class AppointmentDAO {
 
             int rows = pst.executeUpdate();
 
-            con.close();
-
             return rows == 1;
 
         } catch (Exception e) {
@@ -270,22 +240,15 @@ public class AppointmentDAO {
     // DELETE
     public void deleteAppointment(int appointmentId) {
 
-        try {
+        String query =
+                "DELETE FROM Appointments WHERE appointment_id=?";
 
-            Connection con =
-                    DBConnection.getConnection();
-
-            String query =
-                    "DELETE FROM Appointments WHERE appointment_id=?";
-
-            PreparedStatement pst =
-                    con.prepareStatement(query);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query)) {
 
             pst.setInt(1, appointmentId);
 
             pst.executeUpdate();
-
-            con.close();
 
         } catch (Exception e) {
 
@@ -296,24 +259,17 @@ public class AppointmentDAO {
 
     int count = 0;
 
-    try {
+    String query = "SELECT COUNT(*) FROM Appointments";
 
-        Connection con = DBConnection.getConnection();
-
-        String query = "SELECT COUNT(*) FROM Appointments";
-
-        PreparedStatement pst =
-                con.prepareStatement(query);
-
-        ResultSet rs = pst.executeQuery();
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement pst = con.prepareStatement(query);
+         ResultSet rs = pst.executeQuery()) {
 
         if(rs.next()) {
 
             count = rs.getInt(1);
 
         }
-
-        con.close();
 
     } catch(Exception e) {
 
