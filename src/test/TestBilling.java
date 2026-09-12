@@ -2,6 +2,7 @@ package test;
 
 import dao.BillingDAO;
 import dao.AppointmentDAO;
+import model.Billing;
 
 import java.util.Scanner;
 
@@ -23,6 +24,8 @@ public class TestBilling {
             System.out.println("3. Update Bill");
             System.out.println("4. Delete Bill");
             System.out.println("5. Count Bills");
+            System.out.println("6. Search Bill");
+            System.out.println("7. Total Revenue");
             System.out.println("0. Exit");
 
             System.out.print("Enter Choice : ");
@@ -234,6 +237,32 @@ public class TestBilling {
                             "Total Bills = "
                             + dao.getBillCount());
 
+                    break;
+
+                case 6:
+
+                    System.out.print("Enter Bill ID : ");
+                    int searchId = sc.nextInt();
+
+                    Billing b = dao.searchBill(searchId);
+
+                    if (b != null) {
+                        System.out.println("\nBill Found:");
+                        System.out.println("Bill ID        : " + b.getBillId());
+                        System.out.println("Appointment ID : " + b.getAppointmentId());
+                        System.out.println("Amount         : ₹ " + b.getAmount());
+                        System.out.println("Bill Date      : " + b.getBillDate());
+                        System.out.println("Payment Method : " + b.getPaymentMethod());
+                        System.out.println("Payment Status : " + b.getPaymentStatus());
+                    } else {
+                        System.out.println("Bill Not Found!");
+                    }
+
+                    break;
+
+                case 7:
+
+                    System.out.printf("Total Revenue Collected (Paid): ₹ %.2f\n", dao.getTotalRevenue());
                     break;
 
                 case 0:

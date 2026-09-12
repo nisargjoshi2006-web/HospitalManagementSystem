@@ -225,34 +225,99 @@ public boolean billExists(int billId) {
 }
 // COUNT BILLS
 
-public int getBillCount() {
+    public int getBillCount() {
 
-    int count = 0;
+        int count = 0;
 
-    try {
+        try {
 
-        Connection con = DBConnection.getConnection();
+            Connection con = DBConnection.getConnection();
 
-        String query =
-                "SELECT COUNT(*) FROM Billing";
+            String query =
+                    "SELECT COUNT(*) FROM Billing";
 
-        PreparedStatement pst =
-                con.prepareStatement(query);
+            PreparedStatement pst =
+                    con.prepareStatement(query);
 
-        ResultSet rs = pst.executeQuery();
+            ResultSet rs = pst.executeQuery();
 
-        if(rs.next()) {
+            if(rs.next()) {
 
-            count = rs.getInt(1);
+                count = rs.getInt(1);
+            }
+
+            con.close();
+
+        } catch(Exception e) {
+
+            e.printStackTrace();
         }
 
-        con.close();
-
-    } catch(Exception e) {
-
-        e.printStackTrace();
+        return count;
     }
 
-    return count;
-}
-}
+    // SEARCH BILL BY ID
+    public Billing searchBill(int billId) {
+
+        Billing bill = null;
+
+        try {
+
+            Connection con = DBConnection.getConnection();
+
+            String query = "SELECT * FROM Billing WHERE bill_id=?";
+
+            PreparedStatement pst = con.prepareStatement(query);
+            pst.setInt(1, billId);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+
+                bill = new Billing();
+                bill.setBillId(rs.getInt("bill_id"));
+                bill.setAppointmentId(rs.getInt("appointment_id"));
+                bill.setAmount(rs.getDouble("amount"));
+                bill.setBillDate(rs.getDate("bill_date") != null
+                        ? rs.getDate("bill_date").toString() : "");
+                bill.setPaymentMethod(rs.getString("payment_method"));
+                bill.setPaymentStatus(rs.getString("payment_status"));
+            }
+
+            con.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return bill;
+    }
+
+    // TOTAL REVENUE (PAID BILLS)
+    public double getTotalRevenue() {
+
+        double total = 0.0;
+
+        try {
+
+            Connection con = DBConnection.getConnection();
+
+            String query = "SELECT SUM(amount) FROM Billing WHERE payment_status='Paid'";
+
+            PreparedStatement pst = con.prepareStatement(query);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                total = rs.getDouble(1);
+            }
+
+            con.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+}

@@ -1,0 +1,3 @@
+db.url=jdbc:mysql://localhost:3306/hospital
+db.user=root
+db.password=your_password_here

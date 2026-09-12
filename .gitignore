@@ -1,3 +1,18 @@
-*.class
+# Database configuration (protect local credentials)
 config.properties
-hs_err_pid*.log
+src/config.properties
+
+# Compiled class files
+out/
+*.class
+
+# Log files
+*.log
+
+# User documents
+*.pdf
+
+# IDE settings
+.vscode/
+.idea/
+*.iml

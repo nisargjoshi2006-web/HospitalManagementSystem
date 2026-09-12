@@ -7,12 +7,14 @@ A full-featured **Hospital Management System** developed using Java Swing, JDBC,
 ### 🔐 Login System & Security
 - **Authentication**: Secure login with **SHA-256** password hashing.
 - **Role-Based Access Control (RBAC)**:
-  - **Admin**: Full access to all 9 system modules and configurations.
+  - **Admin**: Full access to all modules and configurations.
   - **Receptionist**: Dedicated access to Dashboard, Patients, Appointments, and Billing.
+- **One-Click Logout**: Easily switch between user accounts and roles seamlessly.
 - **Failed Attempt Tracking**: Security warnings on multiple consecutive failed login attempts.
 
 ### 📊 Dashboard
-- Real-time live counts of Patients, Doctors, Appointments, Feedback, and Emergency cases.
+- Real-time live counts of Patients, Doctors, Appointments, Feedback, and Emergencies.
+- **Financial & Clinical Metrics**: Live Total Revenue collected (₹), Total Invoices/Bills, and Prescriptions Issued.
 - Live current date display.
 
 ### 🗂️ Core Modules (CRUD Operations)
@@ -144,7 +146,7 @@ The `Database.sql` script includes dedicated review demonstration queries for:
 - **Aggregates with `GROUP BY` & `HAVING`** (Revenue by payment method, doctor popularity)
 - **Nested Subqueries** (Scalar, `IN`, and `EXISTS` subqueries)
 
-## 🗄️ Database Schema
+## 🗄️ Database Schema & Advanced Concepts
 
 The database consists of **10 interconnected tables**:
 1. `Users` — Credentials, SHA-256 passwords, full name, role (`Admin`/`Receptionist`)
@@ -157,6 +159,15 @@ The database consists of **10 interconnected tables**:
 8. `Billing` — Automated consultation billing and payment tracking
 9. `Feedback` — Patient satisfaction ratings (1–5) and review comments
 10. `Emergency` — Emergency room admissions and priority triage management
+
+### ⚡ Advanced Database Implementations:
+- **Views**:
+  - `v_ActiveAppointments`: Pre-joined view for all non-cancelled appointments.
+  - `v_HospitalRevenueSummary`: Aggregated revenue summary grouped by payment method.
+- **Stored Procedure**:
+  - `sp_GetPatientHistory(IN p_patient_id INT)`: Fetches a patient's complete clinical, prescription, and billing timeline.
+- **Trigger**:
+  - `trg_AfterBillPaid`: Automatically updates appointment status to `'Completed'` when corresponding bill is marked `'Paid'`.
 
 ## 👥 Team Members
 

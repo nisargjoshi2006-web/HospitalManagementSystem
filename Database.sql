@@ -363,3 +363,78 @@ WHERE EXISTS (
     WHERE e.assigned_doctor = d.doctor_id 
       AND e.priority_level = 'Critical'
 );
+
+-- ==================================================================================
+-- ADVANCED DATABASE CONCEPTS: VIEWS, STORED PROCEDURES & TRIGGERS
+-- ==================================================================================
+
+-- 1. DATABASE VIEWS
+-- View: Complete Appointment Overview (Abstraction & Simplified Querying)
+CREATE OR REPLACE VIEW v_ActiveAppointments AS
+SELECT 
+    a.appointment_id,
+    p.patient_name,
+    p.contact AS patient_contact,
+    d.doctor_name,
+    s.specialization_name,
+    a.appointment_date,
+    a.appointment_time,
+    a.room_number,
+    a.status
+FROM Appointments a
+JOIN Patients p ON a.patient_id = p.patient_id
+JOIN Doctor d ON a.doctor_id = d.doctor_id
+JOIN Specializations s ON d.specialization_id = s.specialization_id
+WHERE a.status != 'Cancelled';
+
+-- View: Revenue and Financial Performance Summary
+CREATE OR REPLACE VIEW v_HospitalRevenueSummary AS
+SELECT 
+    payment_method,
+    payment_status,
+    COUNT(*) AS total_bills,
+    SUM(amount) AS total_amount,
+    AVG(amount) AS average_amount
+FROM Billing
+GROUP BY payment_method, payment_status;
+
+-- 2. STORED PROCEDURES
+-- Procedure: Retrieve Complete Patient Medical & Clinical History
+DELIMITER //
+CREATE PROCEDURE sp_GetPatientHistory(IN p_patient_id INT)
+BEGIN
+    SELECT 
+        p.patient_id,
+        p.patient_name,
+        p.age,
+        p.blood_group,
+        a.appointment_id,
+        a.appointment_date,
+        d.doctor_name,
+        pr.diagnosis,
+        pr.medicine,
+        b.amount,
+        b.payment_status
+    FROM Patients p
+    LEFT JOIN Appointments a ON p.patient_id = a.patient_id
+    LEFT JOIN Doctor d ON a.doctor_id = d.doctor_id
+    LEFT JOIN Prescriptions pr ON a.appointment_id = pr.appointment_id
+    LEFT JOIN Billing b ON a.appointment_id = b.appointment_id
+    WHERE p.patient_id = p_patient_id;
+END //
+DELIMITER ;
+
+-- 3. DATABASE TRIGGER
+-- Trigger: Automatically update Appointment status to 'Completed' when its Bill is paid
+DELIMITER //
+CREATE TRIGGER trg_AfterBillPaid
+AFTER UPDATE ON Billing
+FOR EACH ROW
+BEGIN
+    IF NEW.payment_status = 'Paid' AND OLD.payment_status != 'Paid' THEN
+        UPDATE Appointments 
+        SET status = 'Completed' 
+        WHERE appointment_id = NEW.appointment_id;
+    END IF;
+END //
+DELIMITER ;
