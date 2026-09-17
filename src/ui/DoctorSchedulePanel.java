@@ -143,8 +143,6 @@ public class DoctorSchedulePanel extends JPanel {
         // SEARCH
 
         btnSearch.addActionListener(e -> {
-                System.out.println("Search button clicked");
-
             try {
 
                 int id =
@@ -154,11 +152,8 @@ public class DoctorSchedulePanel extends JPanel {
 
                 DoctorSchedule ds =
                         dao.searchSchedule(id);
-                        System.out.println("Searching for ID = " + id);
 
                 if(ds != null) {
-
-                    System.out.println("Found: " + ds.getScheduleId() + " " + ds.getDoctorId());
                     txtDoctorId.setText(
         String.valueOf(ds.getDoctorId())
 );    
@@ -284,8 +279,6 @@ public class DoctorSchedulePanel extends JPanel {
     }
 
     private void loadTable() {
-         System.out.println("Loading Doctor Schedule Table...");
-
         tableModel.setRowCount(0);
 
         ArrayList<DoctorSchedule> list =
