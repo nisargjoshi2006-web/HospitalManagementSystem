@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Database ER Diagram</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#e0f7fa',
+                primaryTextColor: '#006064',
+                primaryBorderColor: '#00838f',
+                lineColor: '#006064',
+                secondaryColor: '#fff3e0',
+                tertiaryColor: '#fff',
+                fontSize: '24px' // HUGE FONT for visibility
+            },
+            securityLevel: 'loose',
+            er: {
+                useMaxWidth: false // Allows the diagram to stretch beyond the screen size
+            }
+        });
+    </script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f4f7f6; 
+            margin: 0; 
+            padding: 30px; 
+        }
+        h1 { text-align: center; color: #2c3e50; font-size: 2.5rem; margin-bottom: 10px; }
+        .instructions { text-align: center; color: #7f8c8d; font-size: 1.2rem; margin-bottom: 30px; }
+        .diagram-container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            overflow: auto; /* Allows scrolling */
+            text-align: center;
+        }
+        svg {
+            min-width: 1500px; /* Forces SVG to be massive */
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 Hospital Management System - ER Diagram</h1>
+    <p class="instructions">Hold <b>Ctrl</b> and scroll your mouse wheel to zoom in/out. Scroll horizontally/vertically to pan.</p>
+    
+    <div class="diagram-container">
+        <pre class="mermaid">
+erDiagram
+    Users {
+        int user_id PK
+        varchar username "UNIQUE"
+        varchar password "SHA-256"
+        varchar full_name
+        varchar role "Admin/Reception"
+        timestamp created_at
+    }
+
+    Specializations {
+        int specialization_id PK
+        varchar specialization_name
+    }
+
+    Patients {
+        int patient_id PK
+        varchar patient_name
+        varchar gender
+        int age
+        varchar blood_group
+        varchar contact
+        varchar address
+        date registration_date
+    }
+
+    Doctor {
+        int doctor_id PK
+        varchar doctor_name
+        int specialization_id FK
+        varchar qualification
+        decimal consultation_fee
+        varchar contact
+    }
+
+    Doctor_Schedule {
+        int schedule_id PK
+        int doctor_id FK
+        varchar day_of_week
+        time start_time
+        time end_time
+    }
+
+    Appointments {
+        int appointment_id PK
+        int patient_id FK
+        int doctor_id FK
+        date appointment_date
+        time appointment_time
+        varchar room_number
+        varchar status
+    }
+
+    Prescriptions {
+        int prescription_id PK
+        int appointment_id FK
+        varchar diagnosis
+        varchar medicine
+        date next_visit_date
+        varchar remarks
+    }
+
+    Billing {
+        int bill_id PK
+        int appointment_id FK
+        decimal amount
+        date bill_date
+        varchar payment_method
+        varchar payment_status
+    }
+
+    Feedback {
+        int feedback_id PK
+        int patient_id FK
+        int rating
+        date feedback_date
+        varchar comments
+    }
+
+    Emergency {
+        int emergency_id PK
+        int patient_id FK
+        varchar emergency_type
+        varchar priority_level
+        varchar status
+        int assigned_doctor FK
+        date arrival_date
+        time arrival_time
+    }
+
+    Specializations ||--o{ Doctor : "has"
+    Doctor ||--o{ Doctor_Schedule : "has schedule"
+    
+    Patients ||--o{ Appointments : "books"
+    Doctor ||--o{ Appointments : "attends"
+    
+    Appointments ||--o| Prescriptions : "results in"
+    Appointments ||--o| Billing : "generates"
+    
+    Patients ||--o{ Feedback : "provides"
+    
+    Patients ||--o{ Emergency : "admitted as"
+    Doctor ||--o{ Emergency : "assigned to"
+        </pre>
+    </div>
+</body>
+</html>

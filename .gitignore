@@ -1,25 +1,50 @@
 # Database configuration (protect local credentials)
 config.properties
 src/config.properties
+.env
+.env.local
+*.local
 
-# Compiled class files
+# Java build artifacts
 out/
+bin/
+target/
 *.class
+*.jar
+!lib/*.jar
 
-# Log files
+# Bundled local JDKs
+jdk17/
+jdk*/
+
+# Log files & crash dumps
 *.log
+hs_err_pid*.log
+replay_pid*.log
 
 # User documents
 *.pdf
 
-# IDE settings
-.vscode/
+# IDE & Editor settings
 .idea/
 *.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
 
-# Node / Frontend dependencies
+# Node / Frontend dependencies & builds
 node_modules/
 backend/node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 .vite/
+.figma/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini

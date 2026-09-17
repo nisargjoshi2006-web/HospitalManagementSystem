@@ -1,7 +1,17 @@
 # 🏥 Hospital Management System (HMS)
 
+[![CI Status](https://github.com/nisargjoshi2006-web/HospitalManagementSystem/actions/workflows/ci.yml/badge.svg)](https://github.com/nisargjoshi2006-web/HospitalManagementSystem/actions)
+[![Java](https://img.shields.io/badge/Java-17%2B-orange.svg?logo=openjdk)](https://www.oracle.com/java/)
+[![React](https://img.shields.io/badge/React-19-blue.svg?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![Express](https://img.shields.io/badge/Express-4.19-black.svg?logo=express)](https://expressjs.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1.svg?logo=mysql)](https://www.mysql.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > **Enterprise-Grade Dual-Client Healthcare Management Platform**  
 > Powered by **React 19 + TypeScript + Tailwind CSS** (Web Client), **Java Swing + JDBC** (Desktop Client), **Node.js & Express** (REST API), and a unified **MySQL 8.0+** Relational Database.
+
 
 ---
 
@@ -227,6 +237,68 @@ java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" ui.HospitalManagementUI
 
 The project includes 13 standalone command-line test harnesses to verify database operations independently of any GUI:
 
+<<<<<<< HEAD
+=======
+### 🌐 Interactive ER Diagram
+An interactive Mermaid-powered Entity-Relationship Diagram with pan and zoom capabilities is available:
+- **File**: [`ER_Diagram.html`](ER_Diagram.html)
+- Simply double-click or open `ER_Diagram.html` in any modern browser to visually explore all entities, attributes, primary keys, and foreign relationships.
+
+---
+
+## ⚡ Advanced DBMS Concepts Implemented
+
+### Views (2)
+| View | Purpose |
+|------|---------|
+| `v_ActiveAppointments` | Pre-joined view for all non-cancelled appointments with patient & doctor names |
+| `v_HospitalRevenueSummary` | Aggregated revenue grouped by payment method |
+
+### Stored Procedure (1)
+| Procedure | Purpose |
+|-----------|---------|
+| `sp_GetPatientHistory(IN p_patient_id INT)` | Fetches complete clinical, prescription, and billing timeline for a patient |
+
+### Triggers (4)
+| Trigger | Event | Action |
+|---------|-------|--------|
+| `trg_AfterBillPaid` | After bill marked 'Paid' | Auto-updates appointment status to 'Completed' |
+| `trg_AuditAppointmentCancel` | After appointment cancelled | Logs cancellation into `Audit_Logs` |
+| `trg_CheckBedAllocationInsert` | Before bed allocation insert | Prevents duplicate beds & multiple patient admissions |
+| `trg_CheckBedAllocationUpdate` | Before bed allocation update | Prevents bed conflicts on status change |
+
+### Indexes (B-Tree)
+- `Patients(contact)`, `Appointments(appointment_date)`, `Doctor(specialization_id)`, `Billing(payment_status)`, `Emergency(priority_level)`
+
+### Date Arithmetic
+- `DATEDIFF(discharge_date, admit_date) * daily_charge` — calculates total inpatient stay charges
+
+### Demonstration Queries (`sql/queries.sql`)
+- 4-Table Joins (Appointments + Patients + Doctor + Specializations)
+- Aggregates with `GROUP BY` & `HAVING`
+- Nested Subqueries (Scalar, `IN`, `EXISTS`)
+- `AVG`, `SUM`, `COUNT` aggregations
+
+---
+
+## 🔒 Backend Security & Data Integrity
+
+| Feature | Implementation |
+|---------|----------------|
+| SQL Injection Prevention | All queries use `PreparedStatement` with `?` bind parameters |
+| Resource Management | All 12 DAOs use `try-with-resources` for Connection, PreparedStatement, ResultSet |
+| Business Rule Enforcement | Bed allocation triggers + DAO-level validation (fail-safe on error) |
+| Cascade Delete Safety | Confirmation dialogs before cascade deletions |
+| Input Validation | Patient/Doctor existence checks, date format validation, null-safe table handling |
+| Audit Trail | Automatic logging of appointment cancellations |
+| Password Security | SHA-256 hashing via MySQL `SHA2()` function |
+
+---
+
+## 🧪 How to Verify the System
+
+### Quick Smoke Test
+>>>>>>> 352b6c4 (Polish repository: clean Figma artifacts, standardize Vite & build configs, add CI workflow, ER diagram, and cross-platform launch scripts)
 ```bash
 # Verify system metrics & database connection
 java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDashboard
