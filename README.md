@@ -51,12 +51,34 @@ A full-featured **Hospital Management System** built with **Java Swing**, **JDBC
 
 | Technology | Purpose |
 |-----------|---------|
-| **Java (JDK 17+)** | Core language |
-| **Java Swing & AWT** | Desktop GUI |
-| **MySQL 8.0+** | RDBMS |
-| **JDBC** | Database connectivity with PreparedStatements |
-| **SHA-256** | Password hashing |
-| **MySQL Connector/J** | JDBC driver (included in `lib/`) |
+| **React 19 + TypeScript** | Modern Web Frontend (Figma UI/UX) |
+| **Tailwind CSS v4 & Lucide** | Responsive styling & clinical icons |
+| **Vite 8** | High-performance web bundler & dev server |
+| **Recharts** | Interactive revenue & patient analytics charts |
+| **Node.js & Express** | REST API server connecting web app to MySQL |
+| **Java (JDK 17+)** | Native Desktop GUI language |
+| **Java Swing & AWT** | Desktop GUI interface |
+| **MySQL 8.0+** | Centralized Relational Database Management System |
+| **JDBC & mysql2** | Database drivers with PreparedStatements & connection pooling |
+| **SHA-256** | Password hashing for authentication |
+
+---
+
+## 🌐 Dual-Client Architecture
+
+This system supports **two independent frontends connected to the same central MySQL database**:
+
+1. **Modern React Web Client (`http://localhost:5173`)**:
+   - Built from the Figma UI/UX specification.
+   - Interactive charts, responsive modals, live metrics, and real-time CRUD operations.
+   - Run instantly with `start_web.bat` or `npm run dev`.
+
+2. **Java Swing Desktop Client**:
+   - Native desktop application for administrative staff.
+   - Full 12-module tabbed interface, CSV export, and database health monitors.
+   - Run instantly with `start_desktop.bat`.
+
+> **Live Synchronization**: Any record added, updated, or deleted in the **Web UI** immediately reflects in the **Java Desktop GUI** (and vice versa) because both clients share the same live MySQL database tables, constraints, and triggers.
 
 ---
 
