@@ -106,6 +106,12 @@ export async function addAppointment(apt: {
   });
 }
 
+export async function deleteAppointment(id: string | number) {
+  return fetchJSON(`/appointments/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 // Bed Allocation
 export async function getBeds() {
   return fetchJSON('/beds');
@@ -136,9 +142,44 @@ export async function getBilling() {
   return fetchJSON('/billing');
 }
 
+export async function addBill(bill: {
+  appointmentId: string | number;
+  amount?: number;
+  billDate?: string;
+  paymentMethod: string;
+  paymentStatus: string;
+}) {
+  return fetchJSON('/billing', {
+    method: 'POST',
+    body: JSON.stringify(bill),
+  });
+}
+
+export async function updateBill(id: string | number, update: { paymentMethod?: string; paymentStatus?: string }) {
+  return fetchJSON(`/billing/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(update),
+  });
+}
+
 // Emergency
 export async function getEmergency() {
   return fetchJSON('/emergency');
+}
+
+export async function addEmergency(em: {
+  patientId: string | number;
+  emergencyType: string;
+  priorityLevel: string;
+  arrivalDate?: string;
+  arrivalTime?: string;
+  status?: string;
+  assignedDoctor?: string | number | null;
+}) {
+  return fetchJSON('/emergency', {
+    method: 'POST',
+    body: JSON.stringify(em),
+  });
 }
 
 // Lab Tests
@@ -146,9 +187,67 @@ export async function getLabTests() {
   return fetchJSON('/lab-tests');
 }
 
+export async function addLabTest(test: {
+  patientId: string | number;
+  doctorId: string | number;
+  testName: string;
+  testDate?: string;
+  cost?: number;
+  result?: string;
+  status?: string;
+}) {
+  return fetchJSON('/lab-tests', {
+    method: 'POST',
+    body: JSON.stringify(test),
+  });
+}
+
+export async function updateLabTest(id: string | number, data: { result?: string; status?: string }) {
+  return fetchJSON(`/lab-tests/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
 // Prescriptions
 export async function getPrescriptions() {
   return fetchJSON('/prescriptions');
+}
+
+export async function addPrescription(rx: {
+  appointmentId: string | number;
+  diagnosis: string;
+  medicine: string;
+  nextVisitDate?: string;
+  remarks?: string;
+}) {
+  return fetchJSON('/prescriptions', {
+    method: 'POST',
+    body: JSON.stringify(rx),
+  });
+}
+
+// Doctor Schedule
+export async function getSchedules() {
+  return fetchJSON('/schedules');
+}
+
+export async function addSchedule(sch: {
+  doctorId: string | number;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+}) {
+  return fetchJSON('/schedules', {
+    method: 'POST',
+    body: JSON.stringify(sch),
+  });
+}
+
+export async function deleteSchedule(id: string | number) {
+  return fetchJSON(`/schedules/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 // Feedback
@@ -156,7 +255,20 @@ export async function getFeedback() {
   return fetchJSON('/feedback');
 }
 
+export async function addFeedback(fb: {
+  patientId: string | number;
+  rating: number;
+  feedbackDate?: string;
+  comments?: string;
+}) {
+  return fetchJSON('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(fb),
+  });
+}
+
 // Audit Logs
 export async function getAuditLogs() {
   return fetchJSON('/audit-logs');
 }
+

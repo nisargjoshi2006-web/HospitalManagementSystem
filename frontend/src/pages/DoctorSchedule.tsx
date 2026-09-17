@@ -1,148 +1,241 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { doctors } from '../data/mockData';
+import { Plus, Trash2, X, RefreshCw, CalendarDays, Clock } from 'lucide-react';
+import { getDoctors, getSchedules, addSchedule, deleteSchedule } from '../api/api';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-
-const scheduleData: Record<string, Record<string, Record<string, string>>> = {
-  'D-001': {
-    Monday: { '09:00': 'booked', '10:00': 'booked', '11:00': 'available', '14:00': 'booked', '15:00': 'available' },
-    Tuesday: { '09:00': 'available', '10:00': 'booked', '11:00': 'booked', '14:00': 'available' },
-    Wednesday: { '09:00': 'booked', '10:00': 'available', '14:00': 'booked', '15:00': 'booked' },
-    Thursday: { '09:00': 'available', '10:00': 'booked', '11:00': 'available' },
-    Friday: { '09:00': 'booked', '10:00': 'booked', '11:00': 'booked', '14:00': 'available' },
-  },
-  'D-002': {
-    Monday: { '08:00': 'booked', '09:00': 'available', '10:00': 'booked' },
-    Tuesday: { '08:00': 'available', '09:00': 'booked', '14:00': 'booked', '15:00': 'available' },
-    Wednesday: { '10:00': 'booked', '11:00': 'booked', '14:00': 'available' },
-    Thursday: { '08:00': 'booked', '09:00': 'booked', '14:00': 'booked' },
-    Friday: { '09:00': 'available', '10:00': 'booked' },
-  },
-};
 
 export default function DoctorSchedule() {
-  const [selectedDoctor, setSelectedDoctor] = useState(doctors[0].id);
-  const [weekOffset, setWeekOffset] = useState(0);
+  const [doctorsList, setDoctorsList] = useState<any[]>([]);
+  const [schedulesList, setSchedulesList] = useState<any[]>([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('All');
+  const [showAdd, setShowAdd] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const schedule = scheduleData[selectedDoctor] ?? {};
-  const doctor = doctors.find(d => d.id === selectedDoctor);
+  const [form, setForm] = useState({
+    doctorId: '',
+    dayOfWeek: 'Monday',
+    startTime: '09:00',
+    endTime: '13:00'
+  });
 
-  const getWeekLabel = () => {
-    const base = new Date(2026, 8, 14);
-    base.setDate(base.getDate() + weekOffset * 7);
-    const end = new Date(base);
-    end.setDate(end.getDate() + 6);
-    return `${base.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [dcts, schs] = await Promise.all([getDoctors(), getSchedules()]);
+      if (Array.isArray(dcts)) {
+        setDoctorsList(dcts);
+        if (dcts.length > 0 && !form.doctorId) {
+          setForm(prev => ({ ...prev, doctorId: String(dcts[0].rawId || dcts[0].id) }));
+        }
+      }
+      if (Array.isArray(schs)) {
+        setSchedulesList(schs);
+      }
+    } catch (err) {
+      console.warn('Could not load schedules from API:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleAddSchedule = async () => {
+    if (!form.doctorId) {
+      alert('Please select a doctor');
+      return;
+    }
+    try {
+      await addSchedule({
+        doctorId: form.doctorId,
+        dayOfWeek: form.dayOfWeek,
+        startTime: form.startTime.length === 5 ? `${form.startTime}:00` : form.startTime,
+        endTime: form.endTime.length === 5 ? `${form.endTime}:00` : form.endTime
+      });
+      setShowAdd(false);
+      await loadData();
+      alert('Doctor schedule saved successfully in MySQL!');
+    } catch (err: any) {
+      alert('Failed to save schedule: ' + err.message);
+    }
+  };
+
+  const handleDeleteSchedule = async (id: any) => {
+    if (!confirm('Remove this schedule slot?')) return;
+    try {
+      await deleteSchedule(id);
+      await loadData();
+      alert('Schedule slot removed successfully!');
+    } catch (err: any) {
+      alert('Failed to remove schedule: ' + err.message);
+    }
+  };
+
+  const filtered = schedulesList.filter(s => {
+    if (selectedDoctorId === 'All') return true;
+    return String(s.doctor_id) === String(selectedDoctorId);
+  });
+
   return (
-    <Layout title="Doctor Schedule" subtitle="Manage weekly availability and time slots">
+    <Layout title="Doctor Schedules" subtitle="Manage weekly doctor availability and consultation shifts in MySQL">
       <div className="p-6 space-y-5">
-        {/* Controls */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Doctor</label>
-            <select
-              value={selectedDoctor}
-              onChange={e => setSelectedDoctor(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none bg-white text-slate-800 font-medium"
+        {/* Filter bar */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Filter by Doctor</label>
+              <select
+                value={selectedDoctorId}
+                onChange={e => setSelectedDoctorId(e.target.value)}
+                className="pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none"
+              >
+                <option value="All">All Doctors ({doctorsList.length})</option>
+                {doctorsList.map(d => (
+                  <option key={d.id} value={d.rawId || d.id}>
+                    {d.name} ({d.specialization})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="mt-5 p-2 border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600"
+              title="Refresh"
             >
-              {doctors.map(d => (
-                <option key={d.id} value={d.id}>{d.name} — {d.specialization}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => setWeekOffset(w => w - 1)} className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
-              <ChevronLeft size={16} />
-            </button>
-            <span className="text-sm font-medium text-slate-700 whitespace-nowrap">{getWeekLabel()}</span>
-            <button onClick={() => setWeekOffset(w => w + 1)} className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
-              <ChevronRight size={16} />
+              <RefreshCw size={15} className={loading ? 'animate-spin text-teal-600' : ''} />
             </button>
           </div>
 
-          <button className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>
-            <Plus size={15} /> Add Slot
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white rounded-lg shadow-sm mt-4"
+            style={{ background: '#0F766E' }}
+          >
+            <Plus size={15} /> Add Schedule Slot
           </button>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 text-xs">
-          {[
-            { label: 'Available', color: 'bg-teal-100 border-teal-300' },
-            { label: 'Booked', color: 'bg-slate-200 border-slate-300' },
-            { label: 'No schedule', color: 'bg-slate-50 border-slate-200' },
-          ].map(({ label, color }) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <div className={`w-4 h-4 rounded border ${color}`} />
-              <span className="text-slate-600">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Schedule grid */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr>
-                <th className="w-16 px-3 py-3 text-left text-slate-500 font-medium border-b border-r border-slate-200 bg-slate-50">Time</th>
-                {days.map(d => (
-                  <th key={d} className="px-3 py-3 text-center font-medium text-slate-700 border-b border-r border-slate-200 bg-slate-50 last:border-r-0 min-w-[100px]">
-                    {d.slice(0, 3)}
-                    <div className="font-normal text-slate-400 text-[10px]">{d}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {timeSlots.map(time => (
-                <tr key={time} className="hover:bg-slate-50/30">
-                  <td className="px-3 py-2.5 font-mono text-slate-500 border-b border-r border-slate-100 font-medium bg-slate-50/50">{time}</td>
-                  {days.map(day => {
-                    const slot = schedule[day]?.[time];
-                    return (
-                      <td key={day} className="px-2 py-2 border-b border-r border-slate-100 last:border-r-0 text-center">
-                        {slot ? (
-                          <div
-                            className={`rounded-lg px-2 py-1.5 text-[10px] font-medium cursor-pointer transition-all hover:opacity-80 ${
-                              slot === 'available'
-                                ? 'bg-teal-100 text-teal-700 border border-teal-200'
-                                : 'bg-slate-200 text-slate-600 border border-slate-300'
-                            }`}
-                          >
-                            {slot === 'available' ? '✓ Free' : '✗ Booked'}
-                          </div>
-                        ) : (
-                          <div className="h-7 rounded-lg bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
-                            <Plus size={10} className="text-slate-400" />
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
+        {/* Schedule grid / list */}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-700">Configured Shifts ({filtered.length})</span>
+            <span className="text-xs text-teal-700 bg-teal-50 px-2 py-0.5 rounded font-medium">⚡ Connected to MySQL Doctor_Schedule</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  {['Schedule ID', 'Doctor', 'Specialization', 'Day of Week', 'Shift Time', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtered.map(s => (
+                  <tr key={s.schedule_id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500">#{s.schedule_id}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">{s.doctor_name}</td>
+                    <td className="px-4 py-3 text-slate-600 text-xs">{s.specialization_name || 'General'}</td>
+                    <td className="px-4 py-3 font-medium text-teal-700 text-xs flex items-center gap-1.5">
+                      <CalendarDays size={13} className="text-teal-600" />
+                      {s.day_of_week}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-700">
+                      <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded">
+                        <Clock size={11} className="text-slate-500" />
+                        {String(s.start_time).slice(0, 5)} – {String(s.end_time).slice(0, 5)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleDeleteSchedule(s.schedule_id)}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                        title="Delete Slot"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
 
-        {doctor && (
-          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold shrink-0">
-              {doctor.name.replace('Dr. ', '').charAt(0)}
+      {/* Add Schedule Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowAdd(false)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-900">Add Doctor Schedule (Saves to MySQL)</h3>
+              <button onClick={() => setShowAdd(false)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
             </div>
-            <div>
-              <div className="font-semibold text-teal-900 text-sm">{doctor.name}</div>
-              <div className="text-xs text-teal-700">{doctor.specialization} · {doctor.experience} years experience · {doctor.patients} patients</div>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Select Doctor *</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={form.doctorId}
+                  onChange={e => setForm({ ...form, doctorId: e.target.value })}
+                >
+                  <option value="">-- Choose Doctor --</option>
+                  {doctorsList.map(d => (
+                    <option key={d.id} value={d.rawId || d.id}>
+                      {d.name} ({d.specialization})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Day of Week *</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={form.dayOfWeek}
+                  onChange={e => setForm({ ...form, dayOfWeek: e.target.value })}
+                >
+                  {days.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Start Time *</label>
+                  <input
+                    type="time"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    value={form.startTime}
+                    onChange={e => setForm({ ...form, startTime: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">End Time *</label>
+                  <input
+                    type="time"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    value={form.endTime}
+                    onChange={e => setForm({ ...form, endTime: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setShowAdd(false)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
+                <button onClick={handleAddSchedule} className="flex-1 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>Save Schedule</button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </Layout>
   );
 }

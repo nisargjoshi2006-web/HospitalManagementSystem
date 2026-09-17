@@ -1,147 +1,278 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Plus, X } from 'lucide-react';
-import { beds } from '../data/mockData';
+import { Plus, X, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { getBeds, allocateBed, dischargeBed, getPatients } from '../api/api';
 
-type Ward = 'ICU' | 'Private' | 'General';
-
-const wardConfig: Record<Ward, { color: string; bg: string; border: string }> = {
-  ICU: { color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
-  Private: { color: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD' },
-  General: { color: '#0F766E', bg: '#F0FDFA', border: '#99F6E4' },
-};
-
-const statusStyle: Record<string, string> = {
-  Available: 'bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100',
-  Occupied: 'bg-slate-100 border-slate-300 text-slate-600',
-  Reserved: 'bg-amber-50 border-amber-300 text-amber-700',
-};
+type Ward = 'All' | 'ICU' | 'Private' | 'General';
 
 export default function BedAllocation() {
-  const [selectedWard, setSelectedWard] = useState<Ward>('ICU');
-  const [selectedBed, setSelectedBed] = useState<typeof beds['ICU'][0] | null>(null);
+  const [allocations, setAllocations] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [selectedWard, setSelectedWard] = useState<Ward>('All');
+  const [selectedBed, setSelectedBed] = useState<any | null>(null);
   const [showAdmit, setShowAdmit] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const wardBeds = beds[selectedWard];
-  const occupied = wardBeds.filter(b => b.status === 'Occupied').length;
-  const available = wardBeds.filter(b => b.status === 'Available').length;
-  const reserved = wardBeds.filter(b => b.status === 'Reserved').length;
-  const cfg = wardConfig[selectedWard];
+  const [admitForm, setAdmitForm] = useState({
+    patientId: '',
+    wardType: 'General Ward',
+    bedNumber: '101',
+    dailyCharge: '1500',
+    admitDate: new Date().toISOString().slice(0, 10)
+  });
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [bedsData, ptsData] = await Promise.all([getBeds(), getPatients()]);
+      if (Array.isArray(bedsData)) setAllocations(bedsData);
+      if (Array.isArray(ptsData)) {
+        setPatients(ptsData);
+        if (ptsData.length > 0 && !admitForm.patientId) {
+          setAdmitForm(prev => ({ ...prev, patientId: String(ptsData[0].rawId || ptsData[0].id) }));
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load beds from API:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleAllocate = async () => {
+    if (!admitForm.patientId || !admitForm.bedNumber) {
+      alert('Please select patient and bed number');
+      return;
+    }
+    try {
+      await allocateBed({
+        patientId: admitForm.patientId,
+        wardType: admitForm.wardType,
+        bedNumber: admitForm.bedNumber,
+        admitDate: admitForm.admitDate,
+        dailyCharge: parseFloat(admitForm.dailyCharge) || 1500
+      });
+      setShowAdmit(false);
+      await loadData();
+      alert('Bed allocated successfully in MySQL database!');
+    } catch (err: any) {
+      alert('Allocation Error: ' + err.message);
+    }
+  };
+
+  const handleDischarge = async (allocationId: number) => {
+    if (!confirm('Are you sure you want to discharge this patient?')) return;
+    try {
+      await dischargeBed(allocationId, new Date().toISOString().slice(0, 10));
+      setSelectedBed(null);
+      await loadData();
+      alert('Patient discharged successfully in MySQL!');
+    } catch (err: any) {
+      alert('Discharge Error: ' + err.message);
+    }
+  };
+
+  const occupiedCount = allocations.filter(b => b.status === 'Occupied').length;
+  const dischargedCount = allocations.filter(b => b.status === 'Discharged').length;
+
+  const filtered = allocations.filter(b => {
+    if (selectedWard === 'All') return true;
+    return (b.ward || '').toLowerCase().includes(selectedWard.toLowerCase());
+  });
 
   return (
-    <Layout title="Bed Allocation" subtitle="Hospital ward capacity and patient admission">
+    <Layout title="Bed Allocation" subtitle="Hospital inpatient admissions and ward management">
       <div className="p-6 space-y-5">
-        {/* Ward selector + summary */}
-        <div className="grid grid-cols-3 gap-3">
-          {(['ICU', 'Private', 'General'] as Ward[]).map(w => {
-            const wbeds = beds[w];
-            const wocc = wbeds.filter(b => b.status === 'Occupied').length;
-            const wcfg = wardConfig[w];
-            return (
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="text-xs text-slate-500 font-medium">Currently Occupied</div>
+            <div className="text-2xl font-bold text-amber-600 mt-1">{occupiedCount} Beds</div>
+            <div className="text-xs text-slate-400 mt-0.5">Active inpatients</div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="text-xs text-slate-500 font-medium">Discharged History</div>
+            <div className="text-2xl font-bold text-teal-600 mt-1">{dischargedCount} Patients</div>
+            <div className="text-xs text-slate-400 mt-0.5">Completed stays</div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="text-xs text-slate-500 font-medium">Total Bed Allocations</div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">{allocations.length} Records</div>
+            <div className="text-xs text-slate-400 mt-0.5">Logged in MySQL</div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="text-xs text-slate-500 font-medium">Database Triggers</div>
+            <div className="text-sm font-semibold text-teal-700 mt-2 flex items-center gap-1">
+              <CheckCircle2 size={16} /> Single Occupancy Enforced
+            </div>
+            <div className="text-[11px] text-slate-400">trg_CheckBedAllocationInsert</div>
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            {(['All', 'ICU', 'Private', 'General'] as Ward[]).map(w => (
               <button
                 key={w}
                 onClick={() => setSelectedWard(w)}
-                className={`bg-white rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${selectedWard === w ? '' : 'border-slate-200'}`}
-                style={selectedWard === w ? { borderColor: wcfg.color } : undefined}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedWard === w ? 'bg-teal-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-slate-800">{w}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: wcfg.bg, color: wcfg.color }}>
-                    {Math.round((wocc / wbeds.length) * 100)}%
-                  </span>
-                </div>
-                <div className="text-2xl font-bold text-slate-900">{wocc}/{wbeds.length}</div>
-                <div className="text-xs text-slate-500 mt-0.5">Occupied · {wbeds.length - wocc} free</div>
-                <div className="h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(wocc / wbeds.length) * 100}%`, background: wcfg.color }} />
-                </div>
+                {w === 'All' ? 'All Wards' : `${w} Ward`}
               </button>
-            );
-          })}
-        </div>
-
-        {/* Stats + actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-slate-300" /> Occupied <strong>{occupied}</strong></span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-teal-300" /> Available <strong>{available}</strong></span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-300" /> Reserved <strong>{reserved}</strong></span>
+            ))}
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600"
+              title="Refresh"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin text-teal-600' : ''} />
+            </button>
           </div>
-          <button onClick={() => setShowAdmit(true)} className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>
-            <Plus size={15} /> Admit Patient
+
+          <button
+            onClick={() => setShowAdmit(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white rounded-lg shadow-sm"
+            style={{ background: '#0F766E' }}
+          >
+            <Plus size={15} /> Admit Patient to Bed
           </button>
         </div>
 
-        {/* Bed grid */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="font-semibold text-slate-800 mb-4 text-sm">{selectedWard} Ward — Bed Grid</h3>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10 gap-2">
-            {wardBeds.map(bed => (
-              <button
-                key={bed.id}
-                onClick={() => setSelectedBed(bed)}
-                className={`p-2 rounded-lg border text-center transition-all ${statusStyle[bed.status]} ${bed.status === 'Available' ? 'cursor-pointer' : ''}`}
-                title={bed.patient ? `${bed.id}: ${bed.patient}` : `${bed.id}: ${bed.status}`}
-              >
-                <div className="text-[10px] font-mono font-semibold">{bed.id.split('-')[1]}</div>
-                <div className="text-[9px] mt-0.5 truncate">{bed.status === 'Occupied' && bed.patient ? bed.patient.split(' ')[0] : bed.status}</div>
-              </button>
-            ))}
+        {/* Table of Allocations */}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-700">Live Bed Allocations ({filtered.length})</span>
+            <span className="text-xs text-teal-700 bg-teal-50 px-2 py-0.5 rounded font-medium">⚡ Connected to MySQL Bed_Allocation</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  {['Alloc ID', 'Patient', 'Ward', 'Bed Number', 'Admit Date', 'Discharge Date', 'Daily Charge', 'Status', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtered.map((b: any) => (
+                  <tr key={b.allocationId || b.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500">#{b.allocationId}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">{b.patient}</td>
+                    <td className="px-4 py-3 text-slate-600 text-xs">{b.ward}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-700">{b.bedNumber}</td>
+                    <td className="px-4 py-3 text-slate-600 text-xs">{b.admitDate}</td>
+                    <td className="px-4 py-3 text-slate-500 text-xs">{b.dischargeDate || '—'}</td>
+                    <td className="px-4 py-3 font-medium text-teal-700 text-xs">₹{b.dailyCharge}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${b.status === 'Occupied' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                        {b.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {b.status === 'Occupied' && (
+                        <button
+                          onClick={() => handleDischarge(b.allocationId)}
+                          className="px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                        >
+                          Discharge
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      {/* Bed detail modal */}
-      {selectedBed && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedBed(null)} />
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-slate-900">Bed {selectedBed.id}</h3>
-              <button onClick={() => setSelectedBed(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-slate-500">Ward</span><span className="font-medium">{selectedBed.ward}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Status</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${selectedBed.status === 'Available' ? 'bg-teal-100 text-teal-700' : selectedBed.status === 'Occupied' ? 'bg-slate-100 text-slate-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {selectedBed.status}
-                </span>
-              </div>
-              {selectedBed.patient && <div className="flex justify-between"><span className="text-slate-500">Patient</span><span className="font-medium">{selectedBed.patient}</span></div>}
-              {selectedBed.admitted && <div className="flex justify-between"><span className="text-slate-500">Admitted</span><span className="font-medium">{selectedBed.admitted}</span></div>}
-            </div>
-            {selectedBed.status === 'Occupied' && (
-              <button onClick={() => setSelectedBed(null)} className="w-full mt-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
-                Discharge Patient
-              </button>
-            )}
-            {selectedBed.status === 'Available' && (
-              <button onClick={() => { setSelectedBed(null); setShowAdmit(true); }} className="w-full mt-4 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>
-                Admit Patient to This Bed
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
+      {/* Admit Modal */}
       {showAdmit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowAdmit(false)} />
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between p-5 border-b border-slate-200">
-              <h3 className="font-semibold text-slate-900">Admit Patient</h3>
+              <h3 className="font-semibold text-slate-900">Admit Patient to Bed (Saves to MySQL)</h3>
               <button onClick={() => setShowAdmit(false)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
             </div>
             <div className="p-5 space-y-3">
-              {['Patient', 'Ward', 'Bed Number', 'Admitting Doctor', 'Reason for Admission'].map(f => (
-                <div key={f}>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">{f}</label>
-                  <input className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400" />
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Select Patient *</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={admitForm.patientId}
+                  onChange={e => setAdmitForm({ ...admitForm, patientId: e.target.value })}
+                >
+                  <option value="">-- Choose Patient --</option>
+                  {patients.map(p => (
+                    <option key={p.id} value={p.rawId || p.id}>
+                      {p.name} ({p.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Ward Type *</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={admitForm.wardType}
+                  onChange={e => {
+                    const w = e.target.value;
+                    setAdmitForm({
+                      ...admitForm,
+                      wardType: w,
+                      dailyCharge: w.includes('ICU') ? '5000' : w.includes('Private') ? '3000' : '1500'
+                    });
+                  }}
+                >
+                  <option value="General Ward">General Ward (₹1,500/day)</option>
+                  <option value="Private AC Room">Private AC Room (₹3,000/day)</option>
+                  <option value="ICU">ICU (₹5,000/day)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Bed Number *</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    placeholder="e.g. 105 or PVT-206"
+                    value={admitForm.bedNumber}
+                    onChange={e => setAdmitForm({ ...admitForm, bedNumber: e.target.value })}
+                  />
                 </div>
-              ))}
-              <div className="flex gap-2 mt-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Daily Charge (₹)</label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    value={admitForm.dailyCharge}
+                    onChange={e => setAdmitForm({ ...admitForm, dailyCharge: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Admit Date</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={admitForm.admitDate}
+                  onChange={e => setAdmitForm({ ...admitForm, admitDate: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-2 mt-5">
                 <button onClick={() => setShowAdmit(false)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
-                <button onClick={() => setShowAdmit(false)} className="flex-1 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>Admit Patient</button>
+                <button onClick={handleAllocate} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Confirm Admission</button>
               </div>
             </div>
           </div>

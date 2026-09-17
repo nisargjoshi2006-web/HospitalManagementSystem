@@ -58,7 +58,6 @@ app.get('/api/dashboard', async (req, res) => {
     const [[{ pendingBills }]] = await pool.query("SELECT COUNT(*) AS pendingBills FROM Billing WHERE payment_status = 'Pending'");
     const [[{ totalRevenue }]] = await pool.query("SELECT COALESCE(SUM(amount), 0) AS totalRevenue FROM Billing WHERE payment_status = 'Paid'");
 
-    // Today's appointments preview
     const [recentAppointments] = await pool.query(`
       SELECT a.appointment_id AS id, p.patient_name AS patient, d.doctor_name AS doctor,
              a.appointment_time AS time, a.room_number AS room, a.status
@@ -69,7 +68,6 @@ app.get('/api/dashboard', async (req, res) => {
       LIMIT 6
     `);
 
-    // Recent emergency preview
     const [recentEmergencies] = await pool.query(`
       SELECT e.emergency_id AS id, p.patient_name AS patient, e.priority_level AS priority,
              COALESCE(d.doctor_name, 'Unassigned') AS doctor, e.arrival_time AS arrival,
@@ -157,7 +155,6 @@ app.post('/api/patients', async (req, res) => {
 app.delete('/api/patients/:id', async (req, res) => {
   const patientId = req.params.id.replace(/^P-0*/, '');
   try {
-    // Delete cascades matching PatientDAO
     await pool.query('DELETE FROM Prescriptions WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)', [patientId]);
     await pool.query('DELETE FROM Billing WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE patient_id=?)', [patientId]);
     await pool.query('DELETE FROM Appointments WHERE patient_id=?', [patientId]);
@@ -275,7 +272,7 @@ app.get('/api/appointments', async (req, res) => {
       specialization: a.specialization_name || 'General',
       date: a.appointment_date ? String(a.appointment_date).slice(0, 10) : '',
       time: a.appointment_time ? String(a.appointment_time).slice(0, 5) : '09:00',
-      room: a.room_number,
+      room: a.room_number || '101',
       status: a.status
     }));
     res.json(formatted);
@@ -299,6 +296,18 @@ app.post('/api/appointments', async (req, res) => {
   }
 });
 
+app.delete('/api/appointments/:id', async (req, res) => {
+  const aptId = req.params.id.replace(/^APT-0*/, '');
+  try {
+    await pool.query('DELETE FROM Prescriptions WHERE appointment_id=?', [aptId]);
+    await pool.query('DELETE FROM Billing WHERE appointment_id=?', [aptId]);
+    await pool.query('DELETE FROM Appointments WHERE appointment_id=?', [aptId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // 6. BED ALLOCATION
 // ==========================================
@@ -312,7 +321,19 @@ app.get('/api/beds', async (req, res) => {
       JOIN Patients p ON ba.patient_id = p.patient_id
       ORDER BY ba.allocation_id DESC
     `);
-    res.json(rows);
+    const formatted = rows.map(b => ({
+      id: `${b.ward_type.slice(0, 3).toUpperCase()}-${b.bed_number}`,
+      allocationId: b.allocation_id,
+      patientId: b.patient_id,
+      patient: b.patient_name,
+      ward: b.ward_type,
+      bedNumber: b.bed_number,
+      admitDate: b.admit_date ? String(b.admit_date).slice(0, 10) : '',
+      dischargeDate: b.discharge_date ? String(b.discharge_date).slice(0, 10) : null,
+      dailyCharge: Number(b.daily_charge),
+      status: b.status
+    }));
+    res.json(formatted);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -323,7 +344,6 @@ app.post('/api/beds/allocate', async (req, res) => {
     const { patientId, wardType, bedNumber, admitDate, dailyCharge } = req.body;
     const cleanPid = typeof patientId === 'string' ? parseInt(patientId.replace(/^P-0*/, '')) : patientId;
 
-    // Check if bed already occupied
     const [[{ bedCount }]] = await pool.query(
       "SELECT COUNT(*) AS bedCount FROM Bed_Allocation WHERE ward_type = ? AND bed_number = ? AND status = 'Occupied'",
       [wardType, bedNumber]
@@ -332,7 +352,6 @@ app.post('/api/beds/allocate', async (req, res) => {
       return res.status(400).json({ error: `Bed ${bedNumber} in ${wardType} is currently OCCUPIED!` });
     }
 
-    // Check if patient already admitted
     const [[{ patientCount }]] = await pool.query(
       "SELECT COUNT(*) AS patientCount FROM Bed_Allocation WHERE patient_id = ? AND status = 'Occupied'",
       [cleanPid]
@@ -395,14 +414,50 @@ app.get('/api/billing', async (req, res) => {
   }
 });
 
+app.post('/api/billing', async (req, res) => {
+  try {
+    const { appointmentId, amount, billDate, paymentMethod, paymentStatus } = req.body;
+    const cleanAid = typeof appointmentId === 'string' ? parseInt(appointmentId.replace(/^APT-0*/, '')) : appointmentId;
+    let billAmount = amount;
+    if (!billAmount) {
+      const [feeRows] = await pool.query(
+        'SELECT d.consultation_fee FROM Appointments a JOIN Doctor d ON a.doctor_id = d.doctor_id WHERE a.appointment_id = ?',
+        [cleanAid]
+      );
+      billAmount = feeRows.length > 0 ? feeRows[0].consultation_fee : 500.00;
+    }
+    const [result] = await pool.query(
+      'INSERT INTO Billing (appointment_id, amount, bill_date, payment_method, payment_status) VALUES (?, ?, ?, ?, ?)',
+      [cleanAid, billAmount, billDate || new Date().toISOString().slice(0, 10), paymentMethod || 'Cash', paymentStatus || 'Pending']
+    );
+    res.status(201).json({ success: true, billId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/billing/:id', async (req, res) => {
+  const billId = req.params.id.replace(/^BILL-0*/, '');
+  try {
+    const { paymentMethod, paymentStatus } = req.body;
+    await pool.query(
+      'UPDATE Billing SET payment_method = ?, payment_status = ? WHERE bill_id = ?',
+      [paymentMethod || 'Cash', paymentStatus || 'Paid', billId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // 8. EMERGENCY
 // ==========================================
 app.get('/api/emergency', async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT e.emergency_id, p.patient_name, e.emergency_type, e.priority_level,
-             e.arrival_date, e.arrival_time, e.status, d.doctor_name
+      SELECT e.emergency_id, e.patient_id, p.patient_name, e.emergency_type, e.priority_level,
+             e.arrival_date, e.arrival_time, e.status, e.assigned_doctor, d.doctor_name
       FROM Emergency e
       JOIN Patients p ON e.patient_id = p.patient_id
       LEFT JOIN Doctor d ON e.assigned_doctor = d.doctor_id
@@ -410,6 +465,8 @@ app.get('/api/emergency', async (req, res) => {
     `);
     const formatted = rows.map(e => ({
       id: `EM-${String(e.emergency_id).padStart(3, '0')}`,
+      rawId: e.emergency_id,
+      patientId: e.patient_id,
       patient: e.patient_name,
       priority: e.priority_level,
       doctor: e.doctor_name || 'Unassigned',
@@ -423,13 +480,28 @@ app.get('/api/emergency', async (req, res) => {
   }
 });
 
+app.post('/api/emergency', async (req, res) => {
+  try {
+    const { patientId, emergencyType, priorityLevel, arrivalDate, arrivalTime, status, assignedDoctor } = req.body;
+    const cleanPid = typeof patientId === 'string' ? parseInt(patientId.replace(/^P-0*/, '')) : patientId;
+    const cleanDid = assignedDoctor ? (typeof assignedDoctor === 'string' ? parseInt(assignedDoctor.replace(/^D-0*/, '')) : assignedDoctor) : null;
+    const [result] = await pool.query(
+      'INSERT INTO Emergency (patient_id, emergency_type, priority_level, arrival_date, arrival_time, status, assigned_doctor) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [cleanPid, emergencyType || 'Emergency', priorityLevel || 'High', arrivalDate || new Date().toISOString().slice(0, 10), arrivalTime || '10:00:00', status || 'Admitted', cleanDid]
+    );
+    res.status(201).json({ success: true, emergencyId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // 9. LAB TESTS
 // ==========================================
 app.get('/api/lab-tests', async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT lt.test_id, p.patient_name, d.doctor_name, lt.test_name,
+      SELECT lt.test_id, lt.patient_id, p.patient_name, lt.doctor_id, d.doctor_name, lt.test_name,
              lt.test_date, lt.cost, lt.result, lt.status
       FROM Lab_Tests lt
       JOIN Patients p ON lt.patient_id = p.patient_id
@@ -438,6 +510,8 @@ app.get('/api/lab-tests', async (req, res) => {
     `);
     const formatted = rows.map(l => ({
       id: `LAB-${String(l.test_id).padStart(3, '0')}`,
+      rawId: l.test_id,
+      patientId: l.patient_id,
       patient: l.patient_name,
       doctor: l.doctor_name,
       type: l.test_name,
@@ -447,6 +521,35 @@ app.get('/api/lab-tests', async (req, res) => {
       status: l.status
     }));
     res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/lab-tests', async (req, res) => {
+  try {
+    const { patientId, doctorId, testName, testDate, cost, result, status } = req.body;
+    const cleanPid = typeof patientId === 'string' ? parseInt(patientId.replace(/^P-0*/, '')) : patientId;
+    const cleanDid = typeof doctorId === 'string' ? parseInt(doctorId.replace(/^D-0*/, '')) : doctorId;
+    const [dbRes] = await pool.query(
+      'INSERT INTO Lab_Tests (patient_id, doctor_id, test_name, test_date, cost, result, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [cleanPid, cleanDid, testName, testDate || new Date().toISOString().slice(0, 10), cost || 500.00, result || 'Pending', status || 'Pending']
+    );
+    res.status(201).json({ success: true, testId: dbRes.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/lab-tests/:id', async (req, res) => {
+  const testId = req.params.id.replace(/^LAB-0*/, '');
+  try {
+    const { result, status } = req.body;
+    await pool.query(
+      'UPDATE Lab_Tests SET result = ?, status = ? WHERE test_id = ?',
+      [result, status || 'Completed', testId]
+    );
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -468,6 +571,7 @@ app.get('/api/prescriptions', async (req, res) => {
     `);
     const formatted = rows.map(r => ({
       id: `RX-${String(r.prescription_id).padStart(3, '0')}`,
+      rawId: r.prescription_id,
       patient: r.patient_name,
       doctor: r.doctor_name,
       diagnosis: r.diagnosis,
@@ -482,8 +586,65 @@ app.get('/api/prescriptions', async (req, res) => {
   }
 });
 
+app.post('/api/prescriptions', async (req, res) => {
+  try {
+    const { appointmentId, diagnosis, medicine, nextVisitDate, remarks } = req.body;
+    const cleanAid = typeof appointmentId === 'string' ? parseInt(appointmentId.replace(/^APT-0*/, '')) : appointmentId;
+    const nextDate = nextVisitDate && nextVisitDate.trim() ? nextVisitDate : null;
+    const [result] = await pool.query(
+      'INSERT INTO Prescriptions (appointment_id, diagnosis, medicine, next_visit_date, remarks) VALUES (?, ?, ?, ?, ?)',
+      [cleanAid, diagnosis, medicine, nextDate, remarks || '']
+    );
+    res.status(201).json({ success: true, prescriptionId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
-// 11. FEEDBACK
+// 11. DOCTOR SCHEDULE
+// ==========================================
+app.get('/api/schedules', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT ds.schedule_id, ds.doctor_id, d.doctor_name, ds.day_of_week,
+             ds.start_time, ds.end_time, s.specialization_name
+      FROM Doctor_Schedule ds
+      JOIN Doctor d ON ds.doctor_id = d.doctor_id
+      LEFT JOIN Specializations s ON d.specialization_id = s.specialization_id
+      ORDER BY FIELD(ds.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/schedules', async (req, res) => {
+  try {
+    const { doctorId, dayOfWeek, startTime, endTime } = req.body;
+    const cleanDid = typeof doctorId === 'string' ? parseInt(doctorId.replace(/^D-0*/, '')) : doctorId;
+    const [result] = await pool.query(
+      'INSERT INTO Doctor_Schedule (doctor_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)',
+      [cleanDid, dayOfWeek, startTime, endTime]
+    );
+    res.status(201).json({ success: true, scheduleId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/schedules/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM Doctor_Schedule WHERE schedule_id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 12. FEEDBACK
 // ==========================================
 app.get('/api/feedback', async (req, res) => {
   try {
@@ -495,6 +656,7 @@ app.get('/api/feedback', async (req, res) => {
     `);
     const formatted = rows.map(f => ({
       id: `FB-${String(f.feedback_id).padStart(3, '0')}`,
+      rawId: f.feedback_id,
       patient: f.patient_name,
       rating: f.rating,
       date: f.feedback_date ? String(f.feedback_date).slice(0, 10) : '',
@@ -506,8 +668,22 @@ app.get('/api/feedback', async (req, res) => {
   }
 });
 
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { patientId, rating, feedbackDate, comments } = req.body;
+    const cleanPid = typeof patientId === 'string' ? parseInt(patientId.replace(/^P-0*/, '')) : patientId;
+    const [result] = await pool.query(
+      'INSERT INTO Feedback (patient_id, rating, feedback_date, comments) VALUES (?, ?, ?, ?)',
+      [cleanPid, rating || 5, feedbackDate || new Date().toISOString().slice(0, 10), comments || '']
+    );
+    res.status(201).json({ success: true, feedbackId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
-// 12. AUDIT LOGS
+// 13. AUDIT LOGS
 // ==========================================
 app.get('/api/audit-logs', async (req, res) => {
   try {
@@ -523,6 +699,28 @@ app.get('/api/audit-logs', async (req, res) => {
       severity: l.action_type && l.action_type.includes('CANCEL') ? 'Warning' : 'Info'
     }));
     res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 14. REPORTS & ANALYTICS
+// ==========================================
+app.get('/api/reports/revenue-by-doctor', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT d.doctor_id, d.doctor_name, s.specialization_name,
+             COUNT(b.bill_id) AS total_bills,
+             COALESCE(SUM(b.amount), 0) AS total_revenue
+      FROM Doctor d
+      LEFT JOIN Specializations s ON d.specialization_id = s.specialization_id
+      LEFT JOIN Appointments a ON d.doctor_id = a.doctor_id
+      LEFT JOIN Billing b ON a.appointment_id = b.appointment_id AND b.payment_status = 'Paid'
+      GROUP BY d.doctor_id, d.doctor_name, s.specialization_name
+      ORDER BY total_revenue DESC
+    `);
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
