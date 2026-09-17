@@ -63,6 +63,26 @@ export async function getDoctors() {
   return fetchJSON('/doctors');
 }
 
+export async function addDoctor(doctor: {
+  name: string;
+  specialization?: string;
+  specializationId?: number;
+  qualification?: string;
+  fee: number | string;
+  contact: string;
+}) {
+  return fetchJSON('/doctors', {
+    method: 'POST',
+    body: JSON.stringify(doctor),
+  });
+}
+
+export async function deleteDoctor(id: string) {
+  return fetchJSON(`/doctors/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function getSpecializations() {
   return fetchJSON('/specializations');
 }

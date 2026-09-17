@@ -212,6 +212,43 @@ app.get('/api/specializations', async (req, res) => {
   }
 });
 
+app.post('/api/doctors', async (req, res) => {
+  try {
+    const { name, specializationId, specialization, qualification, fee, contact } = req.body;
+    let specId = specializationId;
+    if (!specId && specialization) {
+      const [specs] = await pool.query('SELECT specialization_id FROM Specializations WHERE specialization_name = ?', [specialization]);
+      if (specs.length > 0) {
+        specId = specs[0].specialization_id;
+      }
+    }
+    const [result] = await pool.query(
+      'INSERT INTO Doctor (doctor_name, specialization_id, qualification, consultation_fee, contact) VALUES (?, ?, ?, ?, ?)',
+      [name, specId || 1, qualification || 'MBBS, MD', parseFloat(fee) || 500, contact || '9876543210']
+    );
+    res.status(201).json({ success: true, doctorId: result.insertId });
+  } catch (err) {
+    console.error('Add doctor error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/doctors/:id', async (req, res) => {
+  const doctorId = req.params.id.replace(/^D-0*/, '');
+  try {
+    await pool.query('DELETE FROM Prescriptions WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE doctor_id=?)', [doctorId]);
+    await pool.query('DELETE FROM Billing WHERE appointment_id IN (SELECT appointment_id FROM Appointments WHERE doctor_id=?)', [doctorId]);
+    await pool.query('DELETE FROM Appointments WHERE doctor_id=?', [doctorId]);
+    await pool.query('DELETE FROM Doctor_Schedule WHERE doctor_id=?', [doctorId]);
+    await pool.query('UPDATE Emergency SET assigned_doctor = NULL WHERE assigned_doctor=?', [doctorId]);
+    await pool.query('DELETE FROM Lab_Tests WHERE doctor_id=?', [doctorId]);
+    await pool.query('DELETE FROM Doctor WHERE doctor_id=?', [doctorId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // 5. APPOINTMENTS
 // ==========================================
