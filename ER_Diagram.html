@@ -1,81 +1,385 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Database ER Diagram</title>
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ 
-            startOnLoad: true, 
-            theme: 'base',
-            themeVariables: {
-                primaryColor: '#e0f7fa',
-                primaryTextColor: '#006064',
-                primaryBorderColor: '#00838f',
-                lineColor: '#006064',
-                secondaryColor: '#fff3e0',
-                tertiaryColor: '#fff',
-                fontSize: '24px' // HUGE FONT for visibility
-            },
-            securityLevel: 'loose',
-            er: {
-                useMaxWidth: false // Allows the diagram to stretch beyond the screen size
-            }
-        });
-    </script>
+    <title>CarePoint Hospital Management System - ER Diagram</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f4f7f6; 
-            margin: 0; 
-            padding: 30px; 
+        :root {
+            --bg-canvas: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #ffffff;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --teal-500: #14b8a6;
+            --teal-600: #0d9488;
+            --blue-500: #3b82f6;
         }
-        h1 { text-align: center; color: #2c3e50; font-size: 2.5rem; margin-bottom: 10px; }
-        .instructions { text-align: center; color: #7f8c8d; font-size: 1.2rem; margin-bottom: 30px; }
-        .diagram-container { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
-            overflow: auto; /* Allows scrolling */
-            text-align: center;
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        svg {
-            min-width: 1500px; /* Forces SVG to be massive */
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .badge {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--teal-500);
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background: #475569;
+            border-color: #64748b;
+        }
+
+        .btn-primary {
+            background: var(--teal-600);
+            border-color: var(--teal-500);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: var(--teal-500);
+        }
+
+        /* Canvas Container */
+        #viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: #0b1120;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 24px 24px;
+            cursor: grab;
+        }
+
+        #viewport:active {
+            cursor: grabbing;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+            padding: 60px;
+        }
+
+        /* Instructions & Legend */
+        .floating-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .floating-hint b {
+            color: #ffffff;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            backdrop-filter: blur(8px);
+            display: flex;
+            gap: 14px;
+            z-index: 50;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        /* Loading indicator */
+        #loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0b1120;
+            z-index: 90;
+            transition: opacity 0.3s ease;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(20, 184, 166, 0.2);
+            border-top-color: var(--teal-500);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+                darkMode: true,
+                background: '#0b1120',
+                primaryColor: '#1e293b',
+                primaryBorderColor: '#0d9488',
+                primaryTextColor: '#f8fafc',
+                lineColor: '#14b8a6',
+                textColor: '#f8fafc',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                fontSize: '14px'
+            },
+            er: {
+                useMaxWidth: false,
+                entityPadding: 16
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const chartDef = document.getElementById('mermaid-src').textContent;
+            const container = document.getElementById('canvas');
+            
+            try {
+                const { svg } = await mermaid.render('er-svg', chartDef);
+                container.innerHTML = svg;
+                initPanZoom();
+                document.getElementById('loading').style.display = 'none';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerHTML = '<p style="color:#ef4444;">Failed to render ER diagram.</p>';
+            }
+        });
+
+        // Pan & Zoom Controller
+        function initPanZoom() {
+            const viewport = document.getElementById('viewport');
+            const canvas = document.getElementById('canvas');
+            let scale = 1;
+            let panX = 40;
+            let panY = 40;
+            let isDragging = false;
+            let startX, startY;
+
+            function updateTransform() {
+                canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            }
+
+            viewport.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button')) return;
+                isDragging = true;
+                startX = e.clientX - panX;
+                startY = e.clientY - panY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                panX = e.clientX - startX;
+                panY = e.clientY - startY;
+                updateTransform();
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
+                const newScale = Math.min(Math.max(scale * zoomFactor, 0.25), 3.5);
+                
+                // Zoom relative to cursor
+                const rect = viewport.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                panX = mouseX - (mouseX - panX) * (newScale / scale);
+                panY = mouseY - (mouseY - panY) * (newScale / scale);
+                scale = newScale;
+                updateTransform();
+            }, { passive: false });
+
+            // Button controls
+            document.getElementById('btn-zoom-in').onclick = () => {
+                scale = Math.min(scale * 1.2, 3.5);
+                updateTransform();
+            };
+
+            document.getElementById('btn-zoom-out').onclick = () => {
+                scale = Math.max(scale * 0.8, 0.25);
+                updateTransform();
+            };
+
+            document.getElementById('btn-reset').onclick = () => {
+                scale = 1;
+                panX = 40;
+                panY = 40;
+                updateTransform();
+            };
+
+            document.getElementById('btn-fit').onclick = () => {
+                const svg = canvas.querySelector('svg');
+                if (!svg) return;
+                const svgWidth = svg.viewBox.baseVal.width || svg.clientWidth || 1600;
+                const svgHeight = svg.viewBox.baseVal.height || svg.clientHeight || 1200;
+                const vpWidth = viewport.clientWidth - 80;
+                const vpHeight = viewport.clientHeight - 80;
+                scale = Math.min(vpWidth / svgWidth, vpHeight / svgHeight, 1.2);
+                panX = (viewport.clientWidth - svgWidth * scale) / 2;
+                panY = (viewport.clientHeight - svgHeight * scale) / 2;
+                updateTransform();
+            };
+
+            // Initial auto-fit
+            setTimeout(() => {
+                document.getElementById('btn-fit').click();
+            }, 100);
+        }
+    </script>
 </head>
 <body>
-    <h1>🏥 Hospital Management System - ER Diagram</h1>
-    <p class="instructions">Hold <b>Ctrl</b> and scroll your mouse wheel to zoom in/out. Scroll horizontally/vertically to pan.</p>
-    
-    <div class="diagram-container">
-        <pre class="mermaid">
+    <header>
+        <div class="header-title">
+            <h1>🏥 CarePoint Hospital System — Database ER Diagram</h1>
+            <span class="badge">MySQL 8.0 • 13 Relational Tables</span>
+        </div>
+        <div class="controls">
+            <button id="btn-zoom-in" class="btn" title="Zoom In">🔍 +</button>
+            <button id="btn-zoom-out" class="btn" title="Zoom Out">🔍 −</button>
+            <button id="btn-fit" class="btn btn-primary" title="Fit to Screen">Fit Diagram</button>
+            <button id="btn-reset" class="btn" title="Reset View">Reset</button>
+        </div>
+    </header>
+
+    <div id="viewport">
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Rendering Relational ER Diagram...</p>
+        </div>
+        <div id="canvas"></div>
+    </div>
+
+    <div class="floating-hint">
+        💡 <b>Drag</b> to pan around • <b>Mouse Wheel</b> to zoom in/out
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#0d9488;"></div> Table Entity</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#14b8a6;"></div> Foreign Key (FK)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> Primary Key (PK)</div>
+    </div>
+
+    <!-- MERMAID SOURCE -->
+    <pre id="mermaid-src" style="display: none;">
 erDiagram
     Users {
         int user_id PK
         varchar username "UNIQUE"
         varchar password "SHA-256"
         varchar full_name
-        varchar role "Admin/Reception"
+        varchar role "Admin/Receptionist"
         timestamp created_at
     }
 
     Specializations {
         int specialization_id PK
-        varchar specialization_name
-    }
-
-    Patients {
-        int patient_id PK
-        varchar patient_name
-        varchar gender
-        int age
-        varchar blood_group
-        varchar contact
-        varchar address
-        date registration_date
+        varchar specialization_name "UNIQUE"
     }
 
     Doctor {
@@ -95,11 +399,22 @@ erDiagram
         time end_time
     }
 
+    Patients {
+        int patient_id PK
+        varchar patient_name
+        varchar gender
+        int age
+        varchar blood_group
+        varchar contact "INDEXED"
+        varchar address
+        date registration_date
+    }
+
     Appointments {
         int appointment_id PK
         int patient_id FK
         int doctor_id FK
-        date appointment_date
+        date appointment_date "INDEXED"
         time appointment_time
         varchar room_number
         varchar status
@@ -120,42 +435,71 @@ erDiagram
         decimal amount
         date bill_date
         varchar payment_method
-        varchar payment_status
-    }
-
-    Feedback {
-        int feedback_id PK
-        int patient_id FK
-        int rating
-        date feedback_date
-        varchar comments
+        varchar payment_status "INDEXED"
     }
 
     Emergency {
         int emergency_id PK
         int patient_id FK
         varchar emergency_type
-        varchar priority_level
+        varchar priority_level "INDEXED"
         varchar status
         int assigned_doctor FK
         date arrival_date
         time arrival_time
     }
 
-    Specializations ||--o{ Doctor : "has"
-    Doctor ||--o{ Doctor_Schedule : "has schedule"
-    
-    Patients ||--o{ Appointments : "books"
+    Lab_Tests {
+        int test_id PK
+        int patient_id FK
+        int doctor_id FK
+        varchar test_name
+        date test_date
+        decimal cost
+        varchar result
+        varchar status
+    }
+
+    Bed_Allocation {
+        int allocation_id PK
+        int patient_id FK
+        varchar ward_type
+        varchar bed_number
+        date admit_date
+        date discharge_date
+        decimal daily_charge
+        varchar status
+    }
+
+    Feedback {
+        int feedback_id PK
+        int patient_id FK
+        int rating "1 to 5"
+        date feedback_date
+        varchar comments
+    }
+
+    Audit_Logs {
+        int log_id PK
+        varchar action_type
+        int record_id
+        timestamp log_time
+        text details
+    }
+
+    Specializations ||--o{ Doctor : "classifies"
+    Doctor ||--o{ Doctor_Schedule : "works_shifts"
     Doctor ||--o{ Appointments : "attends"
-    
-    Appointments ||--o| Prescriptions : "results in"
+    Patients ||--o{ Appointments : "books"
+    Appointments ||--o| Prescriptions : "issues"
     Appointments ||--o| Billing : "generates"
-    
-    Patients ||--o{ Feedback : "provides"
-    
-    Patients ||--o{ Emergency : "admitted as"
-    Doctor ||--o{ Emergency : "assigned to"
-        </pre>
-    </div>
+    Patients ||--o{ Feedback : "submits"
+    Patients ||--o{ Emergency : "admitted_as"
+    Doctor ||--o{ Emergency : "treated_by"
+    Patients ||--o{ Lab_Tests : "undergoes"
+    Doctor ||--o{ Lab_Tests : "orders"
+    Patients ||--o{ Bed_Allocation : "assigned"
+    Appointments ||--o{ Audit_Logs : "audits_cancellations"
+    </pre>
 </body>
 </html>

@@ -126,6 +126,145 @@ The Doctor Schedule module (`DoctorSchedule.tsx`) includes a visual weekly timet
 - `Feedback`: Patient ratings (1–5 stars) and qualitative care feedback.
 - `Audit_Logs`: System audit trail recording cancellations and modifications.
 
+#### 🌐 Interactive ER Diagram Explorer
+An interactive full-screen Mermaid viewer with zoom, pan, and fit-to-screen controls is included in [`ER_Diagram.html`](ER_Diagram.html).
+
+```mermaid
+erDiagram
+    Users {
+        int user_id PK
+        varchar username UK
+        varchar password "SHA-256"
+        varchar full_name
+        varchar role "Admin/Receptionist"
+        timestamp created_at
+    }
+
+    Specializations {
+        int specialization_id PK
+        varchar specialization_name UK
+    }
+
+    Doctor {
+        int doctor_id PK
+        varchar doctor_name
+        int specialization_id FK
+        varchar qualification
+        decimal consultation_fee
+        varchar contact
+    }
+
+    Doctor_Schedule {
+        int schedule_id PK
+        int doctor_id FK
+        varchar day_of_week
+        time start_time
+        time end_time
+    }
+
+    Patients {
+        int patient_id PK
+        varchar patient_name
+        varchar gender
+        int age
+        varchar blood_group
+        varchar contact "INDEXED"
+        varchar address
+        date registration_date
+    }
+
+    Appointments {
+        int appointment_id PK
+        int patient_id FK
+        int doctor_id FK
+        date appointment_date "INDEXED"
+        time appointment_time
+        varchar room_number
+        varchar status
+    }
+
+    Prescriptions {
+        int prescription_id PK
+        int appointment_id FK
+        varchar diagnosis
+        varchar medicine
+        date next_visit_date
+        varchar remarks
+    }
+
+    Billing {
+        int bill_id PK
+        int appointment_id FK
+        decimal amount
+        date bill_date
+        varchar payment_method
+        varchar payment_status "INDEXED"
+    }
+
+    Emergency {
+        int emergency_id PK
+        int patient_id FK
+        varchar emergency_type
+        varchar priority_level "INDEXED"
+        varchar status
+        int assigned_doctor FK
+        date arrival_date
+        time arrival_time
+    }
+
+    Lab_Tests {
+        int test_id PK
+        int patient_id FK
+        int doctor_id FK
+        varchar test_name
+        date test_date
+        decimal cost
+        varchar result
+        varchar status
+    }
+
+    Bed_Allocation {
+        int allocation_id PK
+        int patient_id FK
+        varchar ward_type
+        varchar bed_number
+        date admit_date
+        date discharge_date
+        decimal daily_charge
+        varchar status
+    }
+
+    Feedback {
+        int feedback_id PK
+        int patient_id FK
+        int rating "1 to 5"
+        date feedback_date
+        varchar comments
+    }
+
+    Audit_Logs {
+        int log_id PK
+        varchar action_type
+        int record_id
+        timestamp log_time
+        text details
+    }
+
+    Specializations ||--o{ Doctor : "classifies"
+    Doctor ||--o{ Doctor_Schedule : "works_shifts"
+    Doctor ||--o{ Appointments : "attends"
+    Patients ||--o{ Appointments : "books"
+    Appointments ||--o| Prescriptions : "issues"
+    Appointments ||--o| Billing : "generates"
+    Patients ||--o{ Feedback : "submits"
+    Patients ||--o{ Emergency : "admitted_as"
+    Doctor ||--o{ Emergency : "treated_by"
+    Patients ||--o{ Lab_Tests : "undergoes"
+    Doctor ||--o{ Lab_Tests : "orders"
+    Patients ||--o{ Bed_Allocation : "assigned"
+    Appointments ||--o{ Audit_Logs : "audits_cancellations"
+```
+
 ### 2. Automated Relational Triggers
 - **`trg_CheckBedAllocationInsert`**: Enforces strict single occupancy. Throws SQL exception `45000` if a bed is already occupied or if a patient is already admitted.
 - **`trg_CheckBedAllocationUpdate`**: Prevents bed allocation collisions during status or room modifications.
@@ -236,69 +375,6 @@ java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" ui.HospitalManagementUI
 ## 🧪 CLI Test Suite & Backend Verification
 
 The project includes 13 standalone command-line test harnesses to verify database operations independently of any GUI:
-
-<<<<<<< HEAD
-=======
-### 🌐 Interactive ER Diagram
-An interactive Mermaid-powered Entity-Relationship Diagram with pan and zoom capabilities is available:
-- **File**: [`ER_Diagram.html`](ER_Diagram.html)
-- Simply double-click or open `ER_Diagram.html` in any modern browser to visually explore all entities, attributes, primary keys, and foreign relationships.
-
----
-
-## ⚡ Advanced DBMS Concepts Implemented
-
-### Views (2)
-| View | Purpose |
-|------|---------|
-| `v_ActiveAppointments` | Pre-joined view for all non-cancelled appointments with patient & doctor names |
-| `v_HospitalRevenueSummary` | Aggregated revenue grouped by payment method |
-
-### Stored Procedure (1)
-| Procedure | Purpose |
-|-----------|---------|
-| `sp_GetPatientHistory(IN p_patient_id INT)` | Fetches complete clinical, prescription, and billing timeline for a patient |
-
-### Triggers (4)
-| Trigger | Event | Action |
-|---------|-------|--------|
-| `trg_AfterBillPaid` | After bill marked 'Paid' | Auto-updates appointment status to 'Completed' |
-| `trg_AuditAppointmentCancel` | After appointment cancelled | Logs cancellation into `Audit_Logs` |
-| `trg_CheckBedAllocationInsert` | Before bed allocation insert | Prevents duplicate beds & multiple patient admissions |
-| `trg_CheckBedAllocationUpdate` | Before bed allocation update | Prevents bed conflicts on status change |
-
-### Indexes (B-Tree)
-- `Patients(contact)`, `Appointments(appointment_date)`, `Doctor(specialization_id)`, `Billing(payment_status)`, `Emergency(priority_level)`
-
-### Date Arithmetic
-- `DATEDIFF(discharge_date, admit_date) * daily_charge` — calculates total inpatient stay charges
-
-### Demonstration Queries (`sql/queries.sql`)
-- 4-Table Joins (Appointments + Patients + Doctor + Specializations)
-- Aggregates with `GROUP BY` & `HAVING`
-- Nested Subqueries (Scalar, `IN`, `EXISTS`)
-- `AVG`, `SUM`, `COUNT` aggregations
-
----
-
-## 🔒 Backend Security & Data Integrity
-
-| Feature | Implementation |
-|---------|----------------|
-| SQL Injection Prevention | All queries use `PreparedStatement` with `?` bind parameters |
-| Resource Management | All 12 DAOs use `try-with-resources` for Connection, PreparedStatement, ResultSet |
-| Business Rule Enforcement | Bed allocation triggers + DAO-level validation (fail-safe on error) |
-| Cascade Delete Safety | Confirmation dialogs before cascade deletions |
-| Input Validation | Patient/Doctor existence checks, date format validation, null-safe table handling |
-| Audit Trail | Automatic logging of appointment cancellations |
-| Password Security | SHA-256 hashing via MySQL `SHA2()` function |
-
----
-
-## 🧪 How to Verify the System
-
-### Quick Smoke Test
->>>>>>> 352b6c4 (Polish repository: clean Figma artifacts, standardize Vite & build configs, add CI workflow, ER diagram, and cross-platform launch scripts)
 ```bash
 # Verify system metrics & database connection
 java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" test.TestDashboard
