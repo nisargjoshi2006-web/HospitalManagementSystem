@@ -40,21 +40,11 @@ public class PatientPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
 
         // ================= FONTS =================
-
-        Font labelFont =
-                new Font("Arial", Font.BOLD, 16);
-
-        Font fieldFont =
-                new Font("Arial", Font.PLAIN, 16);
-
-        Font buttonFont =
-                new Font("Arial", Font.BOLD, 16);
-
-        Font tableFont =
-                new Font("Arial", Font.PLAIN, 15);
-
-        Font tableHeaderFont =
-                new Font("Arial", Font.BOLD, 15);
+        Font labelFont = UITheme.FONT_LABEL;
+        Font fieldFont = UITheme.FONT_INPUT;
+        Font buttonFont = UITheme.FONT_BUTTON;
+        Font tableFont = UITheme.FONT_TABLE_CELL;
+        Font tableHeaderFont = UITheme.FONT_TABLE_HEADER;
 
         // ================= FORM PANEL =================
 
@@ -219,11 +209,7 @@ public class PatientPanel extends JPanel {
         table =
                 new JTable(tableModel);
 
-        table.setFont(tableFont);
-        table.setRowHeight(25);
-
-        table.getTableHeader()
-                .setFont(tableHeaderFont);
+        UITheme.styleTable(table);
 
         JScrollPane scrollPane =
                 new JScrollPane(table);

@@ -71,10 +71,11 @@ The system features **dual frontend interfaces** connected to a single central *
 
 | Module | Web Page | Desktop Tab | Core Capabilities |
 | :--- | :--- | :--- | :--- |
-| **🔐 Authentication** | `Login.tsx` | `LoginUI.java` | SHA-256 password hashing, RBAC (`Admin` vs `Receptionist`), failed-attempt lockouts |
-| **📊 Live Dashboard** | `Dashboard.tsx` | `DashboardPanel.java` | Real-time KPI cards (Patients, Doctors, Beds, Emergencies, Bills, Revenue) + live feeds |
-| **🧑‍🤝‍🧑 Patients** | `Patients.tsx` | `PatientPanel.java` | Demographics, blood group categorization, instant search, safe cascade deletion |
-| **👨‍⚕️ Doctors** | `Doctors.tsx` | `DoctorPanel.java` | Specialty mapping, qualifications, consultation fees, contact directory |
+| **🔐 Authentication & Portals** | `Login.tsx` | `LoginUI.java` | VTOP-style 4-role portal selector (Doctor, Receptionist, Patient, Admin), SHA-256 hashing, 1-click pre-fill |
+| **📊 Live Dashboard** | `Dashboard.tsx` | `DashboardPanel.java` | Real-time KPI cards (Patients, Doctors, Beds, Emergencies, Bills, Revenue) + live clinical feeds |
+| **🧑‍⚕️ Patient Health Portal** | `PatientPortal.tsx` | `PatientPortalPanel.java` | Personal consultation timeline via `sp_GetPatientHistory(?)`, prescribed medicines, active diagnoses, billing statuses |
+| **🧑‍🤝‍🧑 Patients Master** | `Patients.tsx` | `PatientPanel.java` | Demographics, blood group categorization, instant search, safe cascade deletion |
+| **👨‍⚕️ Doctors Directory** | `Doctors.tsx` | `DoctorPanel.java` | Specialty mapping, qualifications, consultation fees, contact directory |
 | **📅 Doctor Schedule** | `DoctorSchedule.tsx` | `DoctorSchedulePanel.java` | **Interactive Weekly Timetable Grid**, 7-day Kanban board, quick presets, slot manager |
 | **🕒 Appointments** | `Appointments.tsx` | `AppointmentPanel.java` | Date & room booking, doctor availability verification, status workflows |
 | **💊 Prescriptions** | `Prescriptions.tsx` | `PrescriptionPanel.java` | Clinical diagnoses, medication regimens, dosage instructions, follow-up scheduling |
@@ -83,8 +84,63 @@ The system features **dual frontend interfaces** connected to a single central *
 | **🧪 Lab Tests** | `LabTests.tsx` | `LabTestPanel.java` | Diagnostic orders (CBC, MRI, ECG, Lipid Panel, HbA1c), specimen tracking, test results |
 | **🛏️ Bed Allocation** | `BedAllocation.tsx` | `BedAllocationPanel.java` | Ward management (ICU, Private AC, General), trigger-enforced single occupancy, discharge |
 | **⭐ Patient Feedback** | `Feedback.tsx` | `FeedbackPanel.java` | 1-5 star ratings, qualitative patient reviews, patient experience monitoring |
-| **📈 Reports & BI** | `Reports.tsx` | `ReportsPanel.java` | 8 analytical reports, doctor workload analysis, bed occupancy history, **CSV Export** |
+| **📈 Reports & BI** | `Reports.tsx` | `ReportsPanel.java` | 8 analytical reports, stored procedure patient history viewer, workload analysis, **CSV Export** |
 | **🛡️ Audit Logs** | `AuditLogs.tsx` | `AuditLogDAO.java` | Automated logging of appointment cancellations, security compliance trail |
+
+---
+
+## 🛡️ Role-Based Access Control (RBAC) & Multi-Role Portals
+
+The application implements strict **Role-Based Access Control (RBAC)** across both the **Web Client** (`visibleNavItems` sidebar filter) and the **Java Desktop Client** (tailored `JTabbedPane` tabs):
+
+### Role Visibility & Permission Matrix
+
+| System Module | 🛡️ Admin | 👨‍⚕️ Doctor | 👩‍💼 Receptionist | 🧑‍🤝‍🧑 Patient |
+| :--- | :---: | :---: | :---: | :---: |
+| **🧑‍⚕️ Patient Health Portal** (`sp_GetPatientHistory`) | ❌ | ❌ | ❌ | ✅ |
+| **📊 Live Dashboard** | ✅ | ❌ | ✅ | ❌ |
+| **🧑‍🤝‍🧑 Patients Master** | ✅ | ✅ | ✅ | ❌ |
+| **👨‍⚕️ Doctors Directory** | ✅ | ❌ | ❌ | ❌ |
+| **📅 Doctor Schedule & Weekly Timetable** | ✅ | ✅ | ❌ | ❌ |
+| **🕒 Appointments Management** | ✅ | ✅ | ✅ | ✅ |
+| **💊 Prescriptions & Regimens** | ✅ | ✅ | ❌ | ✅ |
+| **💳 Billing & Payments** | ✅ | ❌ | ✅ | ✅ |
+| **🚨 Emergency Department Triage** | ✅ | ✅ | ✅ | ❌ |
+| **🧪 Diagnostic Lab Tests** | ✅ | ✅ | ✅ | ❌ |
+| **🛏️ Bed Allocation & Inpatient Wards** | ✅ | ❌ | ✅ | ❌ |
+| **⭐ Patient Care Feedback** | ✅ | ✅ | ✅ | ✅ *(Submit)* |
+| **📈 Reports & BI (CSV Export)** | ✅ | ❌ | ❌ | ❌ |
+| **🛡️ System Audit Logs** | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+## 🖥️ Java Swing Systematic Typography & Desktop UI Architecture (`UITheme.java`)
+
+The desktop client features an enterprise-grade visual hierarchy engineered via `ui.UITheme`:
+
+1. **Subpixel Font Anti-Aliasing**:
+   - Explicitly configured with `awt.useSystemAAFontSettings=on` and `swing.aatext=true` to eliminate jagged Swing typography.
+2. **Systematic Font Scale (Segoe UI Native)**:
+   - Replaced legacy hardcoded `16pt Arial` with a proportional typographic scale (`11pt` to `22pt`) anchored to native Windows `Segoe UI` (with cross-platform fallbacks).
+   - Global `UIManager` font registration automatically harmonizes all tabs, table headers, form inputs, tooltips, and dialogs.
+3. **Dual Logout Mechanism**:
+   - **Elevated Top App Bar**: High-visibility user identity banner displaying the user's name, role pill, and a prominent red `🚪 Logout` button with hover state transitions and confirmation prompt.
+   - **Native System Menu Bar (`JMenuBar`)**: Standard desktop menus (`File -> Logout (Ctrl+L)`, `File -> Exit (Ctrl+Q)`, `Account -> User Info`, `Help -> About HMS`).
+4. **Enhanced Table Styling**:
+   - Automated alternating row heights (`28px`), styled table headers, and soft selection highlights via `UITheme.styleTable(table)`.
+5. **Always-Fresh Launcher (`start_desktop.bat`)**:
+   - Automatically recompiles all Java sources with UTF-8 encoding prior to launching, ensuring newly added classes, bug fixes, and RBAC updates are immediately active.
+
+---
+
+## 🔔 Highlight: Real-Time Notification Bell & Reports CSV Export
+
+- **🔔 Notification Bell Popover (`Layout.tsx`)**:
+  - Interactive top-header bell icon with dynamic badge counter.
+  - Toggles an animated popover presenting live hospital alerts: Critical ER triage admissions, pending lab diagnostics, and new feedback submissions.
+- **📥 CSV Export Engine (`Reports.tsx` & `ReportsPanel.java`)**:
+  - Instant one-click CSV report export across all 8 analytical views.
+  - Interactive Patient History selector backed by MySQL stored procedure `CALL sp_GetPatientHistory(?)`.
 
 ---
 
@@ -363,12 +419,14 @@ java -cp "out;lib/mysql-connector-j-26.7.0.jar;src" ui.HospitalManagementUI
 
 ## 🔑 Default Login Credentials
 
-| Username | Password | Role | System Privileges |
-| :--- | :--- | :--- | :--- |
-| **`admin`** | **`admin123`** | **Admin** | Full access to all 15 Web pages and all 12 Desktop modules |
-| **`receptionist`** | **`recep123`** | **Receptionist** | Front-desk access: Patients, Appointments, Billing, Beds, Lab Tests |
+| Username | Password | Role | Linked Identity | System Privileges & Modules |
+| :--- | :--- | :--- | :--- | :--- |
+| **`admin`** | **`admin123`** | **Admin** | Hospital Admin | Full access to all 15 Web modules and all 12 Desktop modules |
+| **`doctor`** | **`doc123`** | **Doctor** | Dr. Vikram Singh | Doctor Schedule & Timetable, Appointments, Prescriptions, Lab Tests, Patients, ER, Feedback |
+| **`receptionist`** | **`recep123`** | **Receptionist** | Ananya Verma | Live Dashboard, Patients, Appointments, Billing, Bed Allocation, ER, Lab Tests, Feedback |
+| **`patient`** | **`patient123`** | **Patient** | Amit Verma | Patient Health Portal (`sp_GetPatientHistory`), Appointments, Prescriptions, Billing, Feedback |
 
-> *On the Web login screen, you can also click the quick **"Admin Demo"** or **"Receptionist Demo"** buttons for instant 1-click authentication.*
+> *On both the Web (`Login.tsx`) and Java Swing (`LoginUI.java`) login screens, you can click any of the 4 **VTOP-style role portal cards** for instant 1-click pre-filled authentication.*
 
 ---
 
@@ -463,12 +521,14 @@ HospitalManagementSystem/
 │   ├── src/
 │   │   ├── api/api.ts             # API client methods communicating with backend
 │   │   ├── components/            # Reusable UI components (Layout, Sidebar, Modals)
-│   │   └── pages/                 # 15 Module pages:
-│   │       ├── Login.tsx, Dashboard.tsx, Patients.tsx, Doctors.tsx
+│   │   └── pages/                 # 16 Module pages:
+│   │       ├── Login.tsx (VTOP 4-Role Portal Cards)
+│   │       ├── PatientPortal.tsx (Personal Timeline & Prescriptions)
+│   │       ├── Dashboard.tsx, Patients.tsx, Doctors.tsx
 │   │       ├── DoctorSchedule.tsx (Weekly Timetable Grid)
 │   │       ├── Appointments.tsx, Prescriptions.tsx, Billing.tsx
 │   │       ├── Emergency.tsx, LabTests.tsx, BedAllocation.tsx
-│   │       ├── Feedback.tsx, Reports.tsx, AuditLogs.tsx, Settings.tsx
+│   │       ├── Feedback.tsx, Reports.tsx (CSV Export), AuditLogs.tsx, Settings.tsx
 │   ├── vite.config.ts             # Vite bundler & API proxy configuration
 │   └── package.json               # Frontend dependencies (React, Tailwind v4, Lucide)
 ├── src/                           # Native Java Desktop Client Source Code
@@ -477,9 +537,12 @@ HospitalManagementSystem/
 │   │   └── DBConnection.java      # Thread-safe JDBC connection factory
 │   ├── model/                     # 12 Java POJO entity models
 │   ├── dao/                       # 12 Data Access Objects with PreparedStatements
-│   ├── ui/                        # 14 Java Swing UI panels and dialogs
-│   │   ├── LoginUI.java           # Desktop login window
-│   │   ├── HospitalManagementUI.java # Main tabbed application window
+│   ├── ui/                        # 16 Java Swing UI panels and dialogs
+│   │   ├── UITheme.java           # Systematic typography & Look-and-Feel design system
+│   │   ├── LoginUI.java           # Desktop VTOP 4-role login window
+│   │   ├── HospitalManagementUI.java # Main tabbed window with MenuBar & prominent Logout
+│   │   ├── PatientPortalPanel.java # Dedicated patient health portal (sp_GetPatientHistory)
+│   │   ├── ReportsPanel.java      # CSV export and analytical views
 │   │   └── DoctorSchedulePanel.java, etc.
 │   └── test/                      # 13 CLI test harnesses for unit verification
 ├── lib/                           # Third-party Java libraries

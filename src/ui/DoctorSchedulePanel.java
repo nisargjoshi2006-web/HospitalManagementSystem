@@ -97,6 +97,7 @@ public class DoctorSchedulePanel extends JPanel {
         });
 
         table = new JTable(tableModel);
+        UITheme.styleTable(table);
 
         JScrollPane sp = new JScrollPane(table);
 

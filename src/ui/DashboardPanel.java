@@ -29,11 +29,11 @@ public class DashboardPanel extends JPanel {
         // Header Panel (Title + Date)
         JPanel headerPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         JLabel lblTitle = new JLabel("Hospital Management System Dashboard", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 26));
+        lblTitle.setFont(UITheme.FONT_TITLE_LARGE);
 
         lblDate = new JLabel("Today's Date: " + LocalDate.now(), SwingConstants.CENTER);
-        lblDate.setFont(new Font("Arial", Font.BOLD, 16));
-        lblDate.setForeground(Color.DARK_GRAY);
+        lblDate.setFont(UITheme.FONT_SECTION);
+        lblDate.setForeground(UITheme.COLOR_TEXT_MUTED);
 
         headerPanel.add(lblTitle);
         headerPanel.add(lblDate);
@@ -43,7 +43,7 @@ public class DashboardPanel extends JPanel {
         add(new JScrollPane(cardsGrid), BorderLayout.CENTER);
 
         JButton btnRefresh = new JButton("Refresh Dashboard");
-        btnRefresh.setFont(new Font("Arial", Font.BOLD, 14));
+        btnRefresh.setFont(UITheme.FONT_BUTTON);
         btnRefresh.addActionListener(e -> refreshDashboard());
         JPanel footerPanel = new JPanel();
         footerPanel.add(btnRefresh);
@@ -103,11 +103,11 @@ public class DashboardPanel extends JPanel {
         ));
 
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTitle.setFont(UITheme.FONT_SECTION);
         lblTitle.setForeground(new Color(60, 60, 60));
 
         JLabel lblValue = new JLabel(value, SwingConstants.RIGHT);
-        lblValue.setFont(new Font("Arial", Font.BOLD, 20));
+        lblValue.setFont(UITheme.FONT_TITLE_LARGE);
         lblValue.setForeground(new Color(20, 20, 20));
 
         card.add(lblTitle, BorderLayout.WEST);

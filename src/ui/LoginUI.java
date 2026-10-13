@@ -17,6 +17,7 @@ public class LoginUI extends JFrame {
     private int failedAttempts = 0;
 
     public LoginUI() {
+        UITheme.setupSystemTheme();
 
         setTitle("CarePoint Hospital Management System — Unified Healthcare Portal");
         setSize(920, 620);
@@ -263,10 +264,7 @@ public class LoginUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Set System Look & Feel for crisp rendering
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
+        UITheme.setupSystemTheme();
         new LoginUI();
     }
 }

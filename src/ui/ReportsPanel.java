@@ -28,7 +28,7 @@ public class ReportsPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JLabel title = new JLabel("Database Reports & Analytical Views", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 18));
+        title.setFont(UITheme.FONT_TITLE);
 
         reportSelector = new JComboBox<>(new String[]{
                 "Revenue by Payment Method",
@@ -41,19 +41,21 @@ public class ReportsPanel extends JPanel {
                 "Bed Occupancy History",
                 "Doctor Workload Analysis"
         });
-        reportSelector.setFont(new Font("Arial", Font.PLAIN, 13));
+        reportSelector.setFont(UITheme.FONT_INPUT);
 
         JButton refreshButton = new JButton("🔄 Refresh Report");
-        refreshButton.setFont(new Font("Arial", Font.BOLD, 12));
+        refreshButton.setFont(UITheme.FONT_BUTTON);
 
         JButton exportCsvButton = new JButton("📥 Export to CSV");
-        exportCsvButton.setFont(new Font("Arial", Font.BOLD, 12));
+        exportCsvButton.setFont(UITheme.FONT_BUTTON);
         exportCsvButton.setBackground(new Color(40, 167, 69));
         exportCsvButton.setForeground(Color.WHITE);
         exportCsvButton.setFocusPainted(false);
 
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        controls.add(new JLabel("Select Report:"));
+        JLabel lblSelect = new JLabel("Select Report:");
+        lblSelect.setFont(UITheme.FONT_LABEL);
+        controls.add(lblSelect);
         controls.add(reportSelector);
         controls.add(refreshButton);
         controls.add(exportCsvButton);
@@ -66,12 +68,11 @@ public class ReportsPanel extends JPanel {
         tableModel = new DefaultTableModel();
         JTable table = new JTable(tableModel);
         table.setAutoCreateRowSorter(true);
-        table.setRowHeight(24);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
+        UITheme.styleTable(table);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         statusLabel = new JLabel("Select a report and click Refresh Report.", SwingConstants.CENTER);
-        statusLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        statusLabel.setFont(UITheme.FONT_STATUS);
         add(statusLabel, BorderLayout.SOUTH);
 
         refreshButton.addActionListener(event -> loadSelectedReport());

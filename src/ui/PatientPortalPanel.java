@@ -33,11 +33,11 @@ public class PatientPortalPanel extends JPanel {
         ));
 
         lblPatientInfo = new JLabel("🧑 Patient Portal — Welcome, " + (user != null ? user.getFullName() : "Patient"));
-        lblPatientInfo.setFont(new Font("Arial", Font.BOLD, 16));
+        lblPatientInfo.setFont(UITheme.FONT_TITLE);
         lblPatientInfo.setForeground(new Color(49, 46, 129));
 
         JLabel lblSub = new JLabel("View your personal clinical timeline, diagnoses, prescribed medicines, and bill statuses (Powered by MySQL Stored Procedure)");
-        lblSub.setFont(new Font("Arial", Font.PLAIN, 12));
+        lblSub.setFont(UITheme.FONT_SUBTITLE);
         lblSub.setForeground(new Color(79, 70, 229));
 
         JPanel titleBox = new JPanel(new GridLayout(2, 1, 0, 4));
@@ -46,7 +46,7 @@ public class PatientPortalPanel extends JPanel {
         titleBox.add(lblSub);
 
         JButton btnRefresh = new JButton("🔄 Refresh History");
-        btnRefresh.setFont(new Font("Arial", Font.BOLD, 12));
+        btnRefresh.setFont(UITheme.FONT_BUTTON);
         btnRefresh.setBackground(new Color(79, 70, 229));
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.setFocusPainted(false);
@@ -70,10 +70,7 @@ public class PatientPortalPanel extends JPanel {
         };
 
         table = new JTable(tableModel);
-        table.setRowHeight(26);
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new Color(241, 245, 249));
-        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        UITheme.styleTable(table);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240)));

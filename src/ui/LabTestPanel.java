@@ -41,8 +41,8 @@ public class LabTestPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
-        Font labelFont = new Font("Arial", Font.BOLD, 14);
-        Font fieldFont = new Font("Arial", Font.PLAIN, 14);
+        Font labelFont = UITheme.FONT_LABEL;
+        Font fieldFont = UITheme.FONT_INPUT;
 
         // Form Panel (Clean form without redundant ID field)
         JPanel formPanel = new JPanel(new GridLayout(7, 2, 8, 8));
