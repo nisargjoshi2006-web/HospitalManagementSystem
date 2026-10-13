@@ -101,9 +101,33 @@ export default function Login() {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-slate-900 text-xl font-semibold">Sign in to your account</h2>
-              <p className="text-slate-500 text-sm mt-1">Enter your credentials to continue</p>
+            <div className="mb-5">
+              <h2 className="text-slate-900 text-xl font-semibold">CarePoint Unified Portal</h2>
+              <p className="text-slate-500 text-xs mt-1">Select your role or enter credentials to sign in</p>
+            </div>
+
+            {/* VTOP-Style Role Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+              {[
+                { role: 'Doctor', user: 'doctor', pass: 'doc123', icon: '👨‍⚕️', border: 'hover:border-teal-400', activeBg: 'bg-teal-50 border-teal-500 text-teal-800' },
+                { role: 'Receptionist', user: 'receptionist', pass: 'recep123', icon: '👩‍💼', border: 'hover:border-sky-400', activeBg: 'bg-sky-50 border-sky-500 text-sky-800' },
+                { role: 'Patient', user: 'patient', pass: 'patient123', icon: '🧑‍🤝‍🧑', border: 'hover:border-purple-400', activeBg: 'bg-purple-50 border-purple-500 text-purple-800' },
+                { role: 'Admin', user: 'admin', pass: 'admin123', icon: '🛡️', border: 'hover:border-slate-600', activeBg: 'bg-slate-100 border-slate-700 text-slate-900' },
+              ].map(r => {
+                const isSelected = form.username === r.user;
+                return (
+                  <button
+                    key={r.role}
+                    type="button"
+                    onClick={() => setForm({ username: r.user, password: r.pass })}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${isSelected ? r.activeBg + ' shadow-xs' : 'bg-slate-50/70 border-slate-200 hover:bg-white ' + r.border}`}
+                  >
+                    <div className="text-xl mb-1">{r.icon}</div>
+                    <div className="text-xs font-bold leading-tight">{r.role}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5 font-mono">1-Click</div>
+                  </button>
+                );
+              })}
             </div>
 
             {error && (

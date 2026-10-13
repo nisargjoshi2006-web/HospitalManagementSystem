@@ -33,6 +33,8 @@ interface LayoutProps {
 export default function Layout({ children, title, subtitle }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
   const navigate = useNavigate();
 
   const handleLogout = () => navigate('/login');
@@ -134,10 +136,127 @@ export default function Layout({ children, title, subtitle }: LayoutProps) {
           </div>
 
           {/* Notifications */}
-          <button className="relative p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
-            <Bell size={18} />
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500 border border-white" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+              title="Hospital Alerts & Notifications"
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Popover Dropdown */}
+            {showNotifications && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowNotifications(false)}
+                />
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-800">Hospital Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="text-[11px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded-full font-bold">
+                          {unreadCount} New
+                        </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={() => setUnreadCount(0)}
+                        className="text-xs text-teal-700 hover:text-teal-800 font-medium"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        navigate('/app/emergency');
+                        setShowNotifications(false);
+                        setUnreadCount(Math.max(0, unreadCount - 1));
+                      }}
+                      className="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 items-start"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <AlertTriangle size={15} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-slate-800">Critical ER Arrival</p>
+                        <p className="text-xs text-slate-600 mt-0.5">Acute Myocardial Infarction — Allocated to ICU-101</p>
+                        <span className="text-[10px] text-slate-400 mt-1 block">5 minutes ago</span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        navigate('/app/appointments');
+                        setShowNotifications(false);
+                        setUnreadCount(Math.max(0, unreadCount - 1));
+                      }}
+                      className="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 items-start"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <Calendar size={15} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-slate-800">Today's OPD Consultations</p>
+                        <p className="text-xs text-slate-600 mt-0.5">5 patient appointments scheduled for today</p>
+                        <span className="text-[10px] text-slate-400 mt-1 block">25 minutes ago</span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        navigate('/app/lab-tests');
+                        setShowNotifications(false);
+                        setUnreadCount(Math.max(0, unreadCount - 1));
+                      }}
+                      className="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 items-start"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <FlaskConical size={15} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-slate-800">Diagnostic Tests Ready</p>
+                        <p className="text-xs text-slate-600 mt-0.5">Cardiac Troponin-I and CBC report uploaded</p>
+                        <span className="text-[10px] text-slate-400 mt-1 block">1 hour ago</span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        navigate('/app/beds');
+                        setShowNotifications(false);
+                      }}
+                      className="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 items-start"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <Bed size={15} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-slate-800">Bed Ward Utilization</p>
+                        <p className="text-xs text-slate-600 mt-0.5">6 inpatient beds occupied across ICU & Private wards</p>
+                        <span className="text-[10px] text-slate-400 mt-1 block">2 hours ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
+                    <span className="text-[11px] text-slate-500 font-medium">⚡ Connected to Live Hospital MySQL Database</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* User */}
           <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">

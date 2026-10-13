@@ -726,6 +726,72 @@ app.get('/api/reports/revenue-by-doctor', async (req, res) => {
   }
 });
 
+app.get('/api/reports/patient-history/:id', async (req, res) => {
+  try {
+    const rawId = parseInt(req.params.id.replace(/^P-0*/, ''));
+    const [result] = await pool.query('CALL sp_GetPatientHistory(?)', [rawId]);
+    res.json(result[0] || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/reports/doctor-workload', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT d.doctor_id, d.doctor_name, s.specialization_name,
+             COUNT(DISTINCT a.appointment_id) AS total_appointments,
+             COUNT(DISTINCT a.patient_id) AS unique_patients,
+             COUNT(DISTINCT e.emergency_id) AS emergency_cases
+      FROM Doctor d
+      LEFT JOIN Specializations s ON d.specialization_id = s.specialization_id
+      LEFT JOIN Appointments a ON d.doctor_id = a.doctor_id
+      LEFT JOIN Emergency e ON d.doctor_id = e.assigned_doctor
+      GROUP BY d.doctor_id, d.doctor_name, s.specialization_name
+      ORDER BY total_appointments DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/reports/pending-bills', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT b.bill_id, p.patient_name, p.contact, d.doctor_name,
+             b.amount, b.bill_date, b.payment_status, a.room_number
+      FROM Billing b
+      JOIN Appointments a ON b.appointment_id = a.appointment_id
+      JOIN Patients p ON a.patient_id = p.patient_id
+      JOIN Doctor d ON a.doctor_id = d.doctor_id
+      WHERE b.payment_status = 'Pending'
+      ORDER BY b.bill_date DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/reports/active-appointments', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM v_ActiveAppointments ORDER BY appointment_date DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/reports/revenue-summary', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM v_HospitalRevenueSummary');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ONLINE', timestamp: new Date().toISOString() });

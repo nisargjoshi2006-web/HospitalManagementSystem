@@ -65,11 +65,11 @@ public class HospitalManagementUI extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        tabs.add("Dashboard", new DashboardPanel());
+        String role = user.getRole();
 
-        if (user.getRole().equalsIgnoreCase("Admin")) {
-
-            // Admin gets all tabs
+        if (role.equalsIgnoreCase("Admin")) {
+            // Admin gets all modules
+            tabs.add("Dashboard", new DashboardPanel());
             tabs.add("Patients", new PatientPanel());
             tabs.add("Doctors", new DoctorPanel());
             tabs.add("Doctor Schedule", new DoctorSchedulePanel());
@@ -82,14 +82,34 @@ public class HospitalManagementUI extends JFrame {
             tabs.add("Bed Allocation", new BedAllocationPanel());
             tabs.add("Reports", new ReportsPanel());
 
-        } else {
+        } else if (role.equalsIgnoreCase("Doctor")) {
+            // Doctor gets consultations, timetable, prescriptions, lab tests, and patients
+            tabs.add("Doctor Schedule", new DoctorSchedulePanel());
+            tabs.add("Appointments", new AppointmentPanel());
+            tabs.add("Prescriptions", new PrescriptionPanel());
+            tabs.add("Lab Tests", new LabTestPanel());
+            tabs.add("Patients", new PatientPanel());
+            tabs.add("Emergency", new EmergencyPanel());
+            tabs.add("Feedback", new FeedbackPanel());
 
-            // Receptionist gets limited tabs
+        } else if (role.equalsIgnoreCase("Patient")) {
+            // Patient gets personal medical history, appointments, prescriptions, and feedback
+            tabs.add("My Medical History", new PatientPortalPanel(user));
+            tabs.add("Appointments", new AppointmentPanel());
+            tabs.add("Prescriptions", new PrescriptionPanel());
+            tabs.add("Billing", new BillingPanel());
+            tabs.add("Submit Feedback", new FeedbackPanel());
+
+        } else {
+            // Receptionist gets front-desk management
+            tabs.add("Dashboard", new DashboardPanel());
             tabs.add("Patients", new PatientPanel());
             tabs.add("Appointments", new AppointmentPanel());
             tabs.add("Billing", new BillingPanel());
-            tabs.add("Lab Tests", new LabTestPanel());
             tabs.add("Bed Allocation", new BedAllocationPanel());
+            tabs.add("Emergency", new EmergencyPanel());
+            tabs.add("Lab Tests", new LabTestPanel());
+            tabs.add("Feedback", new FeedbackPanel());
         }
 
         add(tabs, BorderLayout.CENTER);
