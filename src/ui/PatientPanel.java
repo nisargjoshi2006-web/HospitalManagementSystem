@@ -137,7 +137,7 @@ public class PatientPanel extends JPanel {
         lblDate.setFont(labelFont);
         formPanel.add(lblDate);
 
-        txtDate = new JTextField();
+        txtDate = new JTextField(java.time.LocalDate.now().toString());
         txtDate.setFont(fieldFont);
         formPanel.add(txtDate);
 
@@ -291,15 +291,37 @@ public class PatientPanel extends JPanel {
         btnAdd.addActionListener(e -> {
 
             try {
+                String name = txtName.getText().trim();
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Please enter Patient Name",
+                            "Validation Error",
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
+                }
+
+                String ageStr = txtAge.getText().trim();
+                int age = 0;
+                if (!ageStr.isEmpty()) {
+                    age = Integer.parseInt(ageStr);
+                }
+
+                String regDate = txtDate.getText().trim();
+                if (regDate.isEmpty()) {
+                    regDate = java.time.LocalDate.now().toString();
+                    txtDate.setText(regDate);
+                }
 
                 dao.addPatient(
-                        txtName.getText(),
+                        name,
                         genderBox.getSelectedItem().toString(),
-                        Integer.parseInt(txtAge.getText()),
-                        txtBlood.getText(),
-                        txtContact.getText(),
-                        txtAddress.getText(),
-                        txtDate.getText()
+                        age,
+                        txtBlood.getText().trim(),
+                        txtContact.getText().trim(),
+                        txtAddress.getText().trim(),
+                        regDate
                 );
 
                 JOptionPane.showMessageDialog(
@@ -308,13 +330,21 @@ public class PatientPanel extends JPanel {
                 );
 
                 btnView.doClick();
-                
 
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Please enter a valid numeric age",
+                        "Input Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
             } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Invalid Input"
+                        "Error saving patient: " + ex.getMessage(),
+                        "Invalid Input",
+                        JOptionPane.ERROR_MESSAGE
                 );
 
                 ex.printStackTrace();

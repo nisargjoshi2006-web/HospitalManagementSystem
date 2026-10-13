@@ -27,7 +27,27 @@ public class PatientDAO {
             pst.setString(4, bloodGroup);
             pst.setString(5, contact);
             pst.setString(6, address);
-            pst.setDate(7, java.sql.Date.valueOf(registrationDate));
+            java.sql.Date sqlDate;
+            if (registrationDate == null || registrationDate.trim().isEmpty()) {
+                sqlDate = new java.sql.Date(System.currentTimeMillis());
+            } else {
+                try {
+                    sqlDate = java.sql.Date.valueOf(registrationDate.trim());
+                } catch (IllegalArgumentException ex) {
+                    try {
+                        String clean = registrationDate.trim().replace('/', '-');
+                        String[] parts = clean.split("-");
+                        if (parts.length == 3 && parts[0].length() == 2 && parts[2].length() == 4) {
+                            sqlDate = java.sql.Date.valueOf(parts[2] + "-" + parts[1] + "-" + parts[0]);
+                        } else {
+                            sqlDate = new java.sql.Date(System.currentTimeMillis());
+                        }
+                    } catch (Exception e) {
+                        sqlDate = new java.sql.Date(System.currentTimeMillis());
+                    }
+                }
+            }
+            pst.setDate(7, sqlDate);
 
             int rows = pst.executeUpdate();
 
