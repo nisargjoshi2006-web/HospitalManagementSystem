@@ -4,24 +4,25 @@ import {
   LayoutDashboard, Users, UserRound, Calendar, CalendarDays, FileText,
   CreditCard, AlertTriangle, FlaskConical, Bed, MessageSquare, BarChart3,
   ScrollText, Settings, LogOut, Bell, Search, Activity, Menu, X, ChevronRight,
-  Hospital
+  Hospital, HeartPulse
 } from 'lucide-react';
 
-const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
-  { label: 'Patients', icon: Users, path: '/app/patients' },
-  { label: 'Doctors', icon: UserRound, path: '/app/doctors' },
-  { label: 'Doctor Schedule', icon: CalendarDays, path: '/app/schedule' },
-  { label: 'Appointments', icon: Calendar, path: '/app/appointments' },
-  { label: 'Prescriptions', icon: FileText, path: '/app/prescriptions' },
-  { label: 'Billing', icon: CreditCard, path: '/app/billing' },
-  { label: 'Emergency', icon: AlertTriangle, path: '/app/emergency' },
-  { label: 'Lab Tests', icon: FlaskConical, path: '/app/lab-tests' },
-  { label: 'Bed Allocation', icon: Bed, path: '/app/beds' },
-  { label: 'Feedback', icon: MessageSquare, path: '/app/feedback' },
-  { label: 'Reports', icon: BarChart3, path: '/app/reports' },
-  { label: 'Audit Logs', icon: ScrollText, path: '/app/audit' },
-  { label: 'Settings', icon: Settings, path: '/app/settings' },
+const allNavItems = [
+  { label: 'My Health Portal', icon: HeartPulse, path: '/app/patient-portal', roles: ['Patient'] },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard', roles: ['Admin', 'Doctor', 'Receptionist'] },
+  { label: 'Patients', icon: Users, path: '/app/patients', roles: ['Admin', 'Doctor', 'Receptionist'] },
+  { label: 'Doctors', icon: UserRound, path: '/app/doctors', roles: ['Admin'] },
+  { label: 'Doctor Schedule', icon: CalendarDays, path: '/app/schedule', roles: ['Admin', 'Doctor'] },
+  { label: 'Appointments', icon: Calendar, path: '/app/appointments', roles: ['Admin', 'Doctor', 'Receptionist', 'Patient'] },
+  { label: 'Prescriptions', icon: FileText, path: '/app/prescriptions', roles: ['Admin', 'Doctor', 'Patient'] },
+  { label: 'Billing', icon: CreditCard, path: '/app/billing', roles: ['Admin', 'Receptionist', 'Patient'] },
+  { label: 'Emergency', icon: AlertTriangle, path: '/app/emergency', roles: ['Admin', 'Doctor', 'Receptionist'] },
+  { label: 'Lab Tests', icon: FlaskConical, path: '/app/lab-tests', roles: ['Admin', 'Doctor', 'Receptionist'] },
+  { label: 'Bed Allocation', icon: Bed, path: '/app/beds', roles: ['Admin', 'Receptionist'] },
+  { label: 'Feedback', icon: MessageSquare, path: '/app/feedback', roles: ['Admin', 'Doctor', 'Receptionist', 'Patient'] },
+  { label: 'Reports', icon: BarChart3, path: '/app/reports', roles: ['Admin'] },
+  { label: 'Audit Logs', icon: ScrollText, path: '/app/audit', roles: ['Admin'] },
+  { label: 'Settings', icon: Settings, path: '/app/settings', roles: ['Admin'] },
 ];
 
 interface LayoutProps {
@@ -37,7 +38,23 @@ export default function Layout({ children, title, subtitle }: LayoutProps) {
   const [unreadCount, setUnreadCount] = useState(3);
   const navigate = useNavigate();
 
-  const handleLogout = () => navigate('/login');
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('hospital_user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const userRole = currentUser.role || 'Admin';
+  const userName = currentUser.name || (userRole === 'Doctor' ? 'Dr. Vikram Singh' : userRole === 'Patient' ? 'Amit Verma' : userRole === 'Receptionist' ? 'Ananya Verma' : 'Admin User');
+  const userInitial = userName.replace(/^Dr\.\s*/i, '').charAt(0) || 'A';
+
+  const visibleNavItems = allNavItems.filter(item => item.roles.includes(userRole));
+
+  const handleLogout = () => {
+    localStorage.removeItem('hospital_user');
+    navigate('/login');
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -64,7 +81,7 @@ export default function Layout({ children, title, subtitle }: LayoutProps) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
-          {navItems.map(({ label, icon: Icon, path }) => (
+          {visibleNavItems.map(({ label, icon: Icon, path }) => (
             <NavLink
               key={path}
               to={path}
@@ -258,14 +275,18 @@ export default function Layout({ children, title, subtitle }: LayoutProps) {
             )}
           </div>
 
-          {/* User */}
+          {/* User Profile */}
           <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-              A
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${
+              userRole === 'Doctor' ? 'bg-teal-600' :
+              userRole === 'Receptionist' ? 'bg-sky-600' :
+              userRole === 'Patient' ? 'bg-purple-600' : 'bg-slate-800'
+            }`}>
+              {userInitial}
             </div>
             <div className="hidden sm:block leading-tight">
-              <div className="text-sm font-medium text-slate-800">Admin User</div>
-              <div className="text-xs text-slate-500">Administrator</div>
+              <div className="text-sm font-medium text-slate-800">{userName}</div>
+              <div className="text-xs text-slate-500 font-semibold">{userRole}</div>
             </div>
           </div>
         </header>

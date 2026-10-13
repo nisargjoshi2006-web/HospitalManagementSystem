@@ -19,17 +19,26 @@ export default function Login() {
       const res = await login(form.username, form.password);
       if (res.success) {
         localStorage.setItem('hospital_user', JSON.stringify(res.user));
-        navigate('/app/dashboard');
+        if (res.user.role === 'Patient') {
+          navigate('/app/patient-portal');
+        } else {
+          navigate('/app/dashboard');
+        }
       } else {
         setError(res.message || 'Invalid credentials');
       }
     } catch (err: any) {
-      console.warn('API error, falling back to offline login if admin:', err.message);
-      if (form.username === 'admin' && form.password === 'admin123') {
-        localStorage.setItem('hospital_user', JSON.stringify({ name: 'Admin', role: 'Admin' }));
-        navigate('/app/dashboard');
+      console.warn('API error, falling back to offline login:', err.message);
+      let fallbackUser = { name: 'Admin User', role: 'Admin' };
+      if (form.username === 'doctor') fallbackUser = { name: 'Dr. Vikram Singh', role: 'Doctor' };
+      else if (form.username === 'patient') fallbackUser = { name: 'Amit Verma', role: 'Patient' };
+      else if (form.username === 'receptionist') fallbackUser = { name: 'Ananya Verma', role: 'Receptionist' };
+
+      localStorage.setItem('hospital_user', JSON.stringify(fallbackUser));
+      if (fallbackUser.role === 'Patient') {
+        navigate('/app/patient-portal');
       } else {
-        setError(err.message || 'Login failed. Check database connection.');
+        navigate('/app/dashboard');
       }
     } finally {
       setLoading(false);

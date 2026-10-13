@@ -15,12 +15,15 @@ import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
 import Settings from './pages/Settings';
 
+import PatientPortal from './pages/PatientPortal';
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/app/patient-portal" element={<PatientPortal />} />
         <Route path="/app/dashboard" element={<Dashboard />} />
         <Route path="/app/patients" element={<Patients />} />
         <Route path="/app/doctors" element={<Doctors />} />
