@@ -24,6 +24,7 @@ replay_pid*.log
 
 # User documents
 *.pdf
+!HospitalManagementSystem_*.pdf
 
 # IDE & Editor settings
 .idea/

@@ -1,0 +1,137 @@
+%% CarePoint Hospital Management System - Entity Relationship Diagram
+%% Extracted directly from live MySQL database implementation
+erDiagram
+
+    Specializations {
+        INT specialization_id PK "PK, AUTO_INCREMENT"
+        VARCHAR(50) specialization_name "UNIQUE, NOT NULL"
+    }
+
+    Doctor {
+        INT doctor_id PK "PK, AUTO_INCREMENT"
+        VARCHAR(50) doctor_name "NOT NULL"
+        INT specialization_id FK "FK -> Specializations"
+        VARCHAR(50) qualification "NOT NULL"
+        DECIMAL(10,2) consultation_fee "DEFAULT 500.00"
+        VARCHAR(15) contact "NOT NULL"
+    }
+
+    Doctor_Schedule {
+        INT schedule_id PK "PK, AUTO_INCREMENT"
+        INT doctor_id FK "FK -> Doctor, NOT NULL"
+        VARCHAR(15) day_of_week "NOT NULL"
+        TIME start_time "NOT NULL"
+        TIME end_time "NOT NULL"
+    }
+
+    Patients {
+        INT patient_id PK "PK, AUTO_INCREMENT"
+        VARCHAR(50) patient_name "NOT NULL"
+        VARCHAR(10) gender "Male/Female/Other"
+        INT age "CHECK >= 0"
+        VARCHAR(5) blood_group "NOT NULL"
+        VARCHAR(15) contact "INDEXED, NOT NULL"
+        VARCHAR(100) address "Nullable"
+        DATE registration_date "NOT NULL"
+    }
+
+    Appointments {
+        INT appointment_id PK "PK, AUTO_INCREMENT"
+        INT patient_id FK "FK -> Patients, NOT NULL"
+        INT doctor_id FK "FK -> Doctor, NOT NULL"
+        DATE appointment_date "INDEXED, NOT NULL"
+        TIME appointment_time "NOT NULL"
+        VARCHAR(10) room_number "NOT NULL"
+        VARCHAR(20) status "DEFAULT Scheduled"
+    }
+
+    Emergency {
+        INT emergency_id PK "PK, AUTO_INCREMENT"
+        INT patient_id FK "FK -> Patients (Inferred)"
+        VARCHAR(100) emergency_type "NOT NULL"
+        VARCHAR(20) priority_level "Critical/High/Med/Low"
+        VARCHAR(30) status "DEFAULT Admitted"
+        INT assigned_doctor FK "FK -> Doctor (Inferred)"
+        DATE arrival_date "NOT NULL"
+        TIME arrival_time "NOT NULL"
+    }
+
+    Prescriptions {
+        INT prescription_id PK "PK, AUTO_INCREMENT"
+        INT appointment_id FK "FK -> Appointments, UNIQUE"
+        VARCHAR(100) diagnosis "NOT NULL"
+        VARCHAR(100) medicine "NOT NULL"
+        DATE next_visit_date "Nullable"
+        VARCHAR(100) remarks "Nullable"
+    }
+
+    Billing {
+        INT bill_id PK "PK, AUTO_INCREMENT"
+        INT appointment_id FK "FK -> Appointments, UNIQUE"
+        DECIMAL(10,2) amount "CHECK >= 0"
+        DATE bill_date "NOT NULL"
+        VARCHAR(20) payment_method "UPI/Card/Cash"
+        VARCHAR(20) payment_status "INDEXED (Paid/Pending)"
+    }
+
+    Lab_Tests {
+        INT test_id PK "PK, AUTO_INCREMENT"
+        INT patient_id FK "FK -> Patients, NOT NULL"
+        INT doctor_id FK "FK -> Doctor, NOT NULL"
+        VARCHAR(100) test_name "NOT NULL"
+        DATE test_date "NOT NULL"
+        DECIMAL(10,2) cost "CHECK >= 0"
+        VARCHAR(255) result "Default Pending Analysis"
+        VARCHAR(30) status "DEFAULT Pending"
+    }
+
+    Bed_Allocation {
+        INT allocation_id PK "PK, AUTO_INCREMENT"
+        INT patient_id FK "FK -> Patients, NOT NULL"
+        VARCHAR(50) ward_type "ICU/General/Private AC"
+        VARCHAR(10) bed_number "NOT NULL"
+        DATE admit_date "NOT NULL"
+        DATE discharge_date "Nullable"
+        DECIMAL(10,2) daily_charge "NOT NULL"
+        VARCHAR(20) status "DEFAULT Occupied"
+    }
+
+    Feedback {
+        INT feedback_id PK "PK, AUTO_INCREMENT"
+        INT patient_id FK "FK -> Patients, NOT NULL"
+        INT rating "CHECK (1 TO 5)"
+        DATE feedback_date "NOT NULL"
+        VARCHAR(100) comments "Nullable"
+    }
+
+    Users {
+        INT user_id PK "PK, AUTO_INCREMENT"
+        VARCHAR(50) username "UNIQUE, NOT NULL"
+        VARCHAR(128) password "SHA-256 Digest"
+        VARCHAR(100) full_name "NOT NULL"
+        VARCHAR(20) role "Admin/Doctor/Recep/Patient"
+        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    Audit_Logs {
+        INT log_id PK "PK, AUTO_INCREMENT"
+        VARCHAR(50) action_type "NOT NULL"
+        INT record_id "Logical FK (Entity ID)"
+        TIMESTAMP log_time "DEFAULT CURRENT_TIMESTAMP"
+        TEXT details "Nullable"
+    }
+
+    %% Explicit & Enforced Foreign Key Relationships
+    Specializations ||--o{ Doctor : "classifies"
+    Doctor ||--o{ Doctor_Schedule : "works_shifts"
+    Doctor ||--o{ Appointments : "attends"
+    Patients ||--o{ Appointments : "books"
+    Appointments ||--|| Prescriptions : "issues"
+    Appointments ||--|| Billing : "generates"
+    Patients ||--o{ Bed_Allocation : "allocated_bed"
+    Patients ||--o{ Feedback : "submits"
+    Patients ||--o{ Lab_Tests : "undergoes"
+    Doctor ||--o{ Lab_Tests : "orders"
+    Patients ||--o{ Emergency : "admitted_as (Inferred)"
+    Doctor ||--o{ Emergency : "assigned_doctor (Inferred)"
+    Appointments ||--o{ Audit_Logs : "audits (Inferred)"
