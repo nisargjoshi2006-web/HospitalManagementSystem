@@ -52,6 +52,20 @@ export async function addPatient(patient: {
   });
 }
 
+export async function updatePatient(id: string, patient: {
+  name?: string;
+  age?: number | string;
+  gender?: string;
+  blood?: string;
+  contact?: string;
+  address?: string;
+}) {
+  return fetchJSON(`/patients/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(patient),
+  });
+}
+
 export async function deletePatient(id: string) {
   return fetchJSON(`/patients/${id}`, {
     method: 'DELETE',

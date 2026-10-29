@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Search, Plus, Eye, Trash2, X, ChevronDown, RefreshCw } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, X, ChevronDown, RefreshCw, Pencil } from 'lucide-react';
 import { patients as fallbackPatients } from '../data/mockData';
-import { getPatients, addPatient, deletePatient } from '../api/api';
+import { getPatients, addPatient, updatePatient, deletePatient } from '../api/api';
 
 const bloodGroups = ['All', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -12,10 +12,20 @@ export default function Patients() {
   const [bloodFilter, setBloodFilter] = useState('All');
   const [selected, setSelected] = useState<any | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [addForm, setAddForm] = useState({
+    name: '',
+    age: '',
+    gender: 'Male',
+    blood: 'B+',
+    contact: '',
+    address: ''
+  });
+
+  const [editForm, setEditForm] = useState({
     name: '',
     age: '',
     gender: 'Male',
@@ -72,6 +82,52 @@ export default function Patients() {
       alert('Patient registered successfully in MySQL database!');
     } catch (err: any) {
       alert('Failed to register patient: ' + err.message);
+    }
+  };
+
+  const handleStartEdit = (p: any) => {
+    setEditTarget(p);
+    setEditForm({
+      name: p.name || '',
+      age: String(p.age || ''),
+      gender: p.gender || 'Male',
+      blood: p.blood || 'B+',
+      contact: p.contact || '',
+      address: p.address || ''
+    });
+  };
+
+  const handleUpdatePatient = async () => {
+    if (!editTarget) return;
+    if (!editForm.name.trim()) {
+      alert('Please enter patient name');
+      return;
+    }
+    try {
+      await updatePatient(editTarget.id, {
+        name: editForm.name.trim(),
+        age: parseInt(editForm.age) || 0,
+        gender: editForm.gender,
+        blood: editForm.blood,
+        contact: editForm.contact.trim(),
+        address: editForm.address.trim()
+      });
+      setEditTarget(null);
+      if (selected && selected.id === editTarget.id) {
+        setSelected({
+          ...selected,
+          name: editForm.name.trim(),
+          age: parseInt(editForm.age) || 0,
+          gender: editForm.gender,
+          blood: editForm.blood,
+          contact: editForm.contact.trim(),
+          address: editForm.address.trim()
+        });
+      }
+      loadPatients();
+      alert('Patient details updated successfully in MySQL!');
+    } catch (err: any) {
+      alert('Failed to update patient: ' + err.message);
     }
   };
 
@@ -182,8 +238,11 @@ export default function Patients() {
                     <td className="px-4 py-3 text-slate-500 text-xs">{p.registered}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setSelected(p)} className="p-1.5 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors" title="View">
+                        <button onClick={() => setSelected(p)} className="p-1.5 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors" title="View Profile">
                           <Eye size={14} />
+                        </button>
+                        <button onClick={() => handleStartEdit(p)} className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors" title="Edit Patient">
+                          <Pencil size={14} />
                         </button>
                         <button onClick={() => setDeleteTarget(p.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors" title="Delete">
                           <Trash2 size={14} />
@@ -237,6 +296,16 @@ export default function Patients() {
               <Section title="Registration">
                 <Row label="Registered" value={selected.registered} />
               </Section>
+
+              <button
+                onClick={() => {
+                  handleStartEdit(selected);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90 shadow-sm mt-3"
+                style={{ background: '#0F766E' }}
+              >
+                <Pencil size={15} /> Edit Patient Details
+              </button>
             </div>
           </div>
         </div>
@@ -330,6 +399,84 @@ export default function Patients() {
           <div className="flex gap-2">
             <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
             <button onClick={handleDeletePatient} className="flex-1 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">Delete Patient</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Edit patient modal */}
+      {editTarget && (
+        <Modal title={`Edit Patient — ${editTarget.id} (Updates MySQL)`} onClose={() => setEditTarget(null)}>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-slate-700 mb-1">Full Name *</label>
+              <input
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400"
+                placeholder="e.g. Ramesh Patel"
+                value={editForm.name}
+                onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Age</label>
+              <input
+                type="number"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400"
+                placeholder="e.g. 35"
+                value={editForm.age}
+                onChange={e => setEditForm({ ...editForm, age: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Gender</label>
+              <select
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white"
+                value={editForm.gender}
+                onChange={e => setEditForm({ ...editForm, gender: e.target.value })}
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Blood Group</label>
+              <select
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white"
+                value={editForm.blood}
+                onChange={e => setEditForm({ ...editForm, blood: e.target.value })}
+              >
+                {bloodGroups.filter(b => b !== 'All').map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Contact Phone *</label>
+              <input
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400"
+                placeholder="e.g. 9876501234"
+                value={editForm.contact}
+                onChange={e => setEditForm({ ...editForm, contact: e.target.value })}
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-slate-700 mb-1">Address</label>
+              <input
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400"
+                placeholder="e.g. 14 MG Road, Bangalore"
+                value={editForm.address}
+                onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-5">
+            <button onClick={() => setEditTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
+            <button onClick={handleUpdatePatient} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Save Changes</button>
           </div>
         </Modal>
       )}

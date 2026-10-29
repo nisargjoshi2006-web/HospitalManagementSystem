@@ -152,6 +152,27 @@ app.post('/api/patients', async (req, res) => {
   }
 });
 
+app.put('/api/patients/:id', async (req, res) => {
+  const patientId = req.params.id.replace(/^P-0*/, '');
+  try {
+    const { name, age, gender, blood, contact, address } = req.body;
+    await pool.query(
+      `UPDATE Patients 
+       SET patient_name = COALESCE(?, patient_name),
+           age = COALESCE(?, age),
+           gender = COALESCE(?, gender),
+           blood_group = COALESCE(?, blood_group),
+           contact = COALESCE(?, contact),
+           address = COALESCE(?, address)
+       WHERE patient_id = ?`,
+      [name || null, age !== undefined ? parseInt(age) : null, gender || null, blood || null, contact || null, address || null, patientId]
+    );
+    res.json({ success: true, message: 'Patient updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete('/api/patients/:id', async (req, res) => {
   const patientId = req.params.id.replace(/^P-0*/, '');
   try {
