@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Search, Plus, ChevronDown, X, Trash2, RefreshCw } from 'lucide-react';
+import { Search, Plus, ChevronDown, X, Trash2, RefreshCw, Pencil } from 'lucide-react';
 import { appointments as fallbackAppointments } from '../data/mockData';
-import { getAppointments, addAppointment, deleteAppointment, getPatients, getDoctors } from '../api/api';
+import { getAppointments, addAppointment, updateAppointment, deleteAppointment, getPatients, getDoctors } from '../api/api';
 
 const statusColors: Record<string, string> = {
   Confirmed: 'bg-green-100 text-green-700',
@@ -19,6 +19,7 @@ export default function Appointments() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [showBook, setShowBook] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [bookForm, setBookForm] = useState({
@@ -26,6 +27,13 @@ export default function Appointments() {
     doctorId: '',
     date: new Date().toISOString().slice(0, 10),
     time: '10:00',
+    room: '101',
+    status: 'Scheduled'
+  });
+
+  const [editForm, setEditForm] = useState({
+    date: '',
+    time: '',
     room: '101',
     status: 'Scheduled'
   });
@@ -78,6 +86,33 @@ export default function Appointments() {
       alert('Appointment booked successfully in MySQL!');
     } catch (err: any) {
       alert('Failed to book appointment: ' + err.message);
+    }
+  };
+
+  const handleStartEdit = (a: any) => {
+    setEditTarget(a);
+    setEditForm({
+      date: a.date || new Date().toISOString().slice(0, 10),
+      time: a.time ? a.time.slice(0, 5) : '10:00',
+      room: a.room || '101',
+      status: a.status || 'Scheduled'
+    });
+  };
+
+  const handleUpdateAppointment = async () => {
+    if (!editTarget) return;
+    try {
+      await updateAppointment(editTarget.rawId || editTarget.id, {
+        date: editForm.date,
+        time: editForm.time.length === 5 ? `${editForm.time}:00` : editForm.time,
+        room: editForm.room,
+        status: editForm.status
+      });
+      setEditTarget(null);
+      await loadData();
+      alert('Appointment updated successfully in MySQL!');
+    } catch (err: any) {
+      alert('Failed to update appointment: ' + err.message);
     }
   };
 
@@ -192,13 +227,22 @@ export default function Appointments() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[a.status] || 'bg-slate-100'}`}>{a.status}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleDelete(a.rawId || a.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
-                        title="Cancel Appointment"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleStartEdit(a)}
+                          className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Edit Appointment"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(a.rawId || a.id)}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                          title="Cancel Appointment"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -299,6 +343,76 @@ export default function Appointments() {
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShowBook(false)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
                 <button onClick={handleBook} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Confirm Booking</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Appointment Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-900">Edit Appointment — {editTarget.id} (Updates MySQL)</h3>
+              <button onClick={() => setEditTarget(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
+                <div className="text-slate-600"><strong>Patient:</strong> {editTarget.patient}</div>
+                <div className="text-slate-600"><strong>Doctor:</strong> {editTarget.doctor} ({editTarget.specialization})</div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Appointment Date *</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.date}
+                  onChange={e => setEditForm({ ...editForm, date: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Appointment Time *</label>
+                <input
+                  type="time"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.time}
+                  onChange={e => setEditForm({ ...editForm, time: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Consultation Room</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  placeholder="e.g. Room-102"
+                  value={editForm.room}
+                  onChange={e => setEditForm({ ...editForm, room: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Status</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.status}
+                  onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                >
+                  <option value="Scheduled">Scheduled</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setEditTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
+                <button onClick={handleUpdateAppointment} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Save Changes</button>
               </div>
             </div>
           </div>

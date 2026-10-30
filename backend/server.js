@@ -251,6 +251,33 @@ app.post('/api/doctors', async (req, res) => {
   }
 });
 
+app.put('/api/doctors/:id', async (req, res) => {
+  const doctorId = req.params.id.replace(/^D-0*/, '');
+  try {
+    const { name, specialization, specializationId, qualification, fee, contact } = req.body;
+    let specId = specializationId;
+    if (!specId && specialization) {
+      const [specs] = await pool.query('SELECT specialization_id FROM Specializations WHERE specialization_name = ?', [specialization]);
+      if (specs.length > 0) {
+        specId = specs[0].specialization_id;
+      }
+    }
+    await pool.query(
+      `UPDATE Doctor 
+       SET doctor_name = COALESCE(?, doctor_name),
+           specialization_id = COALESCE(?, specialization_id),
+           qualification = COALESCE(?, qualification),
+           consultation_fee = COALESCE(?, consultation_fee),
+           contact = COALESCE(?, contact)
+       WHERE doctor_id = ?`,
+      [name || null, specId || null, qualification || null, fee !== undefined && fee !== '' ? parseFloat(fee) : null, contact || null, doctorId]
+    );
+    res.json({ success: true, message: 'Doctor updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete('/api/doctors/:id', async (req, res) => {
   const doctorId = req.params.id.replace(/^D-0*/, '');
   try {
@@ -312,6 +339,25 @@ app.post('/api/appointments', async (req, res) => {
       [cleanPid, cleanDid, date, time, room || '101', status || 'Scheduled']
     );
     res.status(201).json({ success: true, appointmentId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/appointments/:id', async (req, res) => {
+  const aptId = req.params.id.replace(/^APT-0*/, '');
+  try {
+    const { date, time, room, status } = req.body;
+    await pool.query(
+      `UPDATE Appointments 
+       SET appointment_date = COALESCE(?, appointment_date),
+           appointment_time = COALESCE(?, appointment_time),
+           room_number = COALESCE(?, room_number),
+           status = COALESCE(?, status)
+       WHERE appointment_id = ?`,
+      [date || null, time || null, room || null, status || null, aptId]
+    );
+    res.json({ success: true, message: 'Appointment updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -460,12 +506,23 @@ app.post('/api/billing', async (req, res) => {
 app.put('/api/billing/:id', async (req, res) => {
   const billId = req.params.id.replace(/^BILL-0*/, '');
   try {
-    const { paymentMethod, paymentStatus } = req.body;
+    const { amount, paymentMethod, paymentStatus, billDate } = req.body;
     await pool.query(
-      'UPDATE Billing SET payment_method = ?, payment_status = ? WHERE bill_id = ?',
-      [paymentMethod || 'Cash', paymentStatus || 'Paid', billId]
+      `UPDATE Billing 
+       SET amount = COALESCE(?, amount),
+           payment_method = COALESCE(?, payment_method),
+           payment_status = COALESCE(?, payment_status),
+           bill_date = COALESCE(?, bill_date)
+       WHERE bill_id = ?`,
+      [
+        amount !== undefined && amount !== null && amount !== '' ? parseFloat(amount) : null,
+        paymentMethod || null,
+        paymentStatus || null,
+        billDate || null,
+        billId
+      ]
     );
-    res.json({ success: true });
+    res.json({ success: true, message: 'Billing updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -617,6 +674,25 @@ app.post('/api/prescriptions', async (req, res) => {
       [cleanAid, diagnosis, medicine, nextDate, remarks || '']
     );
     res.status(201).json({ success: true, prescriptionId: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/prescriptions/:id', async (req, res) => {
+  const rxId = req.params.id.replace(/^RX-0*/, '');
+  try {
+    const { diagnosis, medicine, nextVisitDate, remarks } = req.body;
+    await pool.query(
+      `UPDATE Prescriptions 
+       SET diagnosis = COALESCE(?, diagnosis),
+           medicine = COALESCE(?, medicine),
+           next_visit_date = COALESCE(?, next_visit_date),
+           remarks = COALESCE(?, remarks)
+       WHERE prescription_id = ?`,
+      [diagnosis || null, medicine || null, nextVisitDate || null, remarks !== undefined ? remarks : null, rxId]
+    );
+    res.json({ success: true, message: 'Prescription updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

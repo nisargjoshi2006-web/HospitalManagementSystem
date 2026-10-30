@@ -91,6 +91,20 @@ export async function addDoctor(doctor: {
   });
 }
 
+export async function updateDoctor(id: string | number, doctor: {
+  name?: string;
+  specialization?: string;
+  specializationId?: number;
+  qualification?: string;
+  fee?: number | string;
+  contact?: string;
+}) {
+  return fetchJSON(`/doctors/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(doctor),
+  });
+}
+
 export async function deleteDoctor(id: string) {
   return fetchJSON(`/doctors/${id}`, {
     method: 'DELETE',
@@ -116,6 +130,18 @@ export async function addAppointment(apt: {
 }) {
   return fetchJSON('/appointments', {
     method: 'POST',
+    body: JSON.stringify(apt),
+  });
+}
+
+export async function updateAppointment(id: string | number, apt: {
+  date?: string;
+  time?: string;
+  room?: string;
+  status?: string;
+}) {
+  return fetchJSON(`/appointments/${id}`, {
+    method: 'PUT',
     body: JSON.stringify(apt),
   });
 }
@@ -169,7 +195,7 @@ export async function addBill(bill: {
   });
 }
 
-export async function updateBill(id: string | number, update: { paymentMethod?: string; paymentStatus?: string }) {
+export async function updateBill(id: string | number, update: { amount?: number | string; paymentMethod?: string; paymentStatus?: string; billDate?: string }) {
   return fetchJSON(`/billing/${id}`, {
     method: 'PUT',
     body: JSON.stringify(update),
@@ -237,6 +263,18 @@ export async function addPrescription(rx: {
 }) {
   return fetchJSON('/prescriptions', {
     method: 'POST',
+    body: JSON.stringify(rx),
+  });
+}
+
+export async function updatePrescription(id: string | number, rx: {
+  diagnosis?: string;
+  medicine?: string;
+  nextVisitDate?: string;
+  remarks?: string;
+}) {
+  return fetchJSON(`/prescriptions/${id}`, {
+    method: 'PUT',
     body: JSON.stringify(rx),
   });
 }

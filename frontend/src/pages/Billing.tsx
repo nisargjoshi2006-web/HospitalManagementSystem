@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Search, Plus, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, RefreshCw, CheckCircle2, Pencil, X } from 'lucide-react';
 import { bills as fallbackBills } from '../data/mockData';
 import { getBilling, addBill, updateBill, getAppointments } from '../api/api';
 
@@ -22,6 +22,7 @@ export default function Billing() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [billForm, setBillForm] = useState({
@@ -30,6 +31,13 @@ export default function Billing() {
     paymentMethod: 'UPI',
     paymentStatus: 'Paid',
     billDate: new Date().toISOString().slice(0, 10)
+  });
+
+  const [editForm, setEditForm] = useState({
+    amount: '',
+    paymentMethod: 'UPI',
+    paymentStatus: 'Paid',
+    billDate: ''
   });
 
   const loadData = async () => {
@@ -84,7 +92,34 @@ export default function Billing() {
     try {
       await updateBill(billId, { paymentStatus: 'Paid' });
       await loadData();
-      alert('Bill marked as Paid!');
+      alert('Bill marked as Paid in MySQL!');
+    } catch (err: any) {
+      alert('Failed to update bill: ' + err.message);
+    }
+  };
+
+  const handleStartEdit = (b: any) => {
+    setEditTarget(b);
+    setEditForm({
+      amount: String(b.fee || ''),
+      paymentMethod: b.method || 'UPI',
+      paymentStatus: b.status || 'Paid',
+      billDate: b.date || new Date().toISOString().slice(0, 10)
+    });
+  };
+
+  const handleUpdateBill = async () => {
+    if (!editTarget) return;
+    try {
+      await updateBill(editTarget.rawId || editTarget.id, {
+        amount: parseFloat(editForm.amount) || undefined,
+        paymentMethod: editForm.paymentMethod,
+        paymentStatus: editForm.paymentStatus,
+        billDate: editForm.billDate
+      });
+      setEditTarget(null);
+      await loadData();
+      alert('Bill details updated successfully in MySQL!');
     } catch (err: any) {
       alert('Failed to update bill: ' + err.message);
     }
@@ -192,14 +227,24 @@ export default function Billing() {
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{b.date}</td>
                     <td className="px-4 py-3">
-                      {b.status === 'Pending' && (
+                      <div className="flex items-center gap-1.5">
+                        {b.status === 'Pending' && (
+                          <button
+                            onClick={() => handleMarkPaid(b.rawId || b.id)}
+                            className="px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                            title="Quick Mark Paid"
+                          >
+                            Mark Paid
+                          </button>
+                        )}
                         <button
-                          onClick={() => handleMarkPaid(b.rawId || b.id)}
-                          className="px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                          onClick={() => handleStartEdit(b)}
+                          className="p-1 rounded-md hover:bg-teal-50 text-slate-400 hover:text-teal-700 transition-colors"
+                          title="Edit Bill Details"
                         >
-                          Mark Paid
+                          <Pencil size={14} />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -286,6 +331,79 @@ export default function Billing() {
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShowCreate(false)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
                 <button onClick={handleCreateBill} className="flex-1 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>Generate Bill</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Bill Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-900">Edit Bill — {editTarget.id} (Updates MySQL)</h3>
+              <button onClick={() => setEditTarget(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
+                <div className="text-slate-600"><strong>Patient:</strong> {editTarget.patient}</div>
+                <div className="text-slate-600"><strong>Doctor:</strong> {editTarget.doctor}</div>
+                <div className="text-slate-600"><strong>Appointment:</strong> {editTarget.appointment}</div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Amount (₹) *</label>
+                <input
+                  type="number"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400"
+                  placeholder="e.g. 750"
+                  value={editForm.amount}
+                  onChange={e => setEditForm({ ...editForm, amount: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Payment Method</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.paymentMethod}
+                  onChange={e => setEditForm({ ...editForm, paymentMethod: e.target.value })}
+                >
+                  <option value="UPI">📱 UPI</option>
+                  <option value="Cash">💵 Cash</option>
+                  <option value="Card">💳 Card</option>
+                  <option value="Online">🌐 Online</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Payment Status</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.paymentStatus}
+                  onChange={e => setEditForm({ ...editForm, paymentStatus: e.target.value })}
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Failed">Failed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Bill Date</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.billDate}
+                  onChange={e => setEditForm({ ...editForm, billDate: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setEditTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
+                <button onClick={handleUpdateBill} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Save Changes</button>
               </div>
             </div>
           </div>

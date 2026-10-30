@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Search, Plus, Eye, X, RefreshCw } from 'lucide-react';
+import { Search, Plus, Eye, X, RefreshCw, Pencil } from 'lucide-react';
 import { prescriptions as fallbackPrescriptions } from '../data/mockData';
-import { getPrescriptions, addPrescription, getAppointments } from '../api/api';
+import { getPrescriptions, addPrescription, updatePrescription, getAppointments } from '../api/api';
 
 export default function Prescriptions() {
   const [prescriptionsList, setPrescriptionsList] = useState<any[]>([]);
@@ -10,10 +10,18 @@ export default function Prescriptions() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<any | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     appointmentId: '',
+    diagnosis: '',
+    medicine: '',
+    nextVisitDate: '',
+    remarks: ''
+  });
+
+  const [editForm, setEditForm] = useState({
     diagnosis: '',
     medicine: '',
     nextVisitDate: '',
@@ -66,6 +74,33 @@ export default function Prescriptions() {
       alert('Prescription created successfully in MySQL!');
     } catch (err: any) {
       alert('Failed to save prescription: ' + err.message);
+    }
+  };
+
+  const handleStartEdit = (rx: any) => {
+    setEditTarget(rx);
+    setEditForm({
+      diagnosis: rx.diagnosis || '',
+      medicine: rx.medicine || '',
+      nextVisitDate: rx.nextVisit && rx.nextVisit !== 'None' ? rx.nextVisit : '',
+      remarks: rx.remarks || ''
+    });
+  };
+
+  const handleUpdatePrescription = async () => {
+    if (!editTarget) return;
+    try {
+      await updatePrescription(editTarget.rawId || editTarget.id, {
+        diagnosis: editForm.diagnosis,
+        medicine: editForm.medicine,
+        nextVisitDate: editForm.nextVisitDate || undefined,
+        remarks: editForm.remarks
+      });
+      setEditTarget(null);
+      await loadData();
+      alert('Prescription updated successfully in MySQL!');
+    } catch (err: any) {
+      alert('Failed to update prescription: ' + err.message);
     }
   };
 
@@ -134,13 +169,22 @@ export default function Prescriptions() {
                     <td className="px-4 py-3 text-slate-600 text-xs">{p.nextVisit}</td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{p.date}</td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => setSelected(p)}
-                        className="p-1.5 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors"
-                        title="View Details"
-                      >
-                        <Eye size={14} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setSelected(p)}
+                          className="p-1.5 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleStartEdit(p)}
+                          className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Edit Prescription"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -253,6 +297,73 @@ export default function Prescriptions() {
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShowAdd(false)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
                 <button onClick={handleAdd} className="flex-1 py-2 text-sm font-medium text-white rounded-lg" style={{ background: '#0F766E' }}>Save Prescription</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Prescription Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-900">Edit Prescription — {editTarget.id} (Updates MySQL)</h3>
+              <button onClick={() => setEditTarget(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
+                <div className="text-slate-600"><strong>Patient:</strong> {editTarget.patient}</div>
+                <div className="text-slate-600"><strong>Doctor:</strong> {editTarget.doctor}</div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Diagnosis *</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  placeholder="e.g. Hypertension"
+                  value={editForm.diagnosis}
+                  onChange={e => setEditForm({ ...editForm, diagnosis: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Prescribed Medicines *</label>
+                <textarea
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  rows={3}
+                  placeholder="e.g. Paracetamol 500mg, Amoxicillin 250mg"
+                  value={editForm.medicine}
+                  onChange={e => setEditForm({ ...editForm, medicine: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Next Visit Date</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.nextVisitDate}
+                  onChange={e => setEditForm({ ...editForm, nextVisitDate: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Remarks</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  placeholder="e.g. Take after meals"
+                  value={editForm.remarks}
+                  onChange={e => setEditForm({ ...editForm, remarks: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setEditTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
+                <button onClick={handleUpdatePrescription} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Save Changes</button>
               </div>
             </div>
           </div>

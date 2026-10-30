@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Search, Plus, Trash2, X, ChevronDown, Phone, DollarSign, RefreshCw, GraduationCap } from 'lucide-react';
+import { Search, Plus, Trash2, X, ChevronDown, Phone, DollarSign, RefreshCw, GraduationCap, Pencil } from 'lucide-react';
 import { doctors as fallbackDoctors } from '../data/mockData';
-import { getDoctors, addDoctor, deleteDoctor, getSpecializations } from '../api/api';
+import { getDoctors, addDoctor, updateDoctor, deleteDoctor, getSpecializations } from '../api/api';
 
 const specColors: Record<string, string> = {
   Cardiology: 'bg-red-100 text-red-700',
@@ -29,10 +29,19 @@ export default function Doctors() {
   const [search, setSearch] = useState('');
   const [specFilter, setSpecFilter] = useState('All');
   const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [addForm, setAddForm] = useState({
+    name: '',
+    specialization: 'Cardiology',
+    qualification: 'MBBS, MD',
+    fee: '500',
+    contact: ''
+  });
+
+  const [editForm, setEditForm] = useState({
     name: '',
     specialization: 'Cardiology',
     qualification: 'MBBS, MD',
@@ -98,6 +107,35 @@ export default function Doctors() {
       alert('Doctor added successfully to MySQL database!');
     } catch (err: any) {
       alert('Failed to add doctor: ' + err.message);
+    }
+  };
+
+  const handleStartEdit = (d: any) => {
+    setEditTarget(d);
+    setEditForm({
+      name: d.name || '',
+      specialization: d.specialization || 'Cardiology',
+      qualification: d.qualification || 'MBBS, MD',
+      fee: String(d.fee || '500'),
+      contact: d.contact || ''
+    });
+  };
+
+  const handleUpdateDoctor = async () => {
+    if (!editTarget) return;
+    try {
+      await updateDoctor(editTarget.rawId || editTarget.id, {
+        name: editForm.name.trim(),
+        specialization: editForm.specialization,
+        qualification: editForm.qualification.trim(),
+        fee: parseFloat(editForm.fee) || 500,
+        contact: editForm.contact.trim()
+      });
+      setEditTarget(null);
+      await loadDoctors();
+      alert('Doctor details updated successfully in MySQL!');
+    } catch (err: any) {
+      alert('Failed to update doctor: ' + err.message);
     }
   };
 
@@ -225,13 +263,22 @@ export default function Doctors() {
                   <Phone size={12} className="text-slate-400" />
                   {d.contact}
                 </div>
-                <button
-                  onClick={() => setDeleteTarget(d)}
-                  className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
-                  title="Remove Doctor"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleStartEdit(d)}
+                    className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                    title="Edit Doctor"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(d)}
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                    title="Remove Doctor"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -328,6 +375,81 @@ export default function Doctors() {
             <div className="flex gap-2">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
               <button onClick={handleDeleteDoctor} className="flex-1 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">Delete Doctor</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Doctor Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-900">Edit Doctor — {editTarget.id} (Updates MySQL)</h3>
+              <button onClick={() => setEditTarget(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"><X size={16} /></button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Doctor Name *</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Specialization</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.specialization}
+                  onChange={e => setEditForm({ ...editForm, specialization: e.target.value })}
+                >
+                  {specializations.map(s => (
+                    <option key={s.specialization_id} value={s.specialization_name}>
+                      {s.specialization_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Qualification</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  placeholder="e.g. MBBS, MD, DM"
+                  value={editForm.qualification}
+                  onChange={e => setEditForm({ ...editForm, qualification: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Consultation Fee (₹) *</label>
+                <input
+                  type="number"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.fee}
+                  onChange={e => setEditForm({ ...editForm, fee: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Contact Phone</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  value={editForm.contact}
+                  onChange={e => setEditForm({ ...editForm, contact: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setEditTarget(null)} className="flex-1 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700">Cancel</button>
+                <button onClick={handleUpdateDoctor} className="flex-1 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: '#0F766E' }}>Save Changes</button>
+              </div>
             </div>
           </div>
         </div>
